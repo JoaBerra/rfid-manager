@@ -1,0 +1,199 @@
+{
+  "main": {
+    "id": "28697020638dbfa9",
+    "type": "split",
+    "children": [
+      {
+        "id": "9ec1b5bf9ab72682",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1af2ddad16faa8a5",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "ba0735203b914f29",
+    "type": "split",
+    "children": [
+      {
+        "id": "1276735387134cd9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3852eb7af033cb93",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "f1bf3c2f27b232ff",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "2ebeca13a04aa3c2",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "14802f443a0c8bc3",
+    "type": "split",
+    "children": [
+      {
+        "id": "76ea9f89797ed3b2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "068bc9a43119ed11",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Eskortminne.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Eskortminne"
+            }
+          },
+          {
+            "id": "b23cda92be923956",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Eskortminne.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Eskortminne"
+            }
+          },
+          {
+            "id": "2d6bfbce161f73fa",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "8ba292a203c61802",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "75ecb7825b6014d5",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Eskortminne.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Eskortminne"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "1af2ddad16faa8a5",
+  "lastOpenFiles": [
+    "Projektrapport.md",
+    "index.md",
+    "Projektöversikt.md",
+    "log.md",
+    "Projektplan.md",
+    "Hardware-Testenheter.md",
+    "App-Architecture.md",
+    "Figma-to-Compose.md",
+    "Eskortminne.md",
+    "Verktyg-och-Setup.md",
+    "Android-Studio-Installation.md",
+    "RFID-och-NFC.md",
+    "Android-NFC-API.md",
+    "Utvecklingsmiljö.md"
+  ]
+}
