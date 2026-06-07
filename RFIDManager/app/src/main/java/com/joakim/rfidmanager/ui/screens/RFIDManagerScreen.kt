@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +24,8 @@ import com.joakim.rfidmanager.ui.model.RFIDTag
 import com.joakim.rfidmanager.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.GlobalScope
 
 /**
  * # UI Layer — RFIDManagerScreen (Architecture: UI Layer huvudskärm)
@@ -59,7 +62,12 @@ fun RFIDManagerScreen(
     selectedId: String?,
     isScanning: Boolean = false,
     onWrite: (String, Int) -> Unit = { _, _ -> },
-    writeStatusMessage: String? = null
+    writeStatusMessage: String? = null,
+    // A1-A4: persistens + mqtt
+    persistAfterWrite: Boolean = true,
+    onPersistAfterWriteChange: (Boolean) -> Unit = {},
+    repository: com.joakim.rfidmanager.data.repository.PersistedReadingRepository? = null,
+    onOpenMqttStatus: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(0) } // 0 = Read Log, 1 = Write Tag
 
@@ -103,6 +111,11 @@ fun RFIDManagerScreen(
                     color = PrimaryForeground,
                     fontSize = 14.sp
                 )
+            }
+
+            // A3: knapp för Mqtt status (kan flyttas till header eller nav)
+            TextButton(onClick = onOpenMqttStatus) {
+                Text("MQTT", fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = Accent)
             }
         }
 
@@ -209,33 +222,33 @@ fun RFIDManagerScreen(
                         colors = CardDefaults.cardColors(containerColor = Card)
                     ) {
                         Column(Modifier.padding(12.dp)) {
-                            Text("SELECTED TAG MEMORY", fontSize: 11.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
-                            Text(selectedTag.uid, fontSize: 13.sp, color = Foreground, fontFamily = FontFamily.Monospace)
+                            Text("SELECTED TAG MEMORY", fontSize = 11.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
+                            Text(selectedTag.uid, fontSize = 13.sp, color = Foreground, fontFamily = FontFamily.Monospace)
                             Spacer(Modifier.height(6.dp))
                             if (selectedTag.fullSectors.isEmpty()) {
-                                Text("No page/sector data read yet (hold tag steady during scan)", fontSize: 9.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
+                                Text("No page/sector data read yet (hold tag steady during scan)", fontSize = 9.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
                             } else {
                                 val isUltra = selectedTag.type.contains("ULTRALIGHT", ignoreCase = true) || selectedTag.type.contains("NTAG", ignoreCase = true)
                                 val labelPrefix = if (isUltra) "Page" else "Sector"
                                 selectedTag.fullSectors.forEach { (addr, hex) ->
-                                    Text("$labelPrefix $addr:", fontSize: 10.sp, color = Primary, fontFamily = FontFamily.Monospace)
-                                    Text(hex, fontSize: 10.sp, color = Foreground, fontFamily = FontFamily.Monospace)
+                                    Text("$labelPrefix $addr:", fontSize = 10.sp, color = Primary, fontFamily = FontFamily.Monospace)
+                                    Text(hex, fontSize = 10.sp, color = Foreground, fontFamily = FontFamily.Monospace)
                                     if (isUltra && addr == 2) {
                                         val bytes = hex.split(" ").mapNotNull { it.toIntOrNull(16)?.toByte() }
                                         if (bytes.size >= 2) {
                                             val lb0 = bytes[0].toInt() and 0xFF
                                             val locked = (3..10).filter { p -> (lb0 and (1 shl (p - 3))) != 0 }
                                             if (locked.isNotEmpty()) {
-                                                Text("  (Lock bits: pages ${locked.joinToString(",")} locked)", fontSize: 9.sp, color = Accent, fontFamily = FontFamily.Monospace)
+                                                Text("  (Lock bits: pages ${locked.joinToString(",")} locked)", fontSize = 9.sp, color = Accent, fontFamily = FontFamily.Monospace)
                                             } else {
-                                                Text("  (No basic locks in LB0)", fontSize: 9.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
+                                                Text("  (No basic locks in LB0)", fontSize = 9.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
                                             }
                                         }
                                     }
                                     Spacer(Modifier.height(4.dp))
                                 }
                             }
-                            Text("Full data also in logcat (AndroidNfcManager)", fontSize: 9.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
+                            Text("Full data also in logcat (AndroidNfcManager)", fontSize = 9.sp, color = MutedForeground, fontFamily = FontFamily.Monospace)
                         }
                     }
                 }
@@ -310,6 +323,11 @@ fun RFIDManagerScreen(
                         onClick = { selectedTab = 1 },
                         text = { Text("WRITE TAG", fontFamily = FontFamily.Monospace, fontSize = 12.sp) }
                     )
+                    Tab(
+                        selected = selectedTab == 2,
+                        onClick = { selectedTab = 2 },
+                        text = { Text("PERSISTED", fontFamily = FontFamily.Monospace, fontSize = 12.sp) }
+                    )
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -331,7 +349,7 @@ fun RFIDManagerScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                } else {
+                } else if (selectedTab == 1) {
                     // WRITE TAG - now wired to real NFC write (uses last detected tag)
                     /**
                      * **WRITE TAG flik (Design: Figma WRITE TAG + Architecture UI onWrite arming)**
@@ -375,8 +393,52 @@ fun RFIDManagerScreen(
                         onWrite = writeWithFeedback,
                         statusMessage = writeStatusMessage ?: localFeedback,
                         defaultTarget = defaultAddr.toString(),
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        // A2: persist toggle
+                        persistAfterWrite = persistAfterWrite,
+                        onPersistAfterWriteChange = onPersistAfterWriteChange
                     )
+                } else {
+                    // PERSISTED (A2) - kopplad ordentligt
+                    if (repository != null) {
+                        val ctx = LocalContext.current
+                        PersistedReadingsScreen(
+                            repository = repository,
+                            onBack = { selectedTab = 0 },
+                            onTransmit = { reading ->
+                                // A3: skicka via MqttSender (Sparkplug B style) + mark locally so the row updates
+                                // (transmitted=true, status pill changes). GlobalScope for quick prototype.
+                                GlobalScope.launch {
+                                    try {
+                                        com.joakim.rfidmanager.data.mqtt.MqttSender.sendReading(reading)
+                                        repository?.markAsTransmitted(reading.id)
+                                        // Always show feedback for UAT so we see if the call was reached
+                                        // Must be on main thread for Toast
+                                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                            android.widget.Toast.makeText(
+                                                ctx,
+                                                "Transmit sent (check subscriber + log)",
+                                                android.widget.Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("RFIDManager", "Transmit failed", e)
+                                        // Visible feedback for UAT (device often blocks the actual socket)
+                                        // Must be on main thread for Toast
+                                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                            android.widget.Toast.makeText(
+                                                ctx,
+                                                "Transmit attempt failed (see log): ${e.message}",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    } else {
+                        Text("Repository inte tillgängligt", color = MutedForeground)
+                    }
                 }
             }
         }
@@ -482,7 +544,10 @@ fun WriteTagForm(
     onWrite: (String, Int) -> Unit,
     statusMessage: String? = null,
     defaultTarget: String = "4",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // A2: persist after write toggle
+    persistAfterWrite: Boolean = true,
+    onPersistAfterWriteChange: (Boolean) -> Unit = {}
 ) {
     var text by remember { mutableStateOf("") }
     var targetAddr by remember { mutableStateOf(defaultTarget) }
@@ -508,6 +573,17 @@ fun WriteTagForm(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+
+        Spacer(Modifier.height(8.dp))
+
+        // A2: Persist after write toggle (enligt Figma spec och user request)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = persistAfterWrite,
+                onCheckedChange = onPersistAfterWriteChange
+            )
+            Text("Persist after write", fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = Foreground)
+        }
 
         Spacer(Modifier.height(16.dp))
 

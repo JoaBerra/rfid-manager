@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import com.joakim.rfidmanager.nfc.AndroidNfcManager
 import com.joakim.rfidmanager.domain.model.RfidTag as DomainRfidTag
 import com.joakim.rfidmanager.domain.model.TagType
+import com.joakim.rfidmanager.domain.model.PersistedReading
 import com.joakim.rfidmanager.ui.screens.RFIDManagerScreen
 import com.joakim.rfidmanager.ui.model.RFIDTag
 import com.joakim.rfidmanager.ui.theme.RFIDManagerTheme
@@ -23,6 +24,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.*
+
+import com.joakim.rfidmanager.AppContainer
 
 /**
  * # MainActivity — Glue / Host (Architecture: UI Layer root + state hoisting)
@@ -51,6 +54,9 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     private lateinit var nfcManager: AndroidNfcManager
 
+    // A1 - Wire up databasen
+    lateinit var appContainer: AppContainer
+
     // Hoisted state so lifecycle methods (onResume, onNewIntent) can access them.
     private val detectedTags = mutableStateListOf<RFIDTag>()
     private var scanningEnabled by mutableStateOf(false)
@@ -60,7 +66,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // A1 - Initiera AppContainer (databas + repositories)
+        appContainer = AppContainer(this)
+
         nfcManager = AndroidNfcManager(this)
+
+        // === Diagnostic: raw socket test (per Gemini analysis) ===
+        // This runs on app start to immediately tell if even a basic TCP socket works from this process.
+        // Look for "MQTT_TEST" in Logcat. If this also throws EPERM, the problem is manifest/permissions/network security config.
+        // If this succeeds but Paho still fails, the issue is inside Paho's socket handling on high targetSdk.
+        Thread {
+            try {
+                val socket = java.net.Socket("192.168.50.128", 1883)
+                android.util.Log.d("MQTT_TEST", "RAW SOCKET SUCCESS: connected=${socket.isConnected}")
+                socket.close()
+            } catch (e: Exception) {
+                android.util.Log.e("MQTT_TEST", "RAW SOCKET FAILED", e)
+            }
+        }.start()
 
         setContent {
             RFIDManagerTheme {
@@ -90,6 +113,10 @@ class MainActivity : ComponentActivity() {
                 data class PendingWrite(val uidHex: String, val addr: Int, val data: ByteArray, val isUltra: Boolean)
                 var pendingWrite by remember { mutableStateOf<PendingWrite?>(null) }
                 var writeStatusMessage by remember { mutableStateOf<String?>(null) }
+
+                // A1 + A4: persistens states
+                var persistAfterWrite by remember { mutableStateOf(true) }
+                var showMqttStatus by remember { mutableStateOf(false) }
 
                 // Control scanning with a "enabled" flag.
                 // LaunchedEffect reacts to changes while the composable is active.
@@ -141,6 +168,29 @@ class MainActivity : ComponentActivity() {
                                             val patched = current.copy(fullSectors = updatedFull)
                                             detectedTags[idx] = patched
                                         }
+
+                                        // A4: auto-persist efter lyckad write (enkelt exempel)
+                                        if (persistAfterWrite) {
+                                            val persisted = PersistedReading(
+                                                id = 0,
+                                                type = if (pw.isUltra) "RFID" else "RFID", // förenklat
+                                                uidOrCode = pw.uidHex,
+                                                timestamp = System.currentTimeMillis(),
+                                                source = "Manual write page ${pw.addr}",
+                                                dataPreview = pw.data.joinToString(" ") { "%02X".format(it) },
+                                                status = "persisted",
+                                                transmitted = false,
+                                                memoryBank = if (pw.isUltra) 3 else null,
+                                                address = pw.addr,
+                                                length = if (pw.isUltra) 4 else 16,
+                                                payload = pw.data.joinToString("") { "%02X".format(it) },
+                                                sparkplugJson = null,
+                                                correlationId = null
+                                            )
+                                            scope.launch {
+                                                appContainer.persistedReadingRepository.saveReading(persisted)
+                                            }
+                                        }
                                     }
                                     pendingWrite = null
                                 }
@@ -187,8 +237,19 @@ class MainActivity : ComponentActivity() {
                     selectedId = selectedTagId,
                     isScanning = scanningEnabled,
                     onWrite = onWrite,
-                    writeStatusMessage = writeStatusMessage
+                    writeStatusMessage = writeStatusMessage,
+                    // A1-A4: persistens + mqtt
+                    persistAfterWrite = persistAfterWrite,
+                    onPersistAfterWriteChange = { persistAfterWrite = it },
+                    repository = appContainer.persistedReadingRepository,
+                    onOpenMqttStatus = { showMqttStatus = true }
                 )
+
+                if (showMqttStatus) {
+                    com.joakim.rfidmanager.ui.screens.MqttStatusScreen(
+                        onClose = { showMqttStatus = false }
+                    )
+                }
             }
         }
     }

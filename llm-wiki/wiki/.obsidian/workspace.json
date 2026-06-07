@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "9ec1b5bf9ab72682",
+        "id": "adc5d84bb0b3435b",
         "type": "tabs",
         "children": [
           {
-            "id": "1af2ddad16faa8a5",
+            "id": "c390c281ddaa797a",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Kundrelationer-och-Acceptans.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Kundrelationer-och-Acceptans"
             }
           }
         ]
@@ -179,21 +183,31 @@
       "bases:Create new base": false
     }
   },
-  "active": "1af2ddad16faa8a5",
+  "active": "c390c281ddaa797a",
   "lastOpenFiles": [
-    "Projektrapport.md",
     "index.md",
-    "Projektöversikt.md",
+    "Kundrelationer-och-Acceptans.md",
+    "bugs/README.md",
     "log.md",
+    "bugs/2026-06-07-mqtt-socket-epem-samsung-note10.md",
+    "bugs/2026-06-07-mqtt-socket-epem-samsung-note10.pdf",
+    "Rollfördelning-och-Arbetsätt.md",
+    "Verktyg-och-Setup.md",
+    "Fas2-Implementation-Overview.md",
+    "Figma-Design-Spec-Fas2.md",
+    "Utvecklingsmiljö.md",
+    "RFID-och-NFC.md",
     "Projektplan.md",
+    "Projektöversikt.md",
     "Hardware-Testenheter.md",
     "App-Architecture.md",
+    "Figma-Prototype-Fas2-Proof.md",
+    "Nomenclature-Figma-Android.md",
+    "Figma-Steps-Fas2-Build-Guide.md",
     "Figma-to-Compose.md",
-    "Eskortminne.md",
-    "Verktyg-och-Setup.md",
-    "Android-Studio-Installation.md",
-    "RFID-och-NFC.md",
     "Android-NFC-API.md",
-    "Utvecklingsmiljö.md"
+    "Projektrapport.md",
+    "Eskortminne.md",
+    "Android-Studio-Installation.md"
   ]
 }

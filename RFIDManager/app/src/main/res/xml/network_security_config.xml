@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext (unencrypted) TCP to the local test broker IP.
+         Required for targetSdk >= 28 when using plain tcp:// (not wss:// or ssl://).
+         This only affects the specific domain/IP; other traffic remains protected. -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.50.128</domain>
+    </domain-config>
+</network-security-config>

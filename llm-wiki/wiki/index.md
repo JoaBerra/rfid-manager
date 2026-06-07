@@ -39,8 +39,13 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 - [[Kotlin-Android-NFC]] — Mönster för implementation, permissions, foreground dispatch, hantering av taggar, exempel på sektorläsning.
 - [[Hårdvarukrav-och-Enheter]] — Rekommendationer för test- och produktionsenheter med kompatibelt NFC.
 - [[Hardware-Testenheter]] — Detaljer om fysiska testtelefoner (t.ex. Galaxy Note 10 SM-N970F/DS).
-- [[App-Architecture]] — Övergripande arkitektur för RFID Manager (UI / Domain / NFC-lager, RFIDManagerScreen, etc.).
+- [[App-Architecture]] — Övergripande arkitektur för RFID Manager (UI / Domain / NFC-lager, RFIDManagerScreen, etc.). **Uppgraderad med Fas 2 (MQTT, persistens, semantisk meddelandemodell)**.
 - [[Figma-to-Compose]] — Hur Figma-designen översatts till Jetpack Compose (design tokens, tema, manuell implementation).
+- [[Nomenclature-Figma-Android]] — Namnsättning / nomenclature för Figma-komponenter, variabler och Android/Kotlin (återanvänds 1:1 av Grok i design + kod).
+- [[Fas2-Implementation-Overview]] — Översikt över filer, struktur och steg för Fas 2-implementation (data + UI + MQTT/Sparkplug). Används för projekt-hantering.
+- [[Figma-Design-Spec-Fas2]] — Full "Developer Handoff Document" från Figma AI (används nu som kanonisk spec istället för Figma-filen). Innehåller alla komponenter, metadata-fält, layout och Sparkplug-struktur.
+- [[Figma-Prototype-Fas2-Proof]] — Detaljerad Figma-spec för mobil prototyp-app (läs/skriv eskort, persisterad lista, MQTT-sänd). Exakta komponentnamn som Grok återanvänder i kod.
+- [[Figma-Steps-Fas2-Build-Guide]] — Granulär steg-för-steg guide för att bygga prototypen i Figma (användaren följer imorgon). Inkluderar design system, components, screens, prototyping, industrial estetik från identsys.se.
 - [[Projektrapport]] — Fullständig projektrapport: vad som gjorts, tidsperiod (2026-05-26→06-04), teknikstack, Architecture-Design-Källkod-förankring, milstolpar (page 12 write etc.).
 
 ### Verktyg, Resurser och Process
@@ -48,6 +53,14 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
 - [[Källor]] — Register över alla raw-filer som ingesterats (tillsammans med backlinks till bearbetade sidor).
 - [[Frågor-och-Svar]] — Samling av vanliga frågor som uppstått under utvecklingen.
+
+### Projektstyrning och Arbetsätt
+- [[Rollfördelning-och-Arbetsätt]] — Explicit rollbaserat samarbete (Kund / Projektledare / Arkitekt / Technical Lead / Programmerare / Testare / DevOps / Wiki Curator). Working Agreement för 1-människa + AI-team. Uppdaterad 2026-06-06.
+- [[Kundrelationer-och-Acceptans]] — Formell dokumentation av relationer till Kund, UAT-tester utförda i kundrollen samt tidsstämplade godkännanden (sign-off) per fas. Innehåller mallar och den aktuella Fas 2 UAT-godkännandet 2026-06-07.
+
+### Felrapporter (Bugs)
+- `bugs/` — Katalog för formella felrapporter.
+- [[bugs/2026-06-07-mqtt-socket-epem-samsung-note10]] — **EPERM på rå TCP-socket för MQTT (Paho) från debug-app på Samsung Galaxy Note 10 (SM-N970F)**. Fullständig felrapport med miljö, reproduktionssteg, Logcat, alla försökta inställningar, PC-side validering och hypoteser. Avsedd för second opinion (t.ex. Gemini).
 
 ## Arbetsflöde (enligt schema)
 
@@ -60,6 +73,10 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 
 ## Status
 
-**Initial struktur skapad** 2026-05-26. Inga raw-filer ingesterade ännu. Redo att börja med första källor.
+**Initial struktur skapad** 2026-05-26. Projekt slutfört 2026-06-04 med fungerande eskortminne-läs/skriv, rika kommentarer, projektrapport och GitHub-release.
 
-Se [[log]] för full historik över ändringar och ingests.
+**GitHub:** https://github.com/JoaBerra/rfid-manager (initialt innehåll + källor pushade; fullt paket i release tarball).
+
+Se [[log]] för full historik över ändringar och ingests. Se [[Projektrapport]] för komplett översikt.
+
+Se [[log]] för full historik över ändringar och ingests. Se särskilt inlägget 2026-06-06 för rollfördelning + tydliga MQTT-teststeg.

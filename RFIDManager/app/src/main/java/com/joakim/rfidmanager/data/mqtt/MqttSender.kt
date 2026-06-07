@@ -1,0 +1,71 @@
+package com.joakim.rfidmanager.data.mqtt
+
+import android.util.Log
+import com.joakim.rfidmanager.domain.model.PersistedReading
+import org.eclipse.paho.client.mqttv3.MqttClient
+import org.eclipse.paho.client.mqttv3.MqttMessage
+import org.json.JSONObject
+
+/**
+ * Enkel MQTT-sändare för Sparkplug B-liknande payload.
+ * Använder den struktur som specificerats i Figma-Design-Spec-Fas2 (metrics, type som "ReadEscortMemory" etc.).
+ *
+ * TODO: Ersätt med full Sparkplug-bibliotek eller bättre hantering av connection.
+ */
+object MqttSender {
+
+    private const val TAG = "MqttSender"
+    // För lokalt test mot Docker på PC:n (adb reverse eller direkt IP)
+    // Använd datorns WiFi-IP (här 192.168.50.128 från "ip a" på wlan0).
+    // När vi testar mot riktig broker byter vi tillbaka till hostname eller config.
+    private const val BROKER = "tcp://192.168.50.128:1883" // PC:ns IP för Fas 2 testmiljö
+    private const val CLIENT_ID = "rfid-android-client"
+
+    private var client: MqttClient? = null
+
+    fun connectIfNeeded() {
+        if (client?.isConnected == true) return
+        try {
+            client = MqttClient(BROKER, CLIENT_ID, null)
+            client?.connect()
+            Log.i(TAG, "Connected to MQTT broker")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to connect to MQTT", e)
+        }
+    }
+
+    suspend fun sendReading(reading: PersistedReading) {
+        Log.i(TAG, "Attempting MQTT connect/publish to $BROKER for uid=${reading.uidOrCode}")
+        connectIfNeeded()
+        val client = client ?: return
+
+        val payload = JSONObject().apply {
+            put("type", if (reading.isRfid()) "ReadEscortMemory" else "ReadBarcode")
+            put("uid", reading.uidOrCode)
+            put("timestamp", reading.timestamp)
+            put("source", reading.source)
+            put("sparkplug", true)
+
+            val data = JSONObject()
+            reading.memoryBank?.let { data.put("memoryBank", it) }
+            reading.address?.let { data.put("address", it) }
+            reading.length?.let { data.put("length", it) }
+            reading.payload?.let { data.put("payload", it) }
+            put("data", data)
+        }
+
+        val message = MqttMessage(payload.toString().toByteArray())
+        message.qos = 1
+
+        val topic = "rfidmanager/${reading.uidOrCode}/telemetry"
+
+        try {
+            client.publish(topic, message)
+            Log.i(TAG, "Published to $topic : ${payload.toString(2)}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to publish reading", e)
+        }
+
+        Log.i(TAG, "=== SEND COMPLETE for uid=${reading.uidOrCode} type=${if (reading.isRfid()) "ReadEscortMemory" else "ReadBarcode"} ===")
+    }
+}
