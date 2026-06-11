@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      # Manifest — Permissions & NFC Dispatch (Architecture: Platform integration)
+      NFC permissions for reading/writing RFID tags (eskortminne) on 13.56 MHz.
+
+      **ID-koppling:**
+      - NFC + VIBRATE → används i AndroidNfcManager (vibrate on detection, NfcAdapter).
+      - uses-feature required=false → app installerar på enheter utan NFC (stub + UI fungerar).
+      - TECH_DISCOVERED + nfc_tech_filter + NDEF → fallback så att onNewIntent i MainActivity kan fånga taggar
+        när enableReaderMode + NO_PLATFORM_SOUNDS inte räcker (se "Fix: System chooser" i log.md).
+
+      **Eskortminne:** MifareUltralight/Classic/NTAG fångas via NfcA + Ndef + tech list (se nfc_tech_filter.xml).
+    -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- INTERNET is required for raw TCP sockets (Paho MQTT). Must be at manifest level, not inside <application>. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        NFC is used but not strictly required for the app to install.
+        The app gracefully handles devices without NFC.
+    -->
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false"
+        tools:ignore="UnusedAttribute,Typos" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RFIDManager"
+        android:networkSecurityConfig="@xml/network_security_config">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.RFIDManager">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- NFC intent filters so the app appears in the NFC chooser when reader mode doesn't suppress it.
+                 onNewIntent will then process the tag and populate READ LOG. -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+</manifest>

@@ -1,0 +1,11 @@
+# Raw source material (not part of published wiki)
+raw/
+
+# Obsidian local workspace (can be committed if you want shared workspace, but usually not)
+.obsidian/workspace.json
+.obsidian/graph.json
+
+# Temp / backup
+*.tmp
+*.bak
+*~
