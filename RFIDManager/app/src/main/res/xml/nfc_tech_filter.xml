@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--
+      Support for eskortminne (MIFARE Classic + Ultralight/NTAG via NfcA + Ndef).
+      Used by TECH_DISCOVERED filter in AndroidManifest so onNewIntent fallback can deliver tags
+      to MainActivity.processDiscoveredTag + nfcManager.onTagDiscovered (which calls handleTag).
+      Note: MifareUltralight is often delivered via NfcA; we also read it explicitly in code.
+    -->
+    <tech-list>
+        <tech>android.nfc.tech.MifareClassic</tech>
+        <tech>android.nfc.tech.NfcA</tech>
+    </tech-list>
+    <tech-list>
+        <tech>android.nfc.tech.Ndef</tech>
+        <tech>android.nfc.tech.NdefFormatable</tech>
+    </tech-list>
+</resources>

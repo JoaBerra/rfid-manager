@@ -1,0 +1,4 @@
+<resources>
+    <!-- App name used in launcher and chooser. Swedish UI on device (One UI). -->
+    <string name="app_name">RFID Manager</string>
+</resources>
