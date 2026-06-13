@@ -14,7 +14,8 @@ created: 2026-06-13
 ## v1.0 (Fas 5) — Dokumentation, kvalitet och release
 
 **Planerad tag:** `v1.0`  
-**Planerat datum:** 2026-06-13
+**Planerat datum:** 2026-06-13  
+**Default branch:** `master` (GitHub)
 
 ### Nytt i denna version
 

@@ -1,5 +1,25 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-06-13] release | Fas 5 klar — samtliga punkter godkända, v1.0 release notes skapade
+
+**Fas 5 — Dokumentation, kvalitet och radar-estetik** är nu fullständigt klar och sign-off av Kund.
+
+**Utfört:**
+- 5.1 Användarmanual ✅
+- 5.2 Arkitektur-diagram ✅
+- 5.3 Release notes ✅
+- 5.4 Testplan (22/22 Godkänt) ✅
+- 5.5 Kodgenomgång ✅
+- 5.6 Dynamisk layout ✅
+- 5.7 Radar sweep trail ✅
+- BUG-001 till BUG-008 samtliga åtgärdade och godkända ✅
+
+**Notering:** GitHub-repot använder `master` som standardbranch (inte `main`). Wiki och Android-projekt pushas med `git push origin master`.
+
+**Nästa:** Fas 6 — 1.0 Release (MQTT-broker i UI, app-ikon, release build, städning, E2E-test, v1.0 GitHub Release).
+
+---
+
 Append-only kronologisk logg över alla ändringar i wikin. Varje entry börjar med `## [YYYY-MM-DD] <action> | <titel>` för enkel parsning.
 
 ---
