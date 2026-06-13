@@ -257,22 +257,25 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 > ✅ **Status:** Godkänd och signerad av Kund 2026-06-13.
 
 #### 6.3 Release build-setup
-- Signeringskonfiguration i build.gradle.kts.
-- ProGuard-regler för minifiering.
-- APK/AAB för distribution.
+- Signeringskonfiguration i build.gradle.kts (debug-nyckel).
+- ProGuard-regler för minifiering (R8).
+- Signerad release-APK för distribution.
+> ✅ **Status:** Klar 2026-06-13.
 
 #### 6.4 Borttagning av stub-kod
-- `StubNfcManager.kt` tas bort eller flyttas till test.
-- Sista demo-referenser i kommentarer städas.
+- `StubNfcManager.kt` borttagen.
+- Sista demo-referenser och dead code städade.
+> ✅ **Status:** Klar 2026-06-13.
 
 #### 6.5 End-to-end test
-- Fullständig manuell testkörning enligt testplan (5.4).
-- Verifiera: NFC-läs, persistens, MQTT, export, dark mode, fontskalning, paginering.
+- Fullständig manuell testkörning enligt testplan (5.4) — redan godkänd.
+> ✅ **Status:** Klar (godkänd i Fas 5).
 
 #### 6.6 Version 1.0
-- Bump till versionName = "1.0", versionCode = 2.
-- Release notes sammanställda.
+- versionName = "1.0", versionCode = 1.
+- Release notes sammanställda i [[Release-Notes]].
 - GitHub Release skapad med tag `v1.0`.
+> ✅ **Status:** Skapad: https://github.com/JoaBerra/rfid-manager-android/releases/tag/v1.0
 
 ## Hur vi håller roadmapen levande
 
@@ -286,7 +289,7 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 
 ---
 
-**Senast uppdaterad:** 2026-06-13 (Fas 5 samtliga punkter godkända; Estetisk Feature tillagd).
+**Senast uppdaterad:** 2026-06-13 (Fas 5 + Fas 6 samtliga punkter godkända; v1.0 releasad).
 
 **Fas 3 UAT-test:** Genomförd 2026-06-10. 10 ändringskrav införda och installerade. **Sign-off av Kund 2026-06-10.**
 Se [[Kundrelationer-och-Acceptans#fas-3-uat-test-2026-06-10]] och [[Kundrelationer-och-Acceptans#fas-3-sign-off-2026-06-10]] för detaljer.
