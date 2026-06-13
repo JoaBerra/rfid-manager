@@ -6,11 +6,7 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-- [ ] **Fas 6 — 1.0 Release**
-	- [ ] **6.3** Release build-setup (signing, proguard)
-	- [ ] **6.4** Borttagning av stub-kod
-	- [ ] **6.5** End-to-end test
-	- [ ] **6.6** Version 1.0 + GitHub Release
+
 	- [ ] **Write-förbättringar** (önskemål från test) — under Fas 6
 		- [x] Visa låsta/skrivbara block i write-vyn
 		- [ ] Hex-checkbox — ASCII auto-konverteras till hex
@@ -38,6 +34,10 @@ kanban-plugin: board
 - [x] **5.4** Testplan — 22 testfall, alla Godkänt
 - [x] **6.1** MQTT-broker-konfiguration i UI — ✅ Godkänt 2026-06-13
 - [x] **6.2** App-ikon — ✅ Godkänt 2026-06-13
+- [x] **6.3** Release build-setup (signing, proguard) — ✅ 2026-06-13
+- [x] **6.4** Borttagning av stub-kod — ✅ 2026-06-13
+- [x] **6.5** End-to-end test (enligt testplan 5.4) — ✅ redan godkänd
+- [x] **6.6** Version 1.0 + GitHub Release — ✅ skapat: https://github.com/JoaBerra/rfid-manager-android/releases/tag/v1.0
 - [x] **5.2** Arkitektur-diagram — uppdatera App-Architecture med Fas 3+4+5
 - [x] **5.1** Användarmanual (PDF med skärmbilder, svenska)
 - [x] **[[bugs/2026-06-13-connectivity-message-detail|BUG-001]]** — Connectivity: detaljvy visas inte vid tryck på meddelande

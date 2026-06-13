@@ -11,13 +11,15 @@ created: 2026-06-13
 
 ---
 
-## v1.0 (Fas 5) — Dokumentation, kvalitet och release
+## v1.0 — Dokumentation, kvalitet och 1.0-release
 
-**Planerad tag:** `v1.0`  
-**Planerat datum:** 2026-06-13  
+**Tag:** `v1.0`  
+**Datum:** 2026-06-13  
 **Default branch:** `master` (GitHub)
 
 ### Nytt i denna version
+
+#### Fas 5 — Dokumentation, kvalitet och radar-estetik
 
 - **Användarmanual** (5.1) — Fullständig PDF-manual på svenska med skärmbilder, write-dialog, hex-krav, minneskarta och låsstatus.
 - **Arkitektur-diagram** (5.2) — Uppdaterat App-Architecture med Fas 3+4+5 strukturer.
@@ -26,6 +28,12 @@ created: 2026-06-13
 - **Kodgenomgång** (5.5) — Demo-etiketter borttagna, duplicerat build-block konsoliderat, fas-referenser i kommentarer rensade, hårdkodade färger migrerade till theme, deprecation fixad (`getParcelableExtra`).
 - **Dynamisk layout** (5.6) — Kort skalas dynamiskt med fontstorlek, vertikal stapling vid stor text, overflow-skydd.
 - **Radar sweep trail** (5.7) — Svepande linje med 72° efterglöd som bleknar gradvis, 72 segment, tag-svansar medsols.
+
+#### Fas 6 — 1.0 Release
+
+- **MQTT-broker-konfiguration i UI** (6.1) — Host/port-fält i Settings, sparas i SharedPreferences, återanslutningsknapp med Snackbar-status.
+- **App-ikon** (6.2) — Anpassad launcher-ikon (512×512), adaptive icon för API 26+, mörkblå bakgrund.
+- **Release build-setup** (6.3) — ProGuard-minifiering (R8), signering med debug-nyckel, APK-nedladdning för GitHub Release.
 
 ### Buggar fixade
 
@@ -123,12 +131,16 @@ created: 2026-06-13
 ## Installation
 
 ```bash
-# Bygg och installera på ansluten enhet
+# Bygg och installera debug-APK
 cd ~/AndroidStudioProjects/RFIDManager
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# Bygg signerad release-APK (för distribution)
+./gradlew assembleRelease
+# APK: app/build/outputs/apk/release/app-release.apk
 ```
 
 Källa: `com.joakim.rfidmanager`  
-Minsta SDK: 26 (Android 8.0)  
-Målsatt SDK: 35 (Android 15)
+Minsta SDK: 24 (Android 7.0)  
+Målsatt SDK: 36 (Android 16)
