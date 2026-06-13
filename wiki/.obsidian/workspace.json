@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "adc5d84bb0b3435b",
+        "id": "469d4fd67f3574ab",
         "type": "tabs",
         "children": [
           {
-            "id": "c390c281ddaa797a",
+            "id": "6f01f592869be822",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Kundrelationer-och-Acceptans.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Kundrelationer-och-Acceptans"
+              "title": "New tab"
             }
           }
         ]
@@ -53,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "TC-SCAN-007",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Eskortminne.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Eskortminne"
+              "title": "Backlinks"
             }
           },
           {
@@ -169,8 +164,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -180,34 +174,38 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "obsidian-kanban:Create new board": false
     }
   },
-  "active": "c390c281ddaa797a",
+  "active": "3852eb7af033cb93",
   "lastOpenFiles": [
-    "index.md",
-    "Kundrelationer-och-Acceptans.md",
+    "Testplan.md",
+    "Release-Notes.md",
+    "Användarmanual.md",
+    "Kanban.md",
     "bugs/README.md",
+    "index.md",
+    "Rollfördelning-och-Arbetsätt.md",
+    "App-Architecture.md",
+    "bugs/2026-06-13-connectivity-message-detail.md",
+    "Kundrelationer-och-Acceptans.md",
+    "Produkt-Roadmap.md",
+    "Hardware-Testenheter.md",
+    "Fas2-Implementation-Overview.md",
+    "Fas4-Implementation-Plan.md",
+    "MQTT-Explorer.md",
     "log.md",
+    "Fas3-Implementation-Plan.md",
+    "Fas3-Navigation-Spacing-Design.md",
+    "Figma-Prototype-Fas2-Proof.md",
     "bugs/2026-06-07-mqtt-socket-epem-samsung-note10.md",
     "bugs/2026-06-07-mqtt-socket-epem-samsung-note10.pdf",
-    "Rollfördelning-och-Arbetsätt.md",
     "Verktyg-och-Setup.md",
-    "Fas2-Implementation-Overview.md",
     "Figma-Design-Spec-Fas2.md",
     "Utvecklingsmiljö.md",
     "RFID-och-NFC.md",
     "Projektplan.md",
-    "Projektöversikt.md",
-    "Hardware-Testenheter.md",
-    "App-Architecture.md",
-    "Figma-Prototype-Fas2-Proof.md",
-    "Nomenclature-Figma-Android.md",
-    "Figma-Steps-Fas2-Build-Guide.md",
-    "Figma-to-Compose.md",
-    "Android-NFC-API.md",
-    "Projektrapport.md",
-    "Eskortminne.md",
-    "Android-Studio-Installation.md"
+    "Projektöversikt.md"
   ]
 }

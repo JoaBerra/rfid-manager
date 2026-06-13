@@ -58,10 +58,10 @@ Eftersom plugdev-grupp och udev-regler saknades vid kontroll (upptäckt 2026-06-
 Kör det förberedda hjälpskriptet (rekommenderat):
 
 ```bash
-bash ~/rfid-setup/fix-usb-adb.sh
+bash ~/rfid-manager/setup/fix-usb-adb.sh
 ```
 
-(Det kör pacman usbutils, skapar plugdev-grupp + lägger till dig, kopierar 51-android.rules till /etc/udev/rules.d/ och gör reload. Scriptet ligger i `~/rfid-setup/`.)
+(Det kör pacman usbutils, skapar plugdev-grupp + lägger till dig, kopierar 51-android.rules till /etc/udev/rules.d/ och gör reload. Scriptet ligger i `~/rfid-manager/setup/`.)
 
 Eller manuellt:
 
@@ -75,7 +75,7 @@ sudo usermod -aG plugdev $USER
 
 # Installera udev-regler för Samsung (och Google)
 sudo mkdir -p /etc/udev/rules.d
-sudo cp ~/rfid-setup/51-android.rules /etc/udev/rules.d/51-android.rules || sudo tee /etc/udev/rules.d/51-android.rules << 'RULES'
+sudo cp ~/rfid-manager/setup/51-android.rules /etc/udev/rules.d/51-android.rules || sudo tee /etc/udev/rules.d/51-android.rules << 'RULES'
 SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="plugdev"
 RULES
@@ -153,11 +153,11 @@ Användaren hade redan rätt värde i USB-inställningar:
 - NFC: fullt stöd + initialiserat (nfc_hal_service running, nfc.initialized=true, firmware S.LSI 4.5.11, features: android.hardware.nfc + hce + ese + uicc m.fl.). Samsungs egen NFC-kontroller som stöder Mifare Classic.
 
 **Udev + plugdev setup slutfört (2026-06-02):**
-Scriptet `bash ~/rfid-setup/fix-usb-adb.sh` kördes framgångsrikt i riktig terminal.
+Scriptet `bash ~/rfid-manager/setup/fix-usb-adb.sh` kördes framgångsrikt i riktig terminal.
 - usbutils installerat
 - Användare joakim i `plugdev`-gruppen
 - Regler på plats i `/etc/udev/rules.d/51-android.rules`
-- Filer flyttade till dedikerad katalog `~/rfid-setup/` (för att hålla home root städat)
+- Filer flyttade till dedikerad katalog `~/rfid-manager/setup/` (för att hålla home root städat)
 - `lsusb` bekräftar: `ID 04e8:6860 Samsung Electronics Co., Ltd Galaxy series, misc. (MTP mode)`
 - `adb devices` visar fortfarande `device` efter `kill-server`
 

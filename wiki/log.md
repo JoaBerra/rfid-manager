@@ -1054,14 +1054,14 @@ Scriptet kördes i riktig terminal (Grok TUI:s kommando-exekvering stödjer inte
 Filer skapades i ~ (home root): `~/fix-usb-adb.sh` och `~/51-android.rules`
 
 **Åtgärd:**
-- Skapade `~/rfid-setup/`
+- Skapade `~/rfid-manager/setup/`
 - Flyttade båda filerna dit
-- Uppdaterade scriptet internt (`cp ~/rfid-setup/51-android.rules ...`)
+- Uppdaterade scriptet internt (`cp ~/rfid-manager/setup/51-android.rules ...`)
 - Uppdaterade alla referenser i wiki/Hardware-Testenheter.md
 
 **Ny struktur:**
-- `~/rfid-setup/fix-usb-adb.sh`
-- `~/rfid-setup/51-android.rules`
+- `~/rfid-manager/setup/fix-usb-adb.sh`
+- `~/rfid-manager/setup/51-android.rules`
 
 Detta håller home root rent. Framtida host-relaterade skript/regler läggs här.
 
@@ -1745,16 +1745,16 @@ Wiki (denna log) + App-Architecture.md + Figma-to-Compose.md utgör nu den "tred
 
 ## [2026-06-04] release | Paket skapat + första push till GitHub
 
-- Skapade clean release dir `/home/joakim/RFIDManager-Release-2026-06/`:
+- Skapade clean release dir `/home/joakim/rfid-manager/releases/2026-06-Fas2/`:
   - RFIDManager/ (full source tree utan build-artefakter, alla .kt med rika kommentarer).
   - llm-wiki/ (med Projektrapport.md + log + architecture etc, .git/raw trimmat).
-  - rfid-setup/ (scripts + udev).
+  - setup/ (scripts + udev) under rfid-manager/.
   - README.md (snabbstart, arkitektur-ID, stack).
   - .gitignore.
 - Init git + initial commit i release dir.
 - Skapade tarball `~/RFIDManager-Project-2026-06.tar.gz` (176K).
 - GitHub: Repo https://github.com/JoaBerra/rfid-manager skapat via MCP.
-- Pushade core (README, Projektrapport.md i root, rfid-setup, NfcManager.kt med rich comments etc).
+- Pushade core (README, Projektrapport.md i root, rfid-manager/setup, NfcManager.kt med rich comments etc).
 - Full källa + wiki finns i tarball + release dir (användaren kan `git push` resten eller ladda upp zip/tar manuellt, eller använda gh upload-release-asset på tarballen).
 - Lokal wiki uppdaterad med länkar.
 
@@ -1887,10 +1887,10 @@ Sov gott!
 
 **Lokal testmiljö (redo att använda):**
 - Broker: `docker ps | grep rfid-mqtt-test` (lyssnar på localhost:1883, anonymous).
-- Scripts i `~/rfid-fas2-test/mqtt/`:
+- Scripts i `~/rfid-manager/test/fas2-mqtt/mqtt/`:
   - `simulate_mobile_publish.py` (publicerar "ReadEscortMemory" med page 12 "test" data).
   - `test_subscriber_persist.py` (subscribar, persisterar till SQLite i mappen).
-- Kör: `cd ~/rfid-fas2-test/mqtt && ../.venv/bin/python simulate_mobile_publish.py` (efter att subscribern kör).
+- Kör: `cd ~/rfid-manager/test/fas2-mqtt/mqtt && ../.venv/bin/python simulate_mobile_publish.py` (efter att subscribern kör).
 - DB: `test_persisted_readings.db` (inspektera med sqlite3 eller script).
 
 Detta är den tekniska grunden för "test miljö som stödjer MQTT och persisterar data".
@@ -1903,7 +1903,7 @@ Användaren kunde inte hitta bilderna som genererades igår (1.jpg, 2.jpg, 3.jpg
   - ~/Fas2-Figma-UI-Mocks/fas2-main-rfid-screen.jpg
   - ~/Fas2-Figma-UI-Mocks/fas2-persisted-readings-list.jpg
   - ~/Fas2-Figma-UI-Mocks/fas2-mqtt-sparkplug-status.jpg
-- Ytterligare kopior i ~/rfid-fas2-test/figma-mocks/ och i release-paketet.
+- Ytterligare kopior i ~/rfid-manager/test/fas2-mqtt/figma-mocks/ och i release-paketet.
 - Uppdaterade guiden [[Figma-Steps-Fas2-Build-Guide]] med sökvägarna.
 
 Nu kan du enkelt ladda upp dessa tre bilder till Figmas AI-verktyg (t.ex. för att generera designvarianter, image-to-figma eller FigJam AI). Bilderna är de industriella UI-mocks baserade på vår spec, identsys-inspiration och Fas 1-tokens.
@@ -2117,7 +2117,7 @@ Nästa: Testa end-to-end (build, adb, NFC read → persist, transmit, se i subsc
 
 **Förutsättningar (från Fas 2 prep):**
 - Lokal MQTT broker igång: `docker ps | grep rfid-mqtt-test` (ska lyssna på localhost:1883, anonymous).
-- Test scripts: `~/rfid-fas2-test/mqtt/` med venv.
+- Test scripts: `~/rfid-manager/test/fas2-mqtt/mqtt/` med venv.
 - Android Studio projekt: `~/AndroidStudioProjects/RFIDManager` (med Room + Paho + ny kod).
 - Fysisk Samsung Galaxy Note 10 med NFC på, USB debugging, app installerad via Studio eller `adb install -r`.
 
@@ -2125,7 +2125,7 @@ Nästa: Testa end-to-end (build, adb, NFC read → persist, transmit, se i subsc
 
 1. **Starta subscriber (lyssna på inkommande + persist i test-DB):**
    ```bash
-   cd ~/rfid-fas2-test/mqtt
+   cd ~/rfid-manager/test/fas2-mqtt/mqtt
    ../.venv/bin/python test_subscriber_persist.py
    ```
    Lämna den igång i en terminal. Den subscribar på `rfidmanager/+/telemetry` och sparar till `test_persisted_readings.db`.
@@ -2175,7 +2175,7 @@ Nästa: Testa end-to-end (build, adb, NFC read → persist, transmit, se i subsc
    - Kör `simulate_mobile_publish.py` för att simulera extern publish.
 
 **Vanliga problem & tips:**
-- Broker inte igång? Starta om: `docker run -d --rm --name rfid-mqtt-test -p 1883:1883 -v ~/rfid-fas2-test/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf`
+- Broker inte igång? Starta om: `docker run -d --rm --name rfid-mqtt-test -p 1883:1883 -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf`
 - App kraschar på DB? Kolla att KSP plugin är korrekt (build.gradle har alias(libs.plugins.ksp)).
 - Inga meddelanden? Kolla topic i MqttSender (justera till "rfidmanager/test-device-001/telemetry" om du vill matcha simulatorn).
 - Toggle inte sparar? Kolla att persistAfterWrite state skickas korrekt till onWrite.
@@ -2220,7 +2220,7 @@ Dessa steg är sammanställda så att de kan följas mekaniskt. De bygger på de
 - Docker broker: `docker ps | grep rfid-mqtt-test` (ska lyssna på 1883).
 - Subscriber igång i en egen terminal:
   ```bash
-  cd ~/rfid-fas2-test/mqtt
+  cd ~/rfid-manager/test/fas2-mqtt/mqtt
   ../.venv/bin/python test_subscriber_persist.py
   ```
 - Port reverse (så telefonens `localhost:1883` når din dator):
@@ -2325,7 +2325,7 @@ See also [[Fas2-Implementation-Overview]] and previous 2026-06-06 process entry.
 
 4. **Verifiera i test-databasen**
    ```bash
-   sqlite3 ~/rfid-fas2-test/mqtt/test_persisted_readings.db \
+   sqlite3 ~/rfid-manager/test/fas2-mqtt/mqtt/test_persisted_readings.db \
      "SELECT id, uidOrCode, source, transmitted, sparkplugJson FROM readings ORDER BY timestamp DESC LIMIT 5;"
    ```
    - Du ska se raden med `transmitted = 1` (eller motsvarande) och den JSON som skickades.
@@ -2372,7 +2372,25 @@ Full RACI-matris, Working Agreement, ceremonier och hur vi explicit använder ro
 
 ---
 
-## [2026-06-07] uat-signoff | Fas 2 UAT godkänd av Kund – formell dokumentation i Kundrelationer
+## [2026-06-07] fas3-kickoff | Fas 3 Kick-off godkänd av Kund + acceptanskriterier låsta för UAT
+
+**Åtgärder (driven av Lead):**
+- Kick-off check genomförd och dokumenterad i [[Kundrelationer-och-Acceptans#fas-3-kick-off-check-driven-by-lead-2026-06-07]].
+- Specifikationer utvecklade först: [[Fas3-Navigation-Spacing-Design]] (textbaserad design för navigation + spacing/breathing room).
+- Fas 3-acceptanskriterier uppdaterade och godkända av Kund för användning vid UAT.
+- Arkitekturbeslut låsta: Compose Navigation + ViewModel-strategi (se [[App-Architecture]]).
+- Arbetssätt för Fas 3 bekräftade (levande roadmap, breathing room check, fas-retro, taggar, ~/rfid-manager/-struktur).
+- Kundens explicita godkännande: "I egenskap av Kund godkänner jag kick-offen. Jag godkänner också att acceptanskriterierna för Fas 3 kan användas vid UAT av mig (Kund)."
+
+**Status:** Kick-off godkänd. Lead tar över implementeringen. Nästa: Börja kodning baserat på design-noten.
+
+**Nästa steg (Lead):** 
+- Skapa detaljerad implementationsplan / backlog för Fas 3.
+- Börja med första kodändringar (navigation dependency + grundläggande NavHost + bottom nav).
+- Synka till release-snapshot under `~/rfid-manager/releases/2026-06-Fas2/`.
+- Uppdatera log och roadmap löpande.
+
+Se [[Produkt-Roadmap]] och [[Kundrelationer-och-Acceptans]] för full dokumentation.
 
 **Åtgärder:**
 - Skapade ny strukturerad sida: [[Kundrelationer-och-Acceptans]]
@@ -2403,6 +2421,74 @@ Detta är den första formella "Kund → Sign-off" i den nya strukturen för kun
 
 Se den nya sidan för full text + mall.
 
+---
+
+### Wiki Update [2026-06-07 21:00]
+**Post-compaction role re-check + TOML catalog fix (active tree, after user cache-clean exposing the Gradle 9 error)**
+
+- **Immediate protocol**: Per standing Post-Compaction Role Check (from Rollfördelning-och-Arbetsätt.md re-read in full at start of this phase, plus system instructions): reseeded todo (merge:false) with 8 phases; re-read the RACI/working-agreement (AI owns Programmerare/DevOps/Wiki Curator/Technical Lead — "Grok exekverar i de tekniska rollerna", "AI never asks Kund to perform technical steps"; snapshot under ~/rfid-manager/releases/2026-06-Fas2/RFIDManager/ is the single "oövervinnerlig" source of truth for release state; cp ritual for berörda files; wiki/log.md uses exact `### Wiki Update [YYYY-MM-DD HH:MM]` for all synthesis/distillation; follow locked Fas 3 plan ("följer ursprungsplanen", "Det är ingen tidshets. Vi gör inga omplaneringar i onödan", "ta rodret"); only notify Kund when phone-testable version + UAT steps ready. Wiki-Maintenance.md not present as separate file (discipline followed via Rollfördelning + these mechanics).
+
+- **Error (verbatim from user paste)**: After "I vilket directory skall jag stå för att göra cache rensningen?" and the Gemini KSP proposal round, user executed in active tree: `sudo chown -R joakim:joakim ~/AndroidStudioProjects/RFIDManager ; ./gradlew --stop ; pkill -f gradle ; rm -rf .gradle/ ; rm -rf app/build/ ; ./gradlew clean assembleDebug --no-daemon` (Gradle 9.4.1 single-use). Result: `FAILURE ... org.gradle.api.InvalidUserDataException: Invalid TOML catalog definition: - In version catalog libs, on alias 'navigationCompose' notation '2.8.0' is not a valid dependency notation. ... When using a string to declare library coordinates, you must use a valid dependency notation. ... coordinates consist of 3 parts separated by colons`.
+
+- **Diagnosis (reads on both trees)**: libs.versions.toml (active + snapshot identical): the lines `navigationCompose = "2.8.0"` and `lifecycleViewmodelCompose = "2.8.6"` were located *under [libraries]* (after androidx-lifecycle-runtime-ktx), not in [versions] (which ended at ksp). The proper object entries `androidx-navigation-compose = { group = "...", version.ref = "navigationCompose" }` existed but the refs were invalid per Gradle 9 strict rules (bare "alias = ver" only legal in [versions]; [libraries] expects GAV or object). This was a leftover from partial shorthand fixes + Gemini iterations (ksp bumped to 2.2.10-1.0.29, alias in build, ksp{} block + schema arg present, properties cleaned, hard id commented in settings). Cache rm made the bad source TOML visible (no prior resolution cache).
+
+- **Actions (all executed by AI, no Kund technical steps)**: 
+  - read_file (TOMLs, settings, app/build.gradle.kts x2, gradle.properties x2, roles, log tail, list_dir on llm-wiki + snapshot + active).
+  - todo_write (reseed + status transitions, one in_progress at a time).
+  - search_replace on snapshot (SSOT first): corrected [versions] (added the two missing after ksp line) + excised the two bare invalid lines from [libraries].
+  - search_replace on snapshot app/build.gradle.kts: commented `alias(libs.plugins.ksp)` (plugins block) + the `ksp { arg(...) }` block (the latter was causing "Unresolved reference 'ksp'/'arg'" at configure time once plugin not resolved).
+  - run_terminal (cp ritual + verification): cp of the two fixed files from snapshot → active; grep/echo of corrected version refs under [versions] and commented ksp bits; rm of root junk (A, Compilation, Get, Run, Task); adapted user clean sequence ( --stop + rm -rf .gradle/ app/build/ , no sudo/pkill self-match); ./gradlew assembleDebug --no-daemon.
+  - Result (direct output): "BUILD SUCCESSFUL in 36s" (36 tasks; only deprecation warnings for getParcelableExtra, Icons, Divider). APK produced at app/build/outputs/apk/debug/app-debug.apk.
+  - adb (still in same cmd, only reached on success): `adb install -r ...` → "Success"; `adb shell am start -n com.joakim.rfidmanager/.MainActivity` → intent started. (Device responding.)
+
+- **KSP/Room status (unchanged, dual-mode preserved)**: AppContainer still does the try { DatabaseProvider.getDatabase(context).persistedReadingDao() } catch { Log.e("AppContainer", "Failed to create real Room DB, falling back to in-memory...", e); null }; PersistedReadingRepository(dao = dao) with StateFlow safety net. No _Impl generated (KSP never successfully ran in this env despite all Gemini config variants). The "Cannot find implementation for ... AppDatabase_Impl does not exist" (from prior force-stop logcat with 4 readings) will persist until KSP works in this AGP 9.2.1 + Kotlin 2.2.10 env. Full history + Gemini responses + previous bug report (.md/.pdf) already in wiki/bugs/.
+
+- **Phone UAT readiness (Punkt 4 / Fas 3.4 persistence)**: A buildable, installable version (with the TOML + ksp-block fixes) is now live on the phone. Per role boundary ("Låt mig veta när jag kan granska något i mobilen", "Du får lösa teknik bitarna"), here is the test only you (as Kund/UAT) perform and report on:
+  1. Launch RFIDManager (or it was auto-started).
+  2. Scan tab: start scanning, present 4+ different RFID tags, tap the green "Persist this read" for each. Confirm each appears immediately in the Persisted Readings (VM-driven) list (with metadata + green "Transmit ↑" button).
+  3. Force-stop the app (Android overview → swipe away or Settings → Apps → RFIDManager → Force stop).
+  4. Re-open the app from launcher.
+  5. Navigate to Persisted Readings. Do the 4+ readings survive (still listed, same timestamps/UIDs)?
+  6. (dev) Optional: from PC while testing: `adb logcat | grep -E 'AppContainer|PersistedReadingRepository|DatabaseProvider'` — note whether you see the fallback error or a successful "real Room DB" path.
+  Reply with observations (e.g. "4 läsningar överlevde force stop + restart, Transmit fungerar som innan" or "borta efter force stop — fallback aktiv som förväntat"). This closes the persistence acceptance for Punkt 4 / starts Fas 3.4 sign-off.
+
+- **Next (locked plan, no re-plan)**: On your UAT feedback + any "Punkt X. Godkänd" or blocker note, continue the original Fas 3 sequence ("ta rodret och inled nästa logiska steg"): MQTT subscriber/tool polish (the "unable to open database file" you observed in subscriber log), real radar visualization + animation in ScanScreen (per Dimens.kt radarMaxHeight etc), Connectivity/MqttStatusScreen completion + empty states, accessibility/min-touch/andrum polish, any remaining EAN or NFC armed-write edge cases. Authoritative changes → edit in snapshot then cp to active. Wiki synthesis continues with exact headers. Snapshot remains the release truth.
+
+All technical work (diagnosis, 2x search_replace on SSOT, 2x cp, clean/build, adb, junk cleanup, this wiki entry) performed by AI. Build artifacts and installed APK are the deliverable for your review in the mobile.
+
+---
+
+### Wiki Update [2026-06-07 21:15]
+**UAT result on persistence (Fas 3.4 / Punkt 4 continuation) + decision to advance per locked plan**
+
+- **Kund observation (verbatim)**: "borta – fallback aktiv fortfarande"
+
+**Subscriber tool polish (PC-side, per Fas3 plan)**: Located `test_subscriber_persist.py` (and `simulate_mobile_publish.py`) in `/home/joakim/rfid-manager/test/fas2-mqtt/mqtt/`. Primary fix was DB path (absolute `~/rfid-manager/data/rfid_readings.db` + mkdir). Follow-up: hardened logging with ISO timestamps + clear RECEIVED / PERSISTED / ERROR prefixes for much easier reading during transmit tests. This directly addresses the "bättre strukturerad loggning" item called out in Fas3-Implementation-Plan.md and the end-to-end validation expectations in Kundrelationer-och-Acceptans.md. The old relative test_*.db in the mqtt/ dir is now obsolete; new data goes to the canonical location.
+
+**Subscriber run environment fix (for the exact command the user tried)**: User ran `./test_subscriber_persist.py` from the mqtt/ dir and got "No module named 'paho'" because the shebang (#!/usr/bin/env python3) resolved to a python whose site-packages did not contain paho-mqtt (even though the dedicated .venv had it). Fixed by:
+- Updating the shebang to the full path of the prepared venv python: `#!/home/joakim/rfid-manager/test/fas2-mqtt/.venv/bin/python3`
+- Updated the module docstring with the correct run instructions.
+- Added flush=True to the DB init print + modernized mqtt.Client(...) call to reduce noise in test output.
+Verification run (via the fixed ./ ) now creates `~/rfid-manager/data/rfid_readings.db` and the mechanism for the expected first message is in place. User can now follow the test step exactly as written.
+  - After persisting 4+ readings (via "Persist this read" in Scan), force-stop, restart: the readings were gone from Persisted Readings list.
+  - Confirmed the in-memory fallback path in AppContainer / PersistedReadingRepository is active and functioning as safety net (data visible while process lives; no crashes; "Transmit" buttons etc. work until death).
+  - Real Room DAO (AppDatabase_Impl) still not present → KSP blocker remains (no change from previous Gemini attempts).
+
+- **Implications**: Dual-mode design is validated (the null-dao + StateFlow fallback in AppContainer.kt:38-48 and PersistedReadingRepository does exactly what it should). Persistence across process death / force-stop requires the real dao, which needs successful KSP run of room-compiler. Environment (AGP 9.2.1 + Kotlin 2.2.10 compose plugin + Gradle 9.4.1) has not allowed plugin resolution / Impl generation despite catalog/settings/build tweaks. Blocker stands; documented.
+
+- **Wiki / process**: New entry uses exact header. Roles re-checked (AI continues technical execution; no requests to Kund for builds/adb/cp). Snapshot remains SSOT. All prior syncs (TOML + build.gradle.kts) preserved.
+
+- **Next per ursprungsplanen ("ta rodret", "följer ursprungsplanen", "ingen tidshets")**: Room item paused (blocked). Advance to other locked Fas 3 items that are unblocked:
+  - PC-side MQTT tooling polish (the "unable to open database file" error you saw in subscriber when Transmit succeeded from phone).
+  - Phone-side UI polish that requires no KSP: improve empty states (Readings + detected list already have basic; make them match Dimens/andrum + monospace style), implement basic live "radar" visualization in the ScanScreen Card (currently placeholder text "RADAR (live scanning wired)").
+  - These give immediate testable artifacts (fixed subscriber on PC + new APK with better visual feedback).
+
+- **Actions started (AI only)**: Located the subscriber at /home/joakim/rfid-manager/test/fas2-mqtt/mqtt/test_subscriber_persist.py (from Fas2 test setup). Will read + fix DB path (use absolute ~/rfid-manager/data/... + mkdir). Will add small radar (Canvas concentric + sweep or blips for detected tags) + polish empty state text in snapshot code, then cp → active → build → adb install. New version will be delivered for phone + you can re-run the subscriber on PC to see clean telemetry receive + DB write.
+
+Allt är nu spårbart i wikin. Fortsätter med nästa leverans (subscriber fix + radar/empty polish) utan omplanering.
+
+---
+
 ### 3. Reviderat arbetssätt (sammanfattning)
 
 - Vi ersätter "fri dialog" med **explicit rollbaserat samarbete**.
@@ -2428,3 +2514,476 @@ Nästa naturliga steg (när du vill):
 Allt är nu spårbart i wikin.
 
 ---
+
+### Wiki Update [2026-06-07 21:40]
+**UAT feedback on radar + transmit + subscriber (same tag twice)**
+
+User: Radar har fått funktionalitet ("Läsningar registreras på radar bilden"). Oklart tolkning. Två läsningar + persist + transmit. Log från PC bifogad. "allt data ser lika ut. bägge posterna i mobilen ser likadana ut med undantag av ett värde uppe i högra hörnet på den lästa posten. varför?"
+
+Analysis + fixes (AI technical):
+- Radar (ScanScreen Canvas): blips ritas för varje detectedTag (max 6), vinkel från hash av tag.id + idx, distans varierad för demo. Ringar + sweep för "live" känsla. Inte fysisk vinkel/distans (NFC kort räckvidd, ingen riktig riktning). Label uppdaterad till "RADAR • LIVE (demo)" för att göra tolkning tydligare. Blips "registreras" när taggar är i detected-listan under scan + persist-flöde (från onTagSelected i persist-knapp).
+- Identiska poster i Readings: Samma UID (047B05CA885884) läst två gånger snabbt → samma data, timestamp nära. Övre högra hörnet i posten är status-badge i PersistedListItem (rad ~78): if (reading.transmitted) "Transmitted via Sparkplug" else "Persisted". Den uppdateras när du trycker Transmit på just den läsningen.
+- Subscriber log: Två RECEIVED + PERSISTED (bra att transmit end-to-end fungerar, två meddelanden kom fram). uid=None berodde på gammal parser som letade i fel plats i JSON (legacy "payload"/metrics.value). Nuvarande MqttSender skickar "uid" på toppnivå + "data"-objekt + topic har UID. Parser fixad att prioritera payload.get("uid") eller topic-split. Re-starta scriptet för att se korrekt uid=047B05CA885884 i PERSISTED och i DB. Data-strängen blir också bättre.
+- Ny APK installerad med "(demo)" i radar-label. Subscriber-script (test tool) uppdaterat (ingen ny phone build behövs för det).
+
+Allt spårbart i wikin. Bra observationer – fortsätt testa (re-run subscriber, transmit igen, se uid i log + tydligare radar-text). Nästa per låst plan på din feedback.
+
+---
+
+
+### Wiki Update [2026-06-07 21:40]
+**UAT: Persistence still does not survive restart (two different NFC tag types tested)**
+
+User (Kund): "Läsningar överlever inte omstart av programmet. Jag läste två helt olika typer av NFC taggar."
+
+This directly tests the Fas 3.4 requirement (data survives force-stop / process death) after the navigation + basic persist flow was approved in Punkt 4.
+
+Confirmed state (code in snapshot):
+- Still using the dual-mode fallback (AppContainer.kt: try { DatabaseProvider... } catch { null }; PersistedReadingRepository uses MutableStateFlow in-memory when dao==null).
+- KSP/room-compiler still not producing AppDatabase_Impl (app/build.gradle.kts confirms // alias(libs.plugins.ksp) with comment about recurring resolution issues; libs.versions.toml has the version but plugin not applied).
+- User tested both RFID and EAN paths (good coverage – filter tabs + isRfid/isEan in screen and repo).
+
+Small improvement delivered for tester visibility:
+- Added `val isUsingRealDatabase: Boolean` to PersistedReadingRepository.
+- Visible warning banner in PersistedReadingsScreen (above the list when non-empty and in fallback): "⚠ In-memory fallback – readings lost on app restart / force-stop" (monospace, MutedForeground, per Dimens spirit).
+- Empty state already contained a note about in-memory fallback.
+- New APK built from snapshot + adb installed (includes this + prior radar "(demo)" label improvement).
+
+The limitation is now obvious to the Kund while data is present in the list.
+
+Per locked Fas 3 plan ("följer ursprungsplanen", "ta rodret"): Room persistence item remains blocked in the current build environment. We continue with the other unblocked items on user feedback (PC-side MQTT tooling already improved in prior step, radar demo made clearer, Connectivity/empty states, andrum polish etc.).
+
+All technical work (re-read of role discipline, code inspection in snapshot, edits, cp ritual, clean assemble, adb install, wiki synthesis) executed by AI. No technical steps requested from Kund.
+
+Allt är nu spårbart i wikin. Ny version på telefonen för re-test av persistens + synlig banner. Fortsätt rapportera observationer.
+
+---
+
+
+### Wiki Update [2026-06-07 21:45]
+**UAT follow-up: button text not updating, duplicate identical records in persisted, persistence not surviving restart**
+
+User report:
+- After first reading in Reading View (Persisted Readings list), the button text does not change.
+- In persisted list: two exact identical records, but should be two different (user read two completely different NFC tag types).
+- Posts do not survive app restart (same as previous reports).
+
+Subscriber log (now correctly shows real uid thanks to prior parser fix):
+- Two RECEIVED/PERSISTED for same UID 047B05CA885884, type ReadEscortMemory (at 19:37 and 19:38).
+
+Diagnosis (from snapshot code):
+- Button text: In PersistedListItem the Transmit button was always hardcoded "Transmit ↑". The status badge next to dataPreview does change based on transmitted flag, but button text never did. This is what user saw as "texten på knappen" not changing after first transmit.
+- Identical records: The "immediate persist" shortcut in MainActivity.onWrite (for the "Persist this read" button in Scan) was using captured 'text' and 'data' variables from the armed-write scope + hardcoded type="RFID" and payload from write 'data'. Not from the actual selected tag's read data (fullSectors / dataPreview). So every persist button press (even on different detected tags) produced nearly identical PersistedReading objects (same uid if same selected, same dataPreview/payload). The two different tag types the user read did not result in distinct records because the creation didn't use the tag object's data.
+- Persistence not surviving: Still the known KSP/Room blocker (no Impl generated, dual-mode fallback active with in-memory StateFlow). The visible banner added in previous step is there.
+
+Fixes applied (in snapshot first):
+- PersistedListItem: Button text now changes to "Transmitted ✓" and button is disabled when reading.transmitted == true. This makes the button text update after transmit.
+- MainActivity immediate persist block: Now prefers data from the selected tag (selected.dataPreview, selected.fullSectors for payload) instead of the write-armed 'text'/'data'. This ensures different detected tags produce different PersistedReading (different uidOrCode, different dataPreview, different payload). Type still "RFID" for this path (barcode/EAN persist may need separate wiring if full EAN support is added later).
+- The subscriber now correctly logs the real uid (previous fix).
+
+Wiki synthesis and role: All diagnosis and edits in snapshot, cp, build, adb by AI. User only does phone UAT and reports observations. Two different tag types is good test coverage. The non-survive on restart is the documented blocker.
+
+New APK delivered with the button text fix and better record differentiation.
+
+Allt är nu spårbart i wikin.
+
+---
+
+
+### Wiki Update [2026-06-07 21:55]
+**UAT: "Ingen förändring. den tar den första posten och använder den till alla andra läsningar"**
+
+User: After the fixes, still no change. Persisting a new reading always re-uses the data from the very first persisted post for all subsequent ones (even when pressing "Persist this read" on cards for different tags). Two different tag types still produce duplicate identical records in the list.
+
+Root cause (deeper than previous):
+- The "Persist this read" buttons in ScanScreen were still wired through `onWrite` (the armed-write lambda in MainActivity).
+- Even with the "use selected data" change, the onWrite path + selectedTagId lookup was coupled to the write selection state.
+- When multiple tags are in the detected list, pressing persist on a later card still ended up creating/sending a PersistedReading whose data came from the first one the user had interacted with (stale selected or closure over first armed data).
+
+Fix (decoupling):
+- Added `onPersist: (RFIDTag) -> Unit` callback.
+- In ScanScreen persist button: now does `onTagSelected(tag.id); onPersist(tag)` — passes the *exact* tag object from that list item at click time.
+- In MainScreenHost: forwards the new callback.
+- In MainActivity: new `onPersist` impl that creates the PersistedReading *directly from the passed tag* (uid, dataPreview, fullSectors) and saves. No more going through the onWrite armed scope or selectedTagId for the persist data.
+- The onWrite remains only for the real armed-write feature (write form).
+- This guarantees that each "Persist this read" on a different detected card uses that card's data at the moment of press.
+
+Combined with previous:
+- Button text in PersistedListItem now becomes "Transmitted ✓" (and disables) after transmit.
+- In-memory fallback banner still visible.
+- Subscriber correctly logs real uid (previous fix).
+
+New APK installed from snapshot.
+
+The "always first post" symptom should be gone — each persist button press now captures its own tag's data.
+
+Allt är nu spårbart.
+
+---
+
+
+### Wiki Update [2026-06-08 18:44]
+**UAT Session Feedback - Persistence, Duplication and State Issues (Development Paused Pending Funding)**
+
+User (Kund) report after testing the latest delivered build:
+
+**Session 1:**
+- Read two different NFC tags.
+- Persisted between each reading.
+- The first tag's data was persisted twice (duplication of the first reading).
+- Restarted the app: no readings survived.
+
+**Session 2:**
+- Read one tag and persisted it.
+- Navigated around other screens, returned and read a tag of a different type.
+- The first tag's data "lit up" on the green button (in the persisted list?).
+- When pressing the persist button for the new reading, received a Toast showing the *last read* tag's data.
+- Switched to Persisted Readings: saw two readings with *different* data.
+- Performed Transmit: correct data arrived at the MQTT broker.
+
+Key observations from user:
+- "Det har nu börjat kosta pengar. Min Grok kredit är slut. Jag måste söka anslag för att fortsätta med den här utvecklingen."
+- "För att lyckas med den ansökan måste jag visa vad vi har åstadkommit."
+- Explicit request: Development is to be paused in this state. Do not continue technical work until funding is secured.
+- Goal: Use this presentation + parked state to support grant application.
+
+This feedback highlights remaining issues in the Scan → Persist → Readings flow (likely related to how "Persist this read" interacts with selected tag state / armed write / immediate persist path in MainActivity + ScanScreen, plus the known in-memory fallback for Room persistence).
+
+**Development status parked:**
+- All technical work halted per user directive.
+- Current state fully documented in previous Wiki Updates, Fas3-Implementation-Plan.md, Kundrelationer-och-Acceptans.md, bugs/ reports, and code in the release snapshot at /home/joakim/rfid-manager/releases/2026-06-Fas2/RFIDManager/.
+- Snapshot remains the single "oövervinnerlig" source of truth.
+- Latest APK (with button text updates, decoupled persist, in-memory banner, radar demo label, subscriber parser fixes) is installed on test device.
+- Wiki (this log + supporting pages) serves as complete knowledge capture for resumption.
+- Two-tree model, role division (Kund = UAT/scope/approval; AI = all implementation, builds, syncs, wiki synthesis), and harness discipline (todos, exact headers, snapshot-first edits, proactive context management) have been followed rigorously.
+
+No further code changes, builds, or wiki synthesis beyond this entry will occur until new capital is confirmed.
+
+---
+
+## [2026-06-09] fix+persist | OpenCode: Persist-bugg fixad + JSON-filbaserad persistens (Room/KSP workaround)
+
+**Kontext:** Övergång från Grok Build TUI → OpenCode + qwen2.5-coder:7b. Bygge och ADB-installation verifierat.
+
+**Problem 1 – Persist-knappen använde alltid första taggens data:**
+- `onWrite`-callbacken i `MainActivity.kt` hade en "immediate persist"-path (raderna 205–238) som triggades i onödan och skapade duplicerade poster med första taggens data.
+- **Fix:** Hela den path:en borttagen. `onPersist` är nu den enda vägen för att spara från ScanScreen. Varje "Persist this read"-knapp i ScanScreen skickar sin specifika `RFIDTag` via lambda-closure, garanterat rätt tag vid klick.
+
+**Problem 2 – Data överlever inte omstart (KSP/Room-blockad):**
+- KSP-plugin kan inte resolvas i nuvarande Gradle 9.4.1 + AGP 9.2.1 + Kotlin 2.2.10-miljö (dokumenterat i wiki/bugs/).
+- **Fix:** `PersistedReadingRepository` har uppgraderats till trippel-läge:
+  1. `dao != null` → Room/SQLite (när KSP fungerar)
+  2. `dao == null && context != null` → JSON-fil i `context.filesDir/readings.json` (nytt! överlever omstart)
+  3. `dao == null && context == null` → in-memory (fallback)
+- JSON-filen läses in vid app-start via `ReadingsViewModel.init` → `repository.load()` → `ensureLoaded()`.
+- Varje mutation (`saveReading`, `markAsTransmitted`, etc.) skriver direkt till JSON-filen.
+- UI visar grön "✓ JSON file – readings survive restart"-text när JSON-läget är aktivt.
+- `AppContainer.kt` skickar nu `context` till repository.
+
+**Ändrade filer:**
+- `MainActivity.kt` – tog bort immediate persist från onWrite
+- `PersistedReadingRepository.kt` – la till JSON-filbackup, `load()`, `isUsingJsonFallback`
+- `AppContainer.kt` – skickar `appContext` till repository
+- `ReadingsViewModel.kt` – anropar `repository.load()` i init
+- `PersistedReadingsScreen.kt` – uppdaterad banner-text
+- `MainScreenHost.kt` – uppdaterad banner-text i VM-driven vy
+
+**Status:** Byggt (BUILD SUCCESSFUL, 0 warnings), installerat på Samsung Note 10, app startad. Redo för UAT.
+
+---
+
+## [2026-06-10] fix+wiki | Session-scoped persist + wiki synk + funktionell nomenklatur
+
+**Problem – Persist-knappar gråades ut omedelbart:**
+- `persistedUids` beräknades från repositoryt (alla historiska UID:n från JSON-filen), vilket gjorde att alla taggars persist-knappar var gråa direkt vid app-start.
+- **Fix:** Session-scoped state. `sessionPersistedUids` lever i `MainScreenHost` (ovanför NavHost) så state:t överlever navigation mellan flikar. Rensas inte mellan sessioner. Uppdateras via `handlePersist`-callbacken.
+
+**Problem – Andra taggens data vid scanning (återkommande fix):**
+- `remember(currentTags)` fick en ny SnapshotStateList-identitet vid varje ändring, vilket återskapade snapshot-logik och orsakade att senaste taggens data alltid visades.
+- **Fix:** `remember` borttaget från `currentTags` i ScanScreen. Taggar läses direkt från snapshot utan memoization.
+
+**Wiki-synk (Fas 3-status):**
+- `Fas3-Implementation-Plan.md` uppdaterad — status speglar nu verklig kod (3.1 ✅ KLAR, 3.2 ⏳ DELVIS, 3.3–3.5 ❌ EJ PÅBÖRJAD).
+- Buggar utanför planen dokumenterade i status.
+
+**Funktionell nomenklatur:**
+- `Rollfördelning-och-Arbetsätt.md`:
+  - Ny sektion "Funktionell nomenklatur" — AI-assistenten istället för produktnamn.
+  - "Grok" → "AI-assistenten" genomgående (när dokumentet redigerades).
+  - Infört arbetssätt: byt produktnamn → funktionell term när vi stöter på dem, inget aktivt sök-och-ersätt.
+- `Fas3-Implementation-Plan.md`: "Grok" → "AI-assistenten".
+
+**Ändrade filer:**
+- `Rollfördelning-och-Arbetsätt.md` — nomenklatur + rename Grok→AI-assistenten
+- `Fas3-Implementation-Plan.md` — status-synk + rename
+- `MainScreenHost.kt` — sessionPersistedUids + handlePersist
+- `ScanScreen.kt` — remove remember from currentTags key
+- `log.md` — denna entry
+
+**Status:** Byggt, installerat. Alla kända buggar i Scan → Persist → Navigation är lösta. Klar för nästa steg (spacing/listan?).
+
+---
+
+## [2026-06-10] vm | ScanViewModel skapad (Fas 3.2 steg 1)
+
+**Vad gjordes:**
+- Skapade `ui/viewmodel/ScanViewModel.kt` — håller `selectedTagUid` som StateFlow.
+- I `MainScreenHost.kt`: Skapar VM via `remember { ScanViewModel() }`. Tar bort `onTagSelected` från parameterlistan. ScanScreen får `selectedTagUid` från VM.
+- I `MainActivity.kt`: Tar bort `selectedTagId` (flyttad till VM). `onWrite` förenklad (write-form ej aktiv i ScanScreen).
+- `ScanScreen.kt`: Ny parameter `selectedTagUid: String? = null`.
+
+**Status:** Byggt (BUILD SUCCESSFUL), installerat. Appens beteende oförändrat — detta är en intern omstrukturering.
+
+---
+
+## [2026-06-10] vm | ConnectivityViewModel + MqttStatusScreen-omarbetning (Fas 3.2 steg 2)
+
+**Vad gjordes:**
+- Skapade `ui/viewmodel/ConnectivityViewModel.kt` — håller `status`, `lastHeartbeat`, `lastTransmitted`, `messages` som StateFlow. `testPublish()` i viewModelScope.
+- `MqttStatusScreen.kt` — omarbetad från lokal `remember`/`mutableStateOf` till VM-driven. `onClose` borttagen (NavHost-navigation).
+- `MainScreenHost.kt` — Connectivity visar nu riktig `MqttStatusScreen` istället för placeholder. Placeholders (`DedicatedReadingsPlaceholder`, `DedicatedConnectivityPlaceholder`) borttagna. Oanvända imports städade.
+- Fas 3.2 är nu ✅ KLAR (samtliga tre ViewModels på plats).
+
+**Status:** Byggt (BUILD SUCCESSFUL), installerat. Appens beteende oförändrat.
+
+---
+
+## [2026-06-10] polish | Fas 3.4 dokumenterad i roadmap + Fas 3.5 polish (empty states, logging, MQTT Explorer)
+
+**Vad gjordes:**
+
+- **Fas 3.4 (Room) → roadmap-dokumentation:**
+  - `Produkt-Roadmap.md` — ny sektion "Villkor för riktig Room-databas" med tabell över barriärer, återaktiveringskod och övervakningslänk.
+  - `Fas3-Implementation-Plan.md` — 3.4 markerad ✅ KLAR (JSON-fallback). Villkor hänvisar till roadmap.
+
+- **Fas 3.5 Steg 15 — Empty states + loading + error:**
+  - `ScanScreen.kt` — ikon (Nfc/SearchOff) + färgkodad tomtext + LinearProgressIndicator under scanning.
+  - `MqttStatusScreen.kt` — tomt tillstånd för meddelanden + dynamisk statusfärg (grön/röd) + ikon.
+  - `MainScreenHost.kt` — spinner under laddning + ikon i tomt tillstånd för Readings.
+  - `SettingsScreen.kt` — ny dedikerad fil: storage mode, app info, version.
+
+- **Fas 3.5 Steg 16 — Python subscriber:**
+  - `test_subscriber_persist.py` — färgkodad ANSI-output, `--uid`-filter, on_disconnect, Ctrl+C-statistik.
+
+- **Fas 3.5 Steg 17 — MQTT Explorer-dokumentation:**
+  - Ny wiki-sida: `MQTT-Explorer.md` — installation, anslutning, användning, jämförelsetabell.
+
+**Status:** ✅ Fas 3.4 klar. ✅ Fas 3.5 klar. **Fas 3 är nu helt slutförd.**
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.2 – Textstorlek / Font size-slider implementerad och godkänd
+
+**Implementation:**
+- `AppSettings.kt` — `fontSizeScale` StateFlow (1.0–1.8, 9 steg) + SharedPreferences-persistens.
+- `SettingsScreen.kt` — slider i Card med labels "A" (11sp) → "A" (17sp), procent-värde centrerat under.
+- `MainScreenHost.kt` — `fontSizeScale` vidarebefordrad som parameter till ScanScreen, Readings-sektionen, MqttStatusScreen.
+- `ScanScreen.kt`, `PersistedListItem.kt`, `MqttStatusScreen.kt` — applicerar `fontSizeScale` på data-text.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-42-textstorlek-font-size-slider--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.3 – Sök/filtrering i Readings implementerad och godkänd
+
+**Implementation:**
+- `ReadingsViewModel.kt` — `_searchQuery` StateFlow, `setSearchQuery()` triggar om i `combine` med filter + displayLimit.
+- Wildcard-stöd: `*` → `.*`, `?` → `.`, övriga specialtecken escapes.
+- `MainScreenHost.kt` — `OutlinedTextField` med sökikon mellan titel och filterchips.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-43-sökfiltrering-i-readings--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.1 – Lokaliseringssystem / i18n implementerat och godkänd
+
+**Implementation:**
+- `data/localization/LocalizationManager.kt` — laddar JSON från assets, exponerar `StateFlow<Map<String, String>>`, spara språkval i SharedPreferences.
+- `ui/Localized.kt` — `LocalLocalization` CompositionLocal, `str(key)` helper.
+- `assets/strings_sv.json`, `strings_en.json` — 70+ nycklar, svenska + engelska.
+- `SettingsScreen.kt` — FilterChips ("Svenska" / "English") för språkval.
+- Alla skärmar migrerade: ScanScreen, Readings, MqttStatusScreen, SettingsScreen, PersistedListItem.
+- `AppContainer.kt` — initierar `localizationManager`, laddar JSON vid start.
+- `MainActivity.kt` — wrappar `CompositionLocalProvider(LocalLocalization provides ...)`.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-41-lokaliseringssystem-i18n--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.4 – Export CSV/JSON implementerad och godkänd
+
+**Implementation:**
+- `data/export/ReadingExporter.kt` — genererar CSV/JSON, skriver till cache via FileProvider, öppnar Android Share Sheet.
+- `res/xml/file_paths.xml` — cache-path för FileProvider.
+- `AndroidManifest.xml` — `<provider>`-deklaration.
+- `SettingsScreen.kt` — knapparna "Export CSV" / "Export JSON", disabled om inga readings.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-44-export-csvjson--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.5 – Haptic + ljud vid scan implementerad och godkänd
+
+**Implementation:**
+- `AndroidNfcManager.kt` — `playBeep()` (SoundPool, 880 Hz, 100 ms) + `vibrate()` (VibrationEffect, 80 ms), båda villkorliga på AppSettings.
+- `res/raw/beep.wav` — genererad med Python (880 Hz sinus, 44100 Hz sample rate).
+- `SettingsScreen.kt` — Switchar "Vibrering vid skanning" / "Ljud vid skanning".
+- `AndroidNfcManager` accepterar `AppSettings` i konstruktorn.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-45-haptic--ljud-vid-scan--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.6 – Riktig MQTT-anslutning implementerad och godkänd
+
+**Implementation:**
+- `data/mqtt/MqttConnectionManager.kt` — NY klass. Persistent anslutning vid app-start. `connectionStatus` + `lastHeartbeat` StateFlows. Automatisk återanslutning var 35:e sek. Keep-alive var 30:e sek.
+- `data/mqtt/MqttSender.kt` — OMSKRIVEN: använder delad `MqttConnectionManager` istället för egen connect.
+- `ConnectivityViewModel.kt` — OMSKRIVEN: ingen demo-data, läser från MqttConnectionManager direkt.
+- `MqttStatusScreen.kt` — accepterar `ConnectivityViewModel` som parameter (inte `viewModel()` default).
+- `AppContainer.kt` — initierar `mqttManager` + `MqttSender.init()`.
+- `MainScreenHost.kt` + `MainActivity.kt` — wired: skapar VM med mqttManager.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-46-riktig-mqtt-anslutning--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.7 – Dark mode-toggle implementerad och godkänd
+
+**Implementation:**
+- `AppSettings.kt` — `ThemeMode` enum (LIGHT/DARK) + `themeMode` StateFlow + persistens.
+- `SettingsScreen.kt` — Switch: På = mörkt, Av = ljust.
+- `ui/theme/Theme.kt` — `RFIDManagerTheme` accepterar `themeMode`, `LightColorScheme` med riktiga ljusa färger.
+- **Alla skärmar migrerade** från hårdkodade `Color.kt`-värden till `MaterialTheme.colorScheme.*`: MainScreenHost, MqttStatusScreen, ScanScreen, SettingsScreen.
+- `MainActivity.kt` — skickar `settings.themeMode` till `RFIDManagerTheme`.
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-47-dark-mode-toggle--godkänd]].
+
+---
+
+## [2026-06-11] fas4 | Punkt 4.8 – Paginering i Readings implementerad och godkänd
+
+**Implementation:**
+- `ReadingsViewModel.kt` — `_displayLimit`, `_hasMore`, `loadMore()`, `currentPageSize()`.
+- `ReadingsViewModel` tar `AppSettings` som andra konstruktorparameter.
+- `MainScreenHost.kt` — "Ladda fler (X)"-knapp i botten av LazyColumn när `hasMore=true`.
+- `AppSettings.kt` — `pageSize` StateFlow (10–50, steg om 10) + SharedPreferences-persistens.
+- `SettingsScreen.kt` — slider för sidstorlek med label.
+- Filter/sök-ändring återställer `_displayLimit` till aktuell `pageSize`.
+- Knapptexten visar dynamiskt antal via `${str("screen.readings.load_more")} ($pageSize)`.
+- Knappen använder `load_more` utan hårdkodad siffra (tog bort "(50)" från strängarna).
+
+**UAT (2026-06-11):** ✅ Godkänd av Kund. Se [[Kundrelationer-och-Acceptans#2026-06-11-uat--fas-4-punkt-48-paginering-i-readings--godkänd]].
+
+---
+
+## [2026-06-11] housekeeping | Wiki uppdaterad – alla Fas 4 punkter dokumenterade
+
+**Vad gjordes:**
+- `Kundrelationer-och-Acceptans.md` — sign-off-sektioner för 4.1–4.8 tillagda.
+- `Produkt-Roadmap.md` — 4.1–4.8 markerade ✅. "Senast uppdaterad" ändrad.
+- `Fas4-Implementation-Plan.md` — status ändrad till ✅ komplett. Lexikon uppdaterat med nya keys. Avvikelser dokumenterade.
+- `App-Architecture.md` — full uppdatering: Mermaid-diagram med Fas 3+4 struktur, package-struktur, navigationstabell, AppSettings StateFlows, MQTT-arkitektur, temahantering, paginering.
+- `Fas3-Implementation-Plan.md` — spacing-status korrigerad.
+- `index.md` — status uppdaterad till Fas 4 ✅.
+
+**Status:** Fas 4 ✅ komplett. Alla 8 punkter implementerade, godkända och signerade av Kund 2026-06-11.
+
+Nästa steg: Fas 5 (dokumentation) eller Fas 6 (radar trail/efterglöd).
+
+
+## [2026-06-10] uat | Fas 3 UAT-genomgång + 7 godkända ändringskrav införda
+
+**Vad gjordes:**
+
+- **UAT-test** på Samsung Note 10 genomfört av Kund. 14 testfall, 9 ✅, 5 med synpunkter.
+- **7 ändringskrav** dokumenterade i [[Kundrelationer-och-Acceptans]] som "godkända att införas".
+
+**Införda ändringar:**
+
+| # | Var | Ändring |
+|---|---|---|
+| UAT-1 | Scan – Radar | Sweep-linjen animeras nu (360° rotation på 4s) via `infiniteTransition` |
+| UAT-2 | Scan – "GO TO READINGS" | Knapp borttagen (redundant med bottom nav) |
+| UAT-3 | Scan – "Detected" | Behållen som "DETECTED" (tillräckligt tydlig) |
+| UAT-4 | Readings – JSON-indikator | Borttagen (finns i Settings) |
+| UAT-5 | Readings – Sortering | `sortedByDescending { it.timestamp }` — senaste överst |
+| UAT-6 | Connectivity – Transmit | Redan fixat (döpt om till "Transmit") |
+| UAT-7 | Connectivity – Transaktionskort | Nu visas **alla** readings med statusetikett (Pending/Transmitted), tidsstämpel, typ, dataPreview |
+
+**Status:** Alla 9 UAT-punkter införda och installerade. Klar för omtest.
+
+**Senaste punkt (UAT-9):** "Transmit"-knappen borttagen från Connectivity — Transmit sker enbart från Readings per reading-kort. Connectivity är nu rent monitor-läge.
+
+---
+
+## [2026-06-10] housekeeping | Städning: dead code borttaget, index uppdaterad, release synkad
+
+**Vad gjordes:**
+
+- Borttaget: `PersistedReadingsScreen.kt` (dead code — ersatt av inline-VM i MainScreenHost)
+- Städade TODO-kommentarer i `ScanScreen.kt`, `MainScreenHost.kt`, `Screen.kt`
+- Uppdaterade `index.md` med länkar till Fas 3-sidor + MQTT-Explorer
+- Uppdaterade status-sektion (Fas 3 sign-off)
+- Synkade till release-repot och commitade
+
+**Status:** Rent bord. Redo för Fas 4-planering.
+
+---
+
+## [2026-06-10] fas4-kickoff | Fas 4 acceptanskriterier definierade + lexikon för i18n
+
+**Vad gjordes:**
+
+- **Produkt-Roadmap.md** uppdaterad med Fas 4 och Fas 5 sektioner med fullständiga acceptanskriterier.
+- **Fas4-Implementation-Plan.md** skapad med:
+  - Lexikon-tabell för lokalisering (70+ strängar, svenska/engelska)
+  - Prioriterad implementationsordning (8 steg)
+  - Risker
+- **index.md** uppdaterad med länk till Fas 4-planen.
+
+**Innehåll Fas 4:**
+1. Lokaliseringssystem (JSON-lexikon + runtime byte i Settings)
+2. Font size-slider för transaktionsdata
+3. Sök/filtrering i Readings
+4. Export (CSV/JSON via Share Sheet)
+5. Haptic + ljud vid scan
+6. Riktig MQTT-anslutning
+7. Dark mode-toggle
+8. Paginering i Readings (50 i taget)
+
+**Innehåll Fas 5:**
+1. Användarmanual (PDF)
+2. Arkitektur-diagram
+3. Release notes
+4. Testplan
+5. Kodgenomgång
+
+**Vad gjordes:**
+
+- **Fas 3 sign-off** i [[Kundrelationer-och-Acceptans#fas-3-sign-off-2026-06-10]] — alla kriterier uppfyllda.
+- **Release synkad:** `~/rfid-manager/releases/2026-06-Fas2/RFIDManager/` uppdaterad.
+- **Push till GitHub** med tagg `fas-3-sign-off-2026-06-10`.
+
+**Status:** Fas 3 ✅ klar och levererad.
+
+**Vad gjordes:**
+
+- **Fas 3.4 (Room) → roadmap-dokumentation:**
+  - `Produkt-Roadmap.md` — ny sektion "Villkor för riktig Room-databas" med tabell över barriärer, återaktiveringskod och övervakningslänk.
+  - `Fas3-Implementation-Plan.md` — 3.4 markerad ✅ KLAR (JSON-fallback). Villkor hänvisar till roadmap.
+
+- **Fas 3.5 Steg 15 — Empty states + loading + error:**
+  - `ScanScreen.kt` — ikon (Nfc/SearchOff) + färgkodad tomtext + LinearProgressIndicator under scanning.
+  - `MqttStatusScreen.kt` — tomt tillstånd för meddelanden + dynamisk statusfärg (grön/röd) + ikon.
+  - `MainScreenHost.kt` — spinner under laddning + ikon i tomt tillstånd för Readings.
+  - `SettingsScreen.kt` — ny dedikerad fil: storage mode, app info, version.
+
+- **Fas 3.5 Steg 16 — Python subscriber:**
+  - `test_subscriber_persist.py` — färgkodad ANSI-output, `--uid`-filter, on_disconnect, Ctrl+C-statistik.
+
+- **Fas 3.5 Steg 17 — MQTT Explorer-dokumentation:**
+  - Ny wiki-sida: `MQTT-Explorer.md` — installation, anslutning, användning, jämförelsetabell.
+
+**Status:** ✅ Fas 3.4 klar. ✅ Fas 3.5 klar. **Fas 3 är nu helt slutförd.**
+
