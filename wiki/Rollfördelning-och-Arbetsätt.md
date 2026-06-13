@@ -1,7 +1,8 @@
 ---
 title: Rollfördelning och Arbetsätt
-tags: [process, roller, arbetsätt, projektledning, governance, karpathy-wiki]
+tags: [process, roller, arbetsätt, projektledning, governance, karpathy-wiki, funktionell-nomenklatur]
 created: 2026-06-06
+updated: 2026-06-10
 ---
 
 # Rollfördelning och Arbetsätt – RFID Manager
@@ -13,9 +14,20 @@ created: 2026-06-06
 
 Arbetet sker i **två parallella spår**:
 1. **Affärs- och styrningsspår** (du som Kund + Projektledare)
-2. **Tekniskt genomförandespår** (Grok i flera tekniska roller)
+2. **Tekniskt genomförandespår** (AI-assistenten i flera tekniska roller)
 
 Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth** och levande projektdokumentation.
+
+## Funktionell nomenklatur — vad vi kallar saker
+
+För att göra dokumentationen oberoende av specifika AI-produkter eller leverantörer använder vi funktionella termer istället för produktnamn. Denna nomenklatur införs löpande — när vi redigerar ett dokument och stöter på ett produktnamn byter vi ut det mot motsvarande funktionella term.
+
+| I dokumenten använder vi | Istället för | Innebörd |
+|--------------------------|-------------|----------|
+| **AI-assistenten** | Specifika produktnamn från olika leverantörer | Den tekniska assistentrollen i teamet |
+| **AI-verktyg / AI-system** | Specifika AI-plattformar | Det underliggande verktyget |
+
+Arbetssätt: När du som Projektledare eller jag som AI-assistent stöter på ett produktnamn under redigering, ersätter vi det med rätt funktionell term. Inget aktivt sök-och-ersätt över hela wikin.
 
 ## Roller (uppdaterad och kompletterad)
 
@@ -28,7 +40,7 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 | **Domänexpert**         | Industriell kunskap (eskortminnen, RFID i verklig drift, säkerhet, processer). | Ger kontext som ingen ren tekniker har. |
 | **UAT-testare & Slutanvändare** | Utför manuell acceptanstest på riktig hårdvara i verklig miljö. | "Jag har testat på telefonen...", ger slutgiltig feedback. |
 
-### Roller Grok primärt äger
+### Roller AI-assistenten primärt äger
 
 | Roll                        | Beskrivning                                                                 | Typisk aktivitet |
 |-----------------------------|-----------------------------------------------------------------------------|------------------|
@@ -43,10 +55,10 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 
 ### Delade eller kontextuella roller
 
-- **Beslutsfattare (Change Control)**: Du har alltid sista ordet. Grok föreslår + dokumenterar.
-- **Manual Tester / UAT-utförare**: Delad. Grok gör så mycket dev-test och automatiserad validering som möjligt. Du gör den verkliga affärsmässiga och ergonomiska valideringen på telefonen.
-- **Arkitekturinput**: Du har rätt (och uppmuntras) att komma med förslag på teknikval och plattformar. Grok utvärderar, kompletterar och äger den slutliga arkitekturbilden.
-- **Release Manager (intern)**: Grok för interna releaser och tarballs. Du kan ta över när vi går mot extern distribution.
+- **Beslutsfattare (Change Control)**: Du har alltid sista ordet. AI-assistenten föreslår + dokumenterar.
+- **Manual Tester / UAT-utförare**: Delad. AI-assistenten gör så mycket dev-test och automatiserad validering som möjligt. Du gör den verkliga affärsmässiga och ergonomiska valideringen på telefonen.
+- **Arkitekturinput**: Du har rätt (och uppmuntras) att komma med förslag på teknikval och plattformar. AI-assistenten utvärderar, kompletterar och äger den slutliga arkitekturbilden.
+- **Release Manager (intern)**: AI-assistenten för interna releaser och tarballs. Du kan ta över när vi går mot extern distribution.
 
 ## RACI-exempel (per fas / område)
 
@@ -55,14 +67,14 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 **C** = Consulted (ska tillfrågas)  
 **I** = Informed (ska hållas uppdaterad)
 
-| Område                        | Du (Kund/PL) | Grok (multi-roll) | Kommentar |
+| Område                        | Du (Kund/PL) | AI-assistenten (multi-roll) | Kommentar |
 |-------------------------------|--------------|-------------------|---------|
 | Krav & scope                  | A / R        | C                 | Du bestämmer vad som är värt att bygga |
-| Arkitekturval                 | C / I        | A / R             | Du får ge input, Grok äger helheten |
+| Arkitekturval                 | C / I        | A / R             | Du får ge input, AI-assistenten äger helheten |
 | Kodimplementation             | I            | A / R             | - |
-| Dev testing + testmiljö       | I            | A / R             | Grok bygger och kör först |
+| Dev testing + testmiljö       | I            | A / R             | AI-assistenten bygger och kör först |
 | UAT på riktig telefon         | A / R        | C / I             | Du validerar affärsnytta |
-| Wiki / dokumentation          | I            | A / R             | Grok håller ordning |
+| Wiki / dokumentation          | I            | A / R             | AI-assistenten håller ordning |
 | Tekniska beslut (bibliotek etc) | C          | A / R             | - |
 | Go / No-go för nästa fas      | A            | C                 | Du fattar beslutet |
 
@@ -70,21 +82,21 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 
 ### 1. Initiering
 - Du (som Projektledare + Kund) ger riktning: "Nu skall vi gå vidare", "Gör Fas 2", "Jag vill ha tydliga teststeg", "Komplettera roller".
-- Grok bryter ner, föreslår plan, låser nomenclature, börjar exekvera.
+- AI-assistenten bryter ner, föreslår plan, låser nomenclature, börjar exekvera.
 
 ### 2. Genomförande
-- Grok arbetar i de tekniska rollerna (Architect → Technical Lead → Programmerare → Testare → DevOps → Dokumentatör).
+- AI-assistenten arbetar i de tekniska rollerna (Architect → Technical Lead → Programmerare → Testare → DevOps → Dokumentatör).
 - Allt viktigt dokumenteras i wikin **innan** eller **samtidigt** som det görs (inte efteråt).
 - Rich comments i koden + wiki = Architecture-Design-Source-förankring.
 
 ### 3. Feedback & Validering
 - Du testar på telefon (UAT-roll).
 - Feedback ges konkret ("det här funkar", "det här kraschar", "jag saknar X").
-- Grok fixar i Programmerare/Testare-roll + uppdaterar dokumentation.
+- AI-assistenten fixar i Programmerare/Testare-roll + uppdaterar dokumentation.
 
 ### 4. Beslut & Eskalering
-- Små beslut: Grok tar i Technical Lead/Programmer-roll.
-- Större beslut (arkitektur, scope, teknikstack): Grok föreslår + dokumenterar, du (PL/Kund) godkänner.
+- Små beslut: AI-assistenten tar i Technical Lead/Programmer-roll.
+- Större beslut (arkitektur, scope, teknikstack): AI-assistenten föreslår + dokumenterar, du (PL/Kund) godkänner.
 - "Jag agerar kund nu" eller "Jag agerar projektledare nu" är en explicit signal du kan ge.
 
 ### 5. Wiki som ryggrad
@@ -93,8 +105,18 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 - Varje ny fas eller större förändring får en egen log-entry + uppdaterad översiktssida.
 
 ### 6. Kontinuitet
-- Efter paus (t.ex. "Jag bryter för kvällen") fortsätter Grok med dokumentation, förberedelser och "så här testar du imorgon".
+- Efter paus (t.ex. "Jag bryter för kvällen") fortsätter AI-assistenten med dokumentation, förberedelser och "så här testar du imorgon".
 - Du kan alltid säga "Sammanfatta läget" eller "Vad är öppet just nu?".
+
+### 7. Pedagogisk förklaring som arbetssätt
+
+När AI-assistenten förklarar tekniska koncept för Kund/Projektledare används en **pedagogisk mall** som validerats som effektiv:
+1. **Vardaglig analogi** – koppla det tekniska till något bekant (kontrollrum, panel, sladdar).
+2. **Före/efter-diagram** – Mermaid flowchart som visar nuvarande vs framtida arkitektur.
+3. **Tabell med steg** – konkret plan med aktivitet, vad som händer, risk, tidsestimat.
+4. **Rakt svar på praktiska frågor** – hur svårt? verktyg? testning? synlig skillnad?
+
+Denna mall används framgent när nya tekniska koncept introduceras för beslut.
 
 ## Fördelar med denna modell
 
@@ -102,7 +124,19 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 - Bättre spårbarhet (vem sa vad och varför).
 - Lättare att skala upp (om vi får in fler personer eller byter AI).
 - Du kan medvetet "kliva in i kundrollen" utan att behöva vara teknisk.
-- Grok kan vara aggressiv i tekniska roller utan att överskrida mandat.
+- AI-assistenten kan vara aggressiv i tekniska roller utan att överskrida mandat.
+
+## Fas-process och kontinuerliga förbättringar (infört efter Fas 2)
+
+För att göra samarbetet ännu effektivare har vi formaliserat följande efter erfarenheterna från Fas 2:
+
+- **Levande Roadmap som nav**: Varje ny fas börjar med en kort kick-off där vi låser acceptanskriterier i [[Kundrelationer-och-Acceptans]] + uppdaterar [[Produkt-Roadmap]]. Roadmapen är single source of truth för vad som är gjort och planerat.
+- **UI-andrum som explicit regel**: Innan kodning av UI sker en "breathing room check" (se detaljer i [[Produkt-Roadmap#fas-3-plan-ui-förbättringar--grundläggande-polish]]). Vi använder befintliga Figma-mocks + textbaserade specar (nomenclature + detaljerade markdown-beskrivningar) för att spara krediter. Nya bilder genereras endast för 1–2 kritiska valideringar per fas.
+- **Fas-retro efter UAT/sign-off**: Efter varje godkännande gör vi en kort retro (5–10 min): Vad fungerade i samarbetet? Vad ska vi ändra till nästa fas? (t.ex. detaljnivå, separation mobil vs PC-stöd).
+- **Fas-specifika taggar + artifacts**: Systematisk användning av taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/rfid-manager/releases/` och `artifacts/`.
+- **Standardiserad path-struktur**: Allt stödmaterial (test, setup, releases, artifacts) ligger under `~/rfid-manager/`. Alla framtida referenser i wiki, kod och instruktioner pekar dit för att eliminera "var ligger sakerna?"-friktion.
+
+Dessa punkter uppdateras löpande i denna sida och i [[Kundrelationer-och-Acceptans]].
 
 ## Nästa steg (rekommendation)
 
@@ -113,6 +147,7 @@ Wiki:n (särskilt `log.md` + strukturerade sidor) är **Single Source of Truth**
 ---
 
 **Skapad**: 2026-06-06 efter din reflektion om roller.  
+**Uppdaterad**: 2026-06-10 (funktionell nomenklatur + Grok → AI-assistenten).  
 **Ägare**: Båda (du som Projektledare har sista ordet).  
 **Uppdateras**: Vid varje större fas-skifte eller när ni vill ändra mandat.
 

@@ -39,24 +39,30 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 - [[Kotlin-Android-NFC]] — Mönster för implementation, permissions, foreground dispatch, hantering av taggar, exempel på sektorläsning.
 - [[Hårdvarukrav-och-Enheter]] — Rekommendationer för test- och produktionsenheter med kompatibelt NFC.
 - [[Hardware-Testenheter]] — Detaljer om fysiska testtelefoner (t.ex. Galaxy Note 10 SM-N970F/DS).
-- [[App-Architecture]] — Övergripande arkitektur för RFID Manager (UI / Domain / NFC-lager, RFIDManagerScreen, etc.). **Uppgraderad med Fas 2 (MQTT, persistens, semantisk meddelandemodell)**.
+- [[App-Architecture]] — Övergripande arkitektur för RFID Manager. Uppgraderad med Fas 2 (MQTT, persistens) + Fas 3 (navigation, ViewModels, spacing).
 - [[Figma-to-Compose]] — Hur Figma-designen översatts till Jetpack Compose (design tokens, tema, manuell implementation).
-- [[Nomenclature-Figma-Android]] — Namnsättning / nomenclature för Figma-komponenter, variabler och Android/Kotlin (återanvänds 1:1 av Grok i design + kod).
-- [[Fas2-Implementation-Overview]] — Översikt över filer, struktur och steg för Fas 2-implementation (data + UI + MQTT/Sparkplug). Används för projekt-hantering.
-- [[Figma-Design-Spec-Fas2]] — Full "Developer Handoff Document" från Figma AI (används nu som kanonisk spec istället för Figma-filen). Innehåller alla komponenter, metadata-fält, layout och Sparkplug-struktur.
-- [[Figma-Prototype-Fas2-Proof]] — Detaljerad Figma-spec för mobil prototyp-app (läs/skriv eskort, persisterad lista, MQTT-sänd). Exakta komponentnamn som Grok återanvänder i kod.
-- [[Figma-Steps-Fas2-Build-Guide]] — Granulär steg-för-steg guide för att bygga prototypen i Figma (användaren följer imorgon). Inkluderar design system, components, screens, prototyping, industrial estetik från identsys.se.
-- [[Projektrapport]] — Fullständig projektrapport: vad som gjorts, tidsperiod (2026-05-26→06-04), teknikstack, Architecture-Design-Källkod-förankring, milstolpar (page 12 write etc.).
+- [[Nomenclature-Figma-Android]] — Namnsättning / nomenclature för Figma-komponenter, variabler och Android/Kotlin (återanvänds 1:1 av AI-assistenten i design + kod).
+- [[Fas2-Implementation-Overview]] — Översikt över filer, struktur och steg för Fas 2.
+- [[Fas3-Implementation-Plan]] — Fullständig plan för Fas 3: navigation, ViewModels, spacing, Room-enablement, polish och PC-stöd. Alla steg slutförda och sign-offade.
+- [[Fas3-Navigation-Spacing-Design]] — Design-dokument för navigation + breathing room-spacing.
+- [[Fas4-Implementation-Plan]] — Plan och resultat för Fas 4: lokalisering, textstorlek, sök, export, haptik, dark mode, MQTT, paginering. Alla 8 punkter ✅ godkända.
+- [[Figma-Design-Spec-Fas2]] — Full "Developer Handoff Document" från Figma AI.
+- [[Figma-Prototype-Fas2-Proof]] — Detaljerad Figma-spec för mobil prototyp-app.
+- [[Figma-Steps-Fas2-Build-Guide]] — Steg-för-steg guide för att bygga prototypen i Figma.
+- [[Projektrapport]] — Fullständig projektrapport: vad som gjorts, teknikstack, milstolpar.
 
 ### Verktyg, Resurser och Process
 - [[Verktyg-och-Setup]] — Omarchy-specifika konfigurationer, Android Studio AUR-paket, Git, AI-assistenter.
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
+- [[MQTT-Explorer]] — Gratis GUI-verktyg för att inspektera MQTT-meddelanden i realtid.
 - [[Källor]] — Register över alla raw-filer som ingesterats (tillsammans med backlinks till bearbetade sidor).
 - [[Frågor-och-Svar]] — Samling av vanliga frågor som uppstått under utvecklingen.
 
-### Projektstyrning och Arbetsätt
+### Projektstyrning, Status och Arbetsätt
+- [[Kanban]] — Visuellt Kanban-board: vad som är kvar, pågår, klart och blockerat. Uppdateras löpande av AI-assistenten.
 - [[Rollfördelning-och-Arbetsätt]] — Explicit rollbaserat samarbete (Kund / Projektledare / Arkitekt / Technical Lead / Programmerare / Testare / DevOps / Wiki Curator). Working Agreement för 1-människa + AI-team. Uppdaterad 2026-06-06.
 - [[Kundrelationer-och-Acceptans]] — Formell dokumentation av relationer till Kund, UAT-tester utförda i kundrollen samt tidsstämplade godkännanden (sign-off) per fas. Innehåller mallar och den aktuella Fas 2 UAT-godkännandet 2026-06-07.
+- [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/rfid-manager/`.
 
 ### Felrapporter (Bugs)
 - `bugs/` — Katalog för formella felrapporter.
@@ -73,10 +79,12 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 
 ## Status
 
-**Initial struktur skapad** 2026-05-26. Projekt slutfört 2026-06-04 med fungerande eskortminne-läs/skriv, rika kommentarer, projektrapport och GitHub-release.
+**Fas 1–4 slutförda.** Initial struktur (Fas 1) 2026-05-26. Eskortminne-läs/skriv (Fas 2) klar 2026-06-04. UI-reallokering, navigation, ViewModels, spacing, polish och PC-stöd (Fas 3) sign-off av Kund 2026-06-10. Lokalisering, inställningar och användbarhet (Fas 4) sign-off av Kund 2026-06-11.
 
-**GitHub:** https://github.com/JoaBerra/rfid-manager (initialt innehåll + källor pushade; fullt paket i release tarball).
+**GitHub:** https://github.com/JoaBerra/rfid-manager
 
-Se [[log]] för full historik över ändringar och ingests. Se [[Projektrapport]] för komplett översikt.
-
-Se [[log]] för full historik över ändringar och ingests. Se särskilt inlägget 2026-06-06 för rollfördelning + tydliga MQTT-teststeg.
+Se [[log]] för full historik. Mer detaljer i:
+- [[Projektrapport]] (Fas 1–2)
+- [[Fas3-Implementation-Plan]] (Fas 3)
+- [[Fas4-Implementation-Plan]] (Fas 4)
+- [[Kundrelationer-och-Acceptans]] (UAT + sign-off)

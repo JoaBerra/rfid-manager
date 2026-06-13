@@ -32,7 +32,7 @@ Total kalendertid: ~9 dagar (intensivt, iterativt, med real hårdvara från 2026
 - Arch Linux + Omarchy (Hyprland) som desktop.
 - Android Studio installerat via AUR (yay).
 - ADB + USB-debugging mot fysisk Samsung Note 10.
-- Dedikerad `~/rfid-setup/` med udev-regler och fix-script (plugdev, 04e8/18d1).
+- Dedikerad `~/rfid-manager/setup/` med udev-regler och fix-script (plugdev, 04e8/18d1).
 - Sideloading av debug-APK via `adb install -r`.
 - All dokumentation i `llm-wiki/` (raw/ + wiki/ följer Karpathy append-only + schema).
 
@@ -167,7 +167,7 @@ AndroidStudioProjects/RFIDManager/
 │   └── res/values/strings.xml
 └── build.gradle.kts, settings.gradle.kts, gradle/libs.versions.toml ...
 
-rfid-setup/
+rfid-manager/setup/
 ├── fix-usb-adb.sh
 └── 51-android.rules
 ```

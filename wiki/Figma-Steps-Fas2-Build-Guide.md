@@ -255,8 +255,8 @@ Jag har kopierat dem till lättillgängliga platser så du kan ladda upp dem dir
 - `~/Fas2-Figma-UI-Mocks/fas2-mqtt-sparkplug-status.jpg` (MQTT/Sparkplug status, log, test publish)
 
 Ytterligare kopior finns i:
-- `~/rfid-fas2-test/figma-mocks/`
-- `~/RFIDManager-Release-2026-06/Fas2-Figma-UI-Mocks/`
+- `~/rfid-manager/test/fas2-mqtt/figma-mocks/`
+- `~/rfid-manager/releases/2026-06-Fas2/Fas2-Figma-UI-Mocks/`
 
 Dessa är de tre bilderna som skapades baserat på den industriella estetiken (identsys-inspiration + Fas1 Primary #00FF88 + clean professional layout). Använd dem som referens eller ladda upp till Figma AI för att generera/iterera lager i din design.
 
