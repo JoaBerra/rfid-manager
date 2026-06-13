@@ -6,13 +6,7 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-- [ ] **Fas 5 — Dokumentation, kvalitet och radar-estetik**
-	- [ ] **5.3** Release notes — dokument per fas + GitHub Releases
-- [ ] **Buggar (Testplan 5.4)**
-
 - [ ] **Fas 6 — 1.0 Release**
-	- [ ] **6.1** MQTT-broker-konfiguration i UI
-	- [ ] **6.2** App-ikon
 	- [ ] **6.3** Release build-setup (signing, proguard)
 	- [ ] **6.4** Borttagning av stub-kod
 	- [ ] **6.5** End-to-end test
@@ -40,7 +34,10 @@ kanban-plugin: board
 - [x] **BUG-006** | Testbeskrivning stämde ej | TC-SCAN-001 | ✅ Godkänt 2026-06-13
 - [x] **BUG-007** | Låst tagg-gränssnitt | TC-SCAN-007 | ✅ Godkänt 2026-06-13
 - [x] **BUG-008** | MQTT-miljö-dokumentation | TC-READ-006, hela Connectivity | ✅ Godkänt 2026-06-13
+- [x] **5.3** Release notes — dokument per fas + GitHub Releases
 - [x] **5.4** Testplan — 22 testfall, alla Godkänt
+- [x] **6.1** MQTT-broker-konfiguration i UI — ✅ Godkänt 2026-06-13
+- [x] **6.2** App-ikon — ✅ Godkänt 2026-06-13
 - [x] **5.2** Arkitektur-diagram — uppdatera App-Architecture med Fas 3+4+5
 - [x] **5.1** Användarmanual (PDF med skärmbilder, svenska)
 - [x] **[[bugs/2026-06-13-connectivity-message-detail|BUG-001]]** — Connectivity: detaljvy visas inte vid tryck på meddelande
