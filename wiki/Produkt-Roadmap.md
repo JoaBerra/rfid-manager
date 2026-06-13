@@ -249,10 +249,12 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 - Settings-vy fält för broker-URL (tcp://...) och port.
 - Sparas i AppSettings/SharedPreferences.
 - MqttConnectionManager läser från settings istället för hårdkodad URL.
+> ✅ **Status:** Godkänd och signerad av Kund 2026-06-13.
 
 #### 6.2 App-ikon
 - Anpassad launcher-ikon (ej standard Android-ikon).
 - Minst adaptive icon för API 26+.
+> ✅ **Status:** Godkänd och signerad av Kund 2026-06-13.
 
 #### 6.3 Release build-setup
 - Signeringskonfiguration i build.gradle.kts.
