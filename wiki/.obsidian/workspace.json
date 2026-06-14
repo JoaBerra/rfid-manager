@@ -11,14 +11,16 @@
             "id": "2eb9f0e5115df276",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "kanban",
               "state": {
-                "file": "MQTT-Infrastruktur.md",
-                "mode": "source",
-                "source": false
+                "file": "Kanban.md",
+                "kanbanViewState": {
+                  "kanban-plugin": "board",
+                  "list-collapse": []
+                }
               },
-              "icon": "lucide-file",
-              "title": "MQTT-Infrastruktur"
+              "icon": "lucide-trello",
+              "title": "Kanban"
             }
           }
         ]
@@ -94,7 +96,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "MQTT-Infrastruktur.md",
+                "file": "Kanban.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +106,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for MQTT-Infrastruktur"
+              "title": "Backlinks for Kanban"
             }
           },
           {
@@ -185,6 +187,7 @@
   },
   "active": "2eb9f0e5115df276",
   "lastOpenFiles": [
+    "MQTT-Infrastruktur.md",
     "Kanban.md",
     "Kotlin-Android-NFC.md",
     "index.md",
@@ -211,7 +214,6 @@
     "bugs/2026-06-07-mqtt-socket-epem-samsung-note10.pdf",
     "Verktyg-och-Setup.md",
     "Figma-Design-Spec-Fas2.md",
-    "Utvecklingsmiljö.md",
-    "RFID-och-NFC.md"
+    "Utvecklingsmiljö.md"
   ]
 }

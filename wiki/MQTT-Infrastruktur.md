@@ -104,6 +104,16 @@ docker run -d --rm --name rfid-mqtt-test \
 ### Grundläggande administration
 
 ```bash
+# Starta brokern (om containern finns men är stoppad)
+docker start rfid-mqtt-test
+
+# Om containern är borttagen (--rm), återskapa den:
+docker run -d --rm --name rfid-mqtt-test \
+  -p 1883:1883 \
+  -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
+  eclipse-mosquitto \
+  mosquitto -c /mosquitto/config/mosquitto.conf
+
 # Se broker-loggar
 docker logs rfid-mqtt-test
 
