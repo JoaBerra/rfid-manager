@@ -9,7 +9,7 @@ created: 2026-05-26
 > **LLM Wiki** för utveckling av kostnadsfria Android-applikationer i Kotlin med fokus på RFID/NFC-integration — särskilt läsning och hantering av eskortminnen.  
 > Miljö: Arch Linux + Omarchy + Android Studio. Helt utan licens- eller distributionskostnader. AI-verktyg som primärt stöd i byggnationen.
 
-Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/joakim/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
+Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
 
 ## Projektmål
 
@@ -36,8 +36,6 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 - [[Android-NFC-API]] — Kärnklasser: `NfcAdapter`, `Tag`, `MifareClassic`, `NfcA`, `IsoDep`. Läs- och skrivoperationer mot specifika sektorer.
 
 ### Implementation och Kod
-- [[Kotlin-Android-NFC]] — Mönster för implementation, permissions, foreground dispatch, hantering av taggar, exempel på sektorläsning.
-- [[Hårdvarukrav-och-Enheter]] — Rekommendationer för test- och produktionsenheter med kompatibelt NFC.
 - [[Hardware-Testenheter]] — Detaljer om fysiska testtelefoner (t.ex. Galaxy Note 10 SM-N970F/DS).
 - [[App-Architecture]] — Övergripande arkitektur för RFID Manager. Uppgraderad med Fas 2 (MQTT, persistens) + Fas 3 (navigation, ViewModels, spacing).
 - [[Figma-to-Compose]] — Hur Figma-designen översatts till Jetpack Compose (design tokens, tema, manuell implementation).
@@ -56,8 +54,6 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
 - [[MQTT-Infrastruktur]] — Fördjupning (Fas-100): MQTT-protokollet, broker, topologi, topics, meddelandeformat, verktyg och hela dataflödet.
 - [[MQTT-Explorer]] — Gratis GUI-verktyg för att inspektera MQTT-meddelanden i realtid.
-- [[Källor]] — Register över alla raw-filer som ingesterats (tillsammans med backlinks till bearbetade sidor).
-- [[Frågor-och-Svar]] — Samling av vanliga frågor som uppstått under utvecklingen.
 
 ### Projektstyrning, Status och Arbetsätt
 - [[Kanban]] — Visuellt Kanban-board: vad som är kvar, pågår, klart och blockerat. Uppdateras löpande av AI-assistenten.
