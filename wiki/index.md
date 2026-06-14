@@ -54,6 +54,7 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 ### Verktyg, Resurser och Process
 - [[Verktyg-och-Setup]] — Omarchy-specifika konfigurationer, Android Studio AUR-paket, Git, AI-assistenter.
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
+- [[MQTT-Infrastruktur]] — Fördjupning (Fas-100): MQTT-protokollet, broker, topologi, topics, meddelandeformat, verktyg och hela dataflödet.
 - [[MQTT-Explorer]] — Gratis GUI-verktyg för att inspektera MQTT-meddelanden i realtid.
 - [[Källor]] — Register över alla raw-filer som ingesterats (tillsammans med backlinks till bearbetade sidor).
 - [[Frågor-och-Svar]] — Samling av vanliga frågor som uppstått under utvecklingen.
@@ -79,7 +80,9 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 
 ## Status
 
-**Fas 1–4 slutförda.** Initial struktur (Fas 1) 2026-05-26. Eskortminne-läs/skriv (Fas 2) klar 2026-06-04. UI-reallokering, navigation, ViewModels, spacing, polish och PC-stöd (Fas 3) sign-off av Kund 2026-06-10. Lokalisering, inställningar och användbarhet (Fas 4) sign-off av Kund 2026-06-11.
+**Fas 1–6 slutförda (v1.0 releasad).** Initial struktur (Fas 1) 2026-05-26. Eskortminne-läs/skriv (Fas 2) klar 2026-06-04. UI-reallokering, navigation, ViewModels, spacing, polish och PC-stöd (Fas 3) sign-off av Kund 2026-06-10. Lokalisering, inställningar och användbarhet (Fas 4) sign-off av Kund 2026-06-11. Dokumentation, kvalitet och radar-estetik (Fas 5) + 1.0 Release (Fas 6) klara 2026-06-13.
+
+**Fas-100 (MQTT-infrastruktur):** Pågående fördjupning. Se [[MQTT-Infrastruktur]].
 
 **GitHub:** https://github.com/JoaBerra/rfid-manager
 

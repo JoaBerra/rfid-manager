@@ -4,17 +4,19 @@
     "type": "split",
     "children": [
       {
-        "id": "469d4fd67f3574ab",
+        "id": "c7562deed7e29345",
         "type": "tabs",
         "children": [
           {
-            "id": "6f01f592869be822",
+            "id": "ab4e1cf683e97078",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "New tab"
+              "type": "image",
+              "state": {
+                "file": "VlobU.jpg"
+              },
+              "icon": "lucide-image",
+              "title": "VlobU"
             }
           }
         ]
@@ -90,6 +92,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "VlobU.jpg",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +102,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for VlobU"
             }
           },
           {
@@ -178,7 +181,7 @@
       "obsidian-kanban:Create new board": false
     }
   },
-  "active": "3852eb7af033cb93",
+  "active": "ab4e1cf683e97078",
   "lastOpenFiles": [
     "VlobU.jpg",
     "Testplan.md",

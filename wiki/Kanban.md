@@ -6,8 +6,11 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
+- [ ] **Fas-100 — MQTT-infrastruktur och nätverkslandskap** (fördjupning)
+	- [x] Wiki-sida skapad: [[MQTT-Infrastruktur]]
+	- [ ] Genomgång och eventuella förbättringar av infrastrukturen
 
-	- [ ] **Write-förbättringar** (önskemål från test) — under Fas 6
+- [ ] **Write-förbättringar** (önskemål från test) — under Fas 6
 		- [x] Visa låsta/skrivbara block i write-vyn
 		- [ ] Hex-checkbox — ASCII auto-konverteras till hex
 		- [ ] Fullskärms-editor för write-data
