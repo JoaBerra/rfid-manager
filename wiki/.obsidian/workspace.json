@@ -11,10 +11,14 @@
             "id": "2eb9f0e5115df276",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "MQTT-Infrastruktur.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "MQTT-Infrastruktur"
             }
           }
         ]
@@ -90,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "MQTT-Infrastruktur.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for MQTT-Infrastruktur"
             }
           },
           {
@@ -180,6 +185,7 @@
   },
   "active": "2eb9f0e5115df276",
   "lastOpenFiles": [
+    "Kanban.md",
     "Kotlin-Android-NFC.md",
     "index.md",
     "Projektöversikt.md",
@@ -187,7 +193,6 @@
     "Testplan.md",
     "Release-Notes.md",
     "Användarmanual.md",
-    "Kanban.md",
     "bugs/README.md",
     "Rollfördelning-och-Arbetsätt.md",
     "App-Architecture.md",
