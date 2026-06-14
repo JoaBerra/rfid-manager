@@ -6,7 +6,61 @@ kanban-plugin: board
 
 - [ ] **Fas-100 — MQTT-infrastruktur och nätverkslandskap** (fördjupning)
 	- [x] Wiki-sida skapad: [[MQTT-Infrastruktur]]
-	- [ ] Genomgång och eventuella förbättringar av infrastrukturen
+	- [ ] **1. MQTT-protokollet — grunderna**
+		- [ ] Utbildning: Förstå publish/subscribe, broker, topic, wildcards
+		- [ ] Konfiguration: Identifiera relevanta protokollinställningar
+		- [ ] Dokumentation: Sammanfatta MQTT-grunder i egna ord
+		- [ ] Test: Verifiera förståelse med praktiskt exempel
+	- [ ] **2. Vår broker: Eclipse Mosquitto**
+		- [ ] Utbildning: Förstå Mosquitto, docker run-kommandot, konfig
+		- [ ] Konfiguration: Gå igenom mosquitto.conf, testa ändra parameter
+		- [ ] Dokumentation: Skapa en "broker quick reference"
+		- [ ] Test: Starta/stoppa brokern, verifiera med mosquitto_pub/sub
+	- [ ] **3. Topologi och nätverk**
+		- [ ] Utbildning: Förstå nätverksflödet app → broker → subscriber
+		- [ ] Konfiguration: Kartlägga portar, IP, WiFi, brandvägg
+		- [ ] Dokumentation: Uppdatera nätverksdiagram med korrekta adresser
+		- [ ] Test: Verifiera anslutning från alla enheter i nätverket
+	- [ ] **4. Topics**
+		- [ ] Utbildning: Förstå topic-struktur, wildcards, hierarki
+		- [ ] Konfiguration: Se över topic-struktur för framtida behov
+		- [ ] Dokumentation: Beskriv topic-trädet med exempel
+		- [ ] Test: Prenumerera på olika topics, verifiera matchning
+	- [ ] **5. Meddelandeformat**
+		- [ ] Utbildning: Förstå JSON-payload, Sparkplug B-relation
+		- [ ] Konfiguration: Se över om fler fält behövs i payload
+		- [ ] Dokumentation: Skapa ett JSON-schema för meddelandena
+		- [ ] Test: Publicera och tolka meddelanden med olika verktyg
+	- [ ] **6. Kvalitet på leverans (QoS)**
+		- [ ] Utbildning: Förstå QoS 0/1/2, cleanSession, konsekvenser
+		- [ ] Konfiguration: Utvärdera om QoS 1 är rätt nivå
+		- [ ] Dokumentation: Beskriv QoS-beslut och trade-offs
+		- [ ] Test: Publicera med olika QoS, mät beteende
+	- [ ] **7. Återanslutning och keep-alive**
+		- [ ] Utbildning: Förstå keep-alive, reconnect-loop, timeouts
+		- [ ] Konfiguration: Se över keepAliveInterval, reconnect-strategi
+		- [ ] Dokumentation: Beskriv nuvarande reconnect-beteende
+		- [ ] Test: Stäng av broker, mät återanslutningstid
+	- [ ] **8. Säkerhet**
+		- [ ] Utbildning: Förstå risker med cleartext, anonym auth, TLS
+		- [ ] Konfiguration: Utvärdera om TLS ska läggas till
+		- [ ] Dokumentation: Dokumentera säkerhetsläge och rekommendationer
+		- [ ] Test: Säkerhetsgenomgång av nuvarande setup
+	- [ ] **9. Verktyg**
+		- [ ] Utbildning: Prova MQTT Explorer, mosquitto_sub, mosquitto_pub
+		- [ ] Konfiguration: Notera anslutningsinställningar per verktyg
+		- [ ] Dokumentation: Skapa "lathund" för varje verktyg
+		- [ ] Test: Använd varje verktyg för att publicera/lyssna
+	- [ ] **10. Flöde: från scan till mottaget meddelande**
+		- [ ] Utbildning: Följ hela kedjan steg för steg
+		- [ ] Konfiguration: Identifiera flaskhalsar eller förbättringar
+		- [ ] Dokumentation: Uppdatera dokumentation med korrekt flöde
+		- [ ] Test: End-to-end test enligt flödesbeskrivningen
+	- [ ] **11. Kända begränsningar och framtida förbättringar**
+		- [ ] Utbildning: Förstå vad som saknas och varför
+		- [ ] Konfiguration: Prioritera vilka förbättringar som är viktigast
+		- [ ] Dokumentation: Uppdatera begränsningar i roadmap
+		- [ ] Test: Verifiera att kända begränsningar fortfarande gäller
 
 - [ ] **Write-förbättringar** (önskemål från test) — under Fas 6
 		- [x] Visa låsta/skrivbara block i write-vyn
