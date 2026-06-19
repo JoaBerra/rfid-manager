@@ -53,7 +53,10 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Verktyg-och-Setup]] — Omarchy-specifika konfigurationer, Android Studio AUR-paket, Git, AI-assistenter.
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
 - [[MQTT-Infrastruktur]] — Fördjupning (Fas-100): MQTT-protokollet, broker, topologi, topics, meddelandeformat, verktyg och hela dataflödet.
+- [[Fas-101-MQTT-Configuration]] — Praktisk implementation (Fas-101): Fullständig MQTT-konfiguration i appens Settings-skärm (host, port, TLS, auth, Sparkplug, topics, beteende).
+- [[Fas-200-Web-Dashboard]] — Realtidsdashboard (Fas-200): Webbaserad visualisering av MQTT-meddelanden med FastAPI + SSE + Docker Compose.
 - [[MQTT-Explorer]] — Gratis GUI-verktyg för att inspektera MQTT-meddelanden i realtid.
+- [[MQTT-Manual]] — Praktisk bruksanvisning: starta broker, dashboard, skicka data från telefonen, felsökning.
 
 ### Projektstyrning, Status och Arbetsätt
 - [[Kanban]] — Visuellt Kanban-board: vad som är kvar, pågår, klart och blockerat. Uppdateras löpande av AI-assistenten.
@@ -79,6 +82,12 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 **Fas 1–6 slutförda (v1.0 releasad).** Initial struktur (Fas 1) 2026-05-26. Eskortminne-läs/skriv (Fas 2) klar 2026-06-04. UI-reallokering, navigation, ViewModels, spacing, polish och PC-stöd (Fas 3) sign-off av Kund 2026-06-10. Lokalisering, inställningar och användbarhet (Fas 4) sign-off av Kund 2026-06-11. Dokumentation, kvalitet och radar-estetik (Fas 5) + 1.0 Release (Fas 6) klara 2026-06-13.
 
 **Fas-100 (MQTT-infrastruktur):** Pågående fördjupning. Se [[MQTT-Infrastruktur]].
+
+**Fas-101 (MQTT-klientkonfiguration):** Planerad. Fullständig konfiguration av anslutning, TLS, autentisering, Sparkplug och beteende direkt i appen. Se [[Fas-101-MQTT-Configuration]].
+
+**Fas-200 (MQTT Realtidsdashboard):** Implementerad och godkänd av Kund ✅. Webbaserad dashboard med FastAPI + SSE för realtidsvisualisering av MQTT-meddelanden. Docker Compose för enkel demo. Se [[Fas-200-Web-Dashboard]].
+
+**MQTT-Manual:** Praktisk bruksanvisning för hela MQTT-kedjan: broker, dashboard, kommandon, felsökning. Se [[MQTT-Manual]].
 
 **GitHub:** https://github.com/JoaBerra/rfid-manager
 

@@ -2792,6 +2792,81 @@ No further code changes, builds, or wiki synthesis beyond this entry will occur 
 
 ---
 
+## [2026-06-10] uat | Fas 3 UAT-genomgång + 7 godkända ändringskrav införda
+
+**Vad gjordes:**
+
+- **UAT-test** på Samsung Note 10 genomfört av Kund. 14 testfall, 9 ✅, 5 med synpunkter.
+- **7 ändringskrav** dokumenterade i [[Kundrelationer-och-Acceptans]] som "godkända att införas".
+
+**Införda ändringar:**
+
+| # | Var | Ändring |
+|---|---|---|
+| UAT-1 | Scan – Radar | Sweep-linjen animeras nu (360° rotation på 4s) via `infiniteTransition` |
+| UAT-2 | Scan – "GO TO READINGS" | Knapp borttagen (redundant med bottom nav) |
+| UAT-3 | Scan – "Detected" | Behållen som "DETECTED" (tillräckligt tydlig) |
+| UAT-4 | Readings – JSON-indikator | Borttagen (finns i Settings) |
+| UAT-5 | Readings – Sortering | `sortedByDescending { it.timestamp }` — senaste överst |
+| UAT-6 | Connectivity – Transmit | Redan fixat (döpt om till "Transmit") |
+| UAT-7 | Connectivity – Transaktionskort | Nu visas **alla** readings med statusetikett (Pending/Transmitted), tidsstämpel, typ, dataPreview |
+
+**Status:** Alla 9 UAT-punkter införda och installerade. Klar för omtest.
+
+**Senaste punkt (UAT-9):** "Transmit"-knappen borttagen från Connectivity — Transmit sker enbart från Readings per reading-kort. Connectivity är nu rent monitor-läge.
+
+---
+
+## [2026-06-10] housekeeping | Städning: dead code borttaget, index uppdaterad, release synkad
+
+**Vad gjordes:**
+
+- Borttaget: `PersistedReadingsScreen.kt` (dead code — ersatt av inline-VM i MainScreenHost)
+- Städade TODO-kommentarer i `ScanScreen.kt`, `MainScreenHost.kt`, `Screen.kt`
+- Uppdaterade `index.md` med länkar till Fas 3-sidor + MQTT-Explorer
+- Uppdaterade status-sektion (Fas 3 sign-off)
+- Synkade till release-repot och commitade
+
+**Status:** Rent bord. Redo för Fas 4-planering.
+
+---
+
+## [2026-06-10] fas4-kickoff | Fas 4 acceptanskriterier definierade + lexikon för i18n
+
+**Vad gjordes:**
+
+- **Produkt-Roadmap.md** uppdaterad med Fas 4 och Fas 5 sektioner med fullständiga acceptanskriterier.
+- **Fas4-Implementation-Plan.md** skapad med:
+  - Lexikon-tabell för lokalisering (70+ strängar, svenska/engelska)
+  - Prioriterad implementationsordning (8 steg)
+  - Risker
+- **index.md** uppdaterad med länk till Fas 4-planen.
+
+**Innehåll Fas 4:**
+1. Lokaliseringssystem (JSON-lexikon + runtime byte i Settings)
+2. Font size-slider för transaktionsdata
+3. Sök/filtrering i Readings
+4. Export (CSV/JSON via Share Sheet)
+5. Haptic + ljud vid scan
+6. Riktig MQTT-anslutning
+7. Dark mode-toggle
+8. Paginering i Readings (50 i taget)
+
+**Innehåll Fas 5:**
+1. Användarmanual (PDF)
+2. Arkitektur-diagram
+3. Release notes
+4. Testplan
+5. Kodgenomgång
+
+- **Fas 3 sign-off** i [[Kundrelationer-och-Acceptans#fas-3-sign-off-2026-06-10]] — alla kriterier uppfyllda.
+- **Release synkad:** `~/rfid-manager/releases/2026-06-Fas2/RFIDManager/` uppdaterad.
+- **Push till GitHub** med tagg `fas-3-sign-off-2026-06-10`.
+
+**Status:** Fas 3 ✅ klar och levererad.
+
+---
+
 ## [2026-06-11] fas4 | Punkt 4.2 – Textstorlek / Font size-slider implementerad och godkänd
 
 **Implementation:**
@@ -2911,99 +2986,72 @@ No further code changes, builds, or wiki synthesis beyond this entry will occur 
 
 Nästa steg: Fas 5 (dokumentation) eller Fas 6 (radar trail/efterglöd).
 
+---
 
-## [2026-06-10] uat | Fas 3 UAT-genomgång + 7 godkända ändringskrav införda
+## [2026-06-14] fas-101 | Fas-101 (MQTT-klientkonfiguration) skapad + Fas-100.1 godkänd av Kund
 
-**Vad gjordes:**
+**Fas-101:**
+- Ny wiki-sida: [[Fas-101-MQTT-Configuration]] med 7 kategorier för MQTT-konfiguration i appens Settings
+- Kanban och index.md uppdaterade
 
-- **UAT-test** på Samsung Note 10 genomfört av Kund. 14 testfall, 9 ✅, 5 med synpunkter.
-- **7 ändringskrav** dokumenterade i [[Kundrelationer-och-Acceptans]] som "godkända att införas".
+**Fas-100.1 — MQTT-protokollet — grunderna:**
+- Genomgång av publish/subscribe, broker, topics, wildcards
+- Kund bekräftar förståelse och tidigare praktiskt test
+- Godkänd ✅
 
-**Införda ändringar:**
+**Fas-100.2 — Vår broker: Eclipse Mosquitto:**
+- Genomgång av Docker-kommandon, konfiguration (`mosquitto.conf`), administration
+- Log-timestamp (UNIX epoch) förklarad och dokumenterad
+- Kund bekräftar förståelse
+- Godkänd ✅
 
-| # | Var | Ändring |
-|---|---|---|
-| UAT-1 | Scan – Radar | Sweep-linjen animeras nu (360° rotation på 4s) via `infiniteTransition` |
-| UAT-2 | Scan – "GO TO READINGS" | Knapp borttagen (redundant med bottom nav) |
-| UAT-3 | Scan – "Detected" | Behållen som "DETECTED" (tillräckligt tydlig) |
-| UAT-4 | Readings – JSON-indikator | Borttagen (finns i Settings) |
-| UAT-5 | Readings – Sortering | `sortedByDescending { it.timestamp }` — senaste överst |
-| UAT-6 | Connectivity – Transmit | Redan fixat (döpt om till "Transmit") |
-| UAT-7 | Connectivity – Transaktionskort | Nu visas **alla** readings med statusetikett (Pending/Transmitted), tidsstämpel, typ, dataPreview |
+**Fas-100.3 — Topologi och nätverk:**
+- Genomgång av nätverksflöde app → broker → subscriber
+- Kartläggning av portar (1883), IP (192.168.50.128), WiFi, cleartext
+- Nätverksdiagram med korrekta adresser
+- Kund bekräftar förståelse
+- Godkänd ✅
 
-**Status:** Alla 9 UAT-punkter införda och installerade. Klar för omtest.
-
-**Senaste punkt (UAT-9):** "Transmit"-knappen borttagen från Connectivity — Transmit sker enbart från Readings per reading-kort. Connectivity är nu rent monitor-läge.
 
 ---
 
-## [2026-06-10] housekeeping | Städning: dead code borttaget, index uppdaterad, release synkad
+## [2026-06-19] fas-200 | MQTT Realtidsdashboard — skapad och testad
 
-**Vad gjordes:**
+**Plan godkänd av Projektledare 2026-06-19.**
 
-- Borttaget: `PersistedReadingsScreen.kt` (dead code — ersatt av inline-VM i MainScreenHost)
-- Städade TODO-kommentarer i `ScanScreen.kt`, `MainScreenHost.kt`, `Screen.kt`
-- Uppdaterade `index.md` med länkar till Fas 3-sidor + MQTT-Explorer
-- Uppdaterade status-sektion (Fas 3 sign-off)
-- Synkade till release-repot och commitade
+**Skapat:**
+- `~/rfid-manager/dashboard/` — ny komponent i utvecklingsmiljön
+- `app/main.py` — FastAPI-backend med SSE-endpoint
+- `app/mqtt_client.py` — MQTT-klient (paho) med trådsäker meddelandekö
+- `static/index.html` — Frontend med mörkt tema, live-flöde, statistik, detaljvy
+- `Dockerfile` + `docker-compose.yml` — Dashboard + Mosquitto i samma nätverk
+- Wiki: [[Fas-200-Web-Dashboard]] — arkitektur, API, startinstruktioner, troubleshooting
+- Kanban uppdaterad med Fas 200-kort
+- index.md uppdaterad med länk
 
-**Status:** Rent bord. Redo för Fas 4-planering.
+**Integrationstest (verifierat):**
+- Dashboard startar och ansluter till lokal Mosquitto-broker
+- `mosquitto_pub` från Docker skickar testmeddelande till `rfidmanager/047B05CA885884/telemetry`
+- Dashboard tar emot, tolkar JSON, lagrar i deque
+- `/api/messages` returnerar korrekt parsed meddelande (UID, type, data, sparkplug)
+- `/api/stats` visar `total=1, unique_uids=1, connected=true`
+- Alla endpoints svarar
+
+**Nästa steg:**
+- Integrationstest med fysisk telefon (Transmit → syns i dashboard)
+- Eventuella UI-förbättringar efter demo-feedback
+- Fortsätt Fas-100 (sektion 4–11) när tid finns
 
 ---
 
-## [2026-06-10] fas4-kickoff | Fas 4 acceptanskriterier definierade + lexikon för i18n
+## [2026-06-19] fas-200 | Kund godkänner — MQTT-Manual, Kanban, Git commit
 
-**Vad gjordes:**
+**Kund godkänner Fas 200** — "Det här är bra. Som kund godkänner jag."
 
-- **Produkt-Roadmap.md** uppdaterad med Fas 4 och Fas 5 sektioner med fullständiga acceptanskriterier.
-- **Fas4-Implementation-Plan.md** skapad med:
-  - Lexikon-tabell för lokalisering (70+ strängar, svenska/engelska)
-  - Prioriterad implementationsordning (8 steg)
-  - Risker
-- **index.md** uppdaterad med länk till Fas 4-planen.
-
-**Innehåll Fas 4:**
-1. Lokaliseringssystem (JSON-lexikon + runtime byte i Settings)
-2. Font size-slider för transaktionsdata
-3. Sök/filtrering i Readings
-4. Export (CSV/JSON via Share Sheet)
-5. Haptic + ljud vid scan
-6. Riktig MQTT-anslutning
-7. Dark mode-toggle
-8. Paginering i Readings (50 i taget)
-
-**Innehåll Fas 5:**
-1. Användarmanual (PDF)
-2. Arkitektur-diagram
-3. Release notes
-4. Testplan
-5. Kodgenomgång
-
-**Vad gjordes:**
-
-- **Fas 3 sign-off** i [[Kundrelationer-och-Acceptans#fas-3-sign-off-2026-06-10]] — alla kriterier uppfyllda.
-- **Release synkad:** `~/rfid-manager/releases/2026-06-Fas2/RFIDManager/` uppdaterad.
-- **Push till GitHub** med tagg `fas-3-sign-off-2026-06-10`.
-
-**Status:** Fas 3 ✅ klar och levererad.
-
-**Vad gjordes:**
-
-- **Fas 3.4 (Room) → roadmap-dokumentation:**
-  - `Produkt-Roadmap.md` — ny sektion "Villkor för riktig Room-databas" med tabell över barriärer, återaktiveringskod och övervakningslänk.
-  - `Fas3-Implementation-Plan.md` — 3.4 markerad ✅ KLAR (JSON-fallback). Villkor hänvisar till roadmap.
-
-- **Fas 3.5 Steg 15 — Empty states + loading + error:**
-  - `ScanScreen.kt` — ikon (Nfc/SearchOff) + färgkodad tomtext + LinearProgressIndicator under scanning.
-  - `MqttStatusScreen.kt` — tomt tillstånd för meddelanden + dynamisk statusfärg (grön/röd) + ikon.
-  - `MainScreenHost.kt` — spinner under laddning + ikon i tomt tillstånd för Readings.
-  - `SettingsScreen.kt` — ny dedikerad fil: storage mode, app info, version.
-
-- **Fas 3.5 Steg 16 — Python subscriber:**
-  - `test_subscriber_persist.py` — färgkodad ANSI-output, `--uid`-filter, on_disconnect, Ctrl+C-statistik.
-
-- **Fas 3.5 Steg 17 — MQTT Explorer-dokumentation:**
-  - Ny wiki-sida: `MQTT-Explorer.md` — installation, anslutning, användning, jämförelsetabell.
-
-**Status:** ✅ Fas 3.4 klar. ✅ Fas 3.5 klar. **Fas 3 är nu helt slutförd.**
-
+**Åtgärder:**
+- Skapat [[MQTT-Manual]] — praktisk bruksanvisning för MQTT-kedjan
+- Kanban: Fas 200 flyttad från "Att göra" → "Klart"
+- index.md: MQTT-Manual + status uppdaterad
+- log.md: denna post
+- README.md: uppdaterad med Fas 200-info
+- Git commit förberedd
