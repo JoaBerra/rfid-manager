@@ -4,23 +4,33 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
+- [ ] **Fas-101 — MQTT-klientkonfiguration i appen** (settings för host, port, TLS, auth, Sparkplug)
+	- [x] Wiki-sida skapad: [[Fas-101-MQTT-Configuration]]
+	- [ ] **1. Anslutning** — host, port, client ID
+	- [ ] **2. Autentisering** — username, password
+	- [ ] **3. TLS/SSL** — certifikat, kryptering
+	- [ ] **4. Sparkplug** — Group ID, Node ID, Device ID
+	- [ ] **5. Topics** — base, telemetry, command
+	- [ ] **6. Beteende** — QoS, retain, keep-alive, reconnect, will message
+	- [ ] **7. Verifiering** — testknapp, statusindikator
+
 - [ ] **Fas-100 — MQTT-infrastruktur och nätverkslandskap** (fördjupning)
 	- [x] Wiki-sida skapad: [[MQTT-Infrastruktur]]
-	- [ ] **1. MQTT-protokollet — grunderna**
-		- [ ] Utbildning: Förstå publish/subscribe, broker, topic, wildcards
-		- [ ] Konfiguration: Identifiera relevanta protokollinställningar
-		- [ ] Dokumentation: Sammanfatta MQTT-grunder i egna ord
-		- [ ] Test: Verifiera förståelse med praktiskt exempel
-	- [ ] **2. Vår broker: Eclipse Mosquitto**
-		- [ ] Utbildning: Förstå Mosquitto, docker run-kommandot, konfig
-		- [ ] Konfiguration: Gå igenom mosquitto.conf, testa ändra parameter
-		- [ ] Dokumentation: Skapa en "broker quick reference"
-		- [ ] Test: Starta/stoppa brokern, verifiera med mosquitto_pub/sub
-	- [ ] **3. Topologi och nätverk**
-		- [ ] Utbildning: Förstå nätverksflödet app → broker → subscriber
-		- [ ] Konfiguration: Kartlägga portar, IP, WiFi, brandvägg
-		- [ ] Dokumentation: Uppdatera nätverksdiagram med korrekta adresser
-		- [ ] Test: Verifiera anslutning från alla enheter i nätverket
+	- [x] **1. MQTT-protokollet — grunderna**
+		- [x] Utbildning: Förstå publish/subscribe, broker, topic, wildcards
+		- [x] Konfiguration: Identifiera relevanta protokollinställningar
+		- [x] Dokumentation: Sammanfatta MQTT-grunder i egna ord
+		- [x] Test: Verifiera förståelse med praktiskt exempel
+	- [x] **2. Vår broker: Eclipse Mosquitto**
+		- [x] Utbildning: Förstå Mosquitto, docker run-kommandot, konfig
+		- [x] Konfiguration: Gå igenom mosquitto.conf, testa ändra parameter
+		- [x] Dokumentation: Skapa en "broker quick reference"
+		- [x] Test: Starta/stoppa brokern, verifiera med mosquitto_pub/sub
+	- [x] **3. Topologi och nätverk**
+		- [x] Utbildning: Förstå nätverksflödet app → broker → subscriber
+		- [x] Konfiguration: Kartlägga portar, IP, WiFi, brandvägg
+		- [x] Dokumentation: Uppdatera nätverksdiagram med korrekta adresser
+		- [x] Test: Verifiera anslutning från alla enheter i nätverket
 	- [ ] **4. Topics**
 		- [ ] Utbildning: Förstå topic-struktur, wildcards, hierarki
 		- [ ] Konfiguration: Se över topic-struktur för framtida behov
@@ -110,14 +120,7 @@ kanban-plugin: board
 - [x] Fas 4 pushad till GitHub
 - [x] Fas 3 — Navigation, ViewModels, spacing, polish
 - [x] Fas 2 — MQTT, persistens, end-to-end
-- [x] Fas 1 — NFC-läsning/skrivning, UI, radar
-- [x] Android Studio + Omarchy-setup
-- [x] Wiki-struktur (Karpathy pattern)
-- [x] GitHub-repo skapat
-
-## ❌ Blockerat
-
-- [ ] Riktig Room-databas — inväntar KSP med AGP 9-stöd
+- [x] **Fas 200 — MQTT Realtidsdashboard** — FastAPI/SSE, Docker Compose, live-flöde + statistik ([[Fas-200-Web-Dashboard]]) — ✅ Godkänt av Kund 2026-06-19
 
 ## 📝 Anteckningar
 

@@ -1,61 +1,58 @@
-# RFID Manager — Release 2026-06-Fas4
+# RFID Manager — Projektöversikt
 
-> **Senaste milstolpe (2026-06-11):** Fas 4 UAT godkänd av Kund.  
-> Alla 8 punkter implementerade, testade på fysisk Samsung Galaxy Note 10 och signerade.  
-> Se tag `fas-4-sign-off-2026-06-11`.
-
-**Lokaliseringssystem (i18n), inställningar (fontstorlek, sök/filter, paginering), export (CSV/JSON), haptik + ljud, riktig MQTT-anslutning, dark mode-toggle.**
+> **Senaste milstolpe (2026-06-19):** Fas 200 — MQTT Realtidsdashboard godkänd av Kund.  
+> Webbaserad dashboard med FastAPI + SSE, live-flöde och statistik för MQTT-meddelanden.
 
 ---
 
-## Vad ingår i Fas 4
+## Projektstatus
 
-| # | Punkt | Status |
-|---|-------|--------|
-| 4.1 | Lokaliseringssystem (i18n) — JSON-lexikon svenska/engelska, runtime byte | ✅ |
-| 4.2 | Font size-slider — 1.0–1.8×, påverkar alla vyer | ✅ |
-| 4.3 | Sök/filtrering i Readings — wildcards (`*`, `?`), kombinerat med type-filter | ✅ |
-| 4.4 | Export CSV/JSON — Android Share Sheet | ✅ |
-| 4.5 | Haptic + ljud vid scan — toggles i Settings | ✅ |
-| 4.6 | Riktig MQTT-anslutning — MqttConnectionManager, persistent, auto-reconnect | ✅ |
-| 4.7 | Dark mode-toggle — Switch, LIGHT/DARK, alla skärmar migrerade till `MaterialTheme.colorScheme.*` | ✅ |
-| 4.8 | Paginering i Readings — "Ladda fler"-knapp, konfigurerbar sidstorlek (10–50) | ✅ |
+| Fas | Innehåll | Status |
+|-----|----------|--------|
+| **Fas 1–6** | NFC-läsning/skrivning, MQTT, navigation, i18n, dark mode, v1.0 release | ✅ Alla klara |
+| **Fas-100** | MQTT-infrastruktur — fördjupning (pågående) | 🔄 ~30% |
+| **Fas-101** | MQTT-klientkonfiguration i appen | 📋 Planerad |
+| **Fas 200** | MQTT Realtidsdashboard — FastAPI, SSE, Docker Compose | ✅ Godkänd 2026-06-19 |
 
 ---
 
-## Snabbstart
+## Snabbstart — Android-app
 
 ```bash
-# 1. Öppna i Android Studio eller bygg från terminal
 cd RFIDManager
 ./gradlew assembleDebug
-
-# 2. Installera på ansluten enhet
 adb install -r app/build/outputs/apk/debug/app-debug.apk
-
-# 3. Starta "RFID Manager" på telefonen, slå på NFC
 ```
 
-## Innehåll i paketet
+## Snabbstart — MQTT-demo
 
-- `RFIDManager/` — fullständig källkod (Kotlin 2.2.10, Compose, Material 3)
-  - `data/mqtt/MqttConnectionManager.kt` — persistent MQTT-anslutning (NY)
-  - `data/settings/AppSettings.kt` — 6 StateFlows (fontSizeScale, hapticEnabled, soundEnabled, themeMode, pageSize)
-  - `data/localization/LocalizationManager.kt` — i18n (NY)
-  - `data/export/ReadingExporter.kt` — CSV/JSON-export (NY)
-  - `nfc/AndroidNfcManager.kt` — haptik + ljud
-  - `ui/theme/Theme.kt` — LIGHT/DARK-stöd
-  - `ui/viewmodel/ReadingsViewModel.kt` — sök, filter, paginering
-  - `ui/viewmodel/ConnectivityViewModel.kt` — ingen demo-data, läser från MqttConnectionManager
-  - `ui/screens/SettingsScreen.kt` — alla inställningar (språk, font, haptik, ljud, dark mode, sidstorlek, export)
-  - `assets/strings_sv.json`, `strings_en.json` — 75+ nycklar var
+```bash
+# 1. Starta broker
+docker run -d --rm --name rfid-mqtt-test -p 1883:1883 \
+  -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
+  eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf
 
-- `llm-wiki/` — hela projektdokumentationen (Karpathy-style)
-  - Uppdaterad med Fas 4 sign-offs, arkitektur, roadmap
+# 2. Starta dashboard
+cd ~/rfid-manager/dashboard
+docker compose up --build
+# Öppna http://localhost:8000
 
-- `rfid-setup/` — udev-regler + ADB-skript
+# 3. Transmit från telefonen → meddelanden syns i dashboardens live-flöde
+```
 
 ---
 
-**Skapad:** 2026-06-11  
-**GitHub:** https://github.com/JoaBerra/rfid-manager
+## Innehåll
+
+- `RFIDManager/` — Android-app (Kotlin, Compose, Material 3)
+  - NFC-läsning/skrivning, MQTT (Paho), persistens, i18n, dark mode
+- `llm-wiki/` — Projektdokumentation (Karpathy-style, Obsidian)
+  - [[wiki/MQTT-Manual]] — Praktisk MQTT-bruksanvisning
+  - [[wiki/Fas-200-Web-Dashboard]] — Dashboardens arkitektur
+- `rfid-setup/` — UDEV-regler + ADB-skript
+- `~/rfid-manager/dashboard/` — Realtidsdashboard (FastAPI + SSE)
+
+---
+
+**GitHub:** https://github.com/JoaBerra/rfid-manager  
+**Wiki-index:** [wiki/index.md](wiki/index.md)

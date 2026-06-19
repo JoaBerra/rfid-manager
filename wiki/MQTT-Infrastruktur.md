@@ -75,13 +75,20 @@ persistence_location /mosquitto/data/
 log_dest stdout
 ```
 
-| Direktiv | Värde | Betydelse |
-|----------|-------|-----------|
-| `listener` | 1883 | Lyssna på port 1883 (TCP, cleartext) |
-| `allow_anonymous` | true | Ingen inloggning krävs |
-| `persistence` | true | Meddelanden och sessioner sparas till disk |
-| `persistence_location` | /mosquitto/data/ | Sökväg inuti containern |
-| `log_dest` | stdout | Loggar till konsolen (syns med `docker logs`) |
+#### Parameter-förklaring
+
+| Direktiv | Värde | Betydelse | Not |
+|----------|-------|-----------|-----|
+| `listener` | 1883 | Port för MQTT (cleartext TCP) | MQTT-standard. Kan ha flera listeners, t.ex. `listener 8883` för TLS |
+| `allow_anonymous` | true | Vem som helst får ansluta utan lösenord | **Säkerhetsrisk** i öppen miljö. Sätt `false` + `password_file` för produktion |
+| `persistence` | true | Meddelanden/sessioner sparas till disk | Data finns kvar efter omstart (i Docker-volym) |
+| `persistence_location` | /mosquitto/data/ | Sökväg inuti containern | Mappad Docker-volym enligt `docker inspect` |
+| `log_dest` | stdout | Loggar till konsolen | Samlas av Docker (`docker logs`). Alternativ: `log_dest file /mosquitto/log/mosquitto.log` |
+
+**Vad är inte konfigurerat?** (alla standard, inga begränsningar):
+- `max_connections` → obegränsat (standard: -1)
+- `allow_zero_length_clientid` → true (standard)
+- `keepalive_interval` → 60 sek (standard)
 
 ### Starta brokern
 
@@ -96,18 +103,42 @@ docker run -d --rm --name rfid-mqtt-test \
 | Flagga | Betydelse |
 |--------|-----------|
 | `-d` | Detached (kör i bakgrunden) |
-| `--rm` | Ta bort containern när den stoppas |
-| `--name` | Namn på containern |
+| `--rm` | Ta bort containern när den stoppas — **containern raderas då permanent** |
+| `--name` | Namn på containern (`rfid-mqtt-test`) |
 | `-p 1883:1883` | Mappa host 1883 → container 1883 |
 | `-v` | Mounta konfigurationsfilen in i containern |
+
+**Viktigt om `--rm`:** Containern raderas automatiskt vid `docker stop`. Efter stopp måste du köra `docker run` igen (inte `docker start`). Om du vill kunna `stop` → `start`, ta bort `--rm` från kommandot.
+
+### Brokerloggen — format
+
+Varje rad i `docker logs` börjar med ett nummer — det är **UNIX epoch-tid** (sekunder sedan 1970-01-01).
+
+```
+1781449592: mosquitto version 2.1.2 starting
+│
+└─ 2026-06-14 17:06:32 (lokal tid)
+```
+
+För att konvertera: `date -d @<timestamp>` eller `date -d @1781449592 "+%Y-%m-%d %H:%M:%S"`.
+
+Exempel från vår broker (14 juni 2026):
+
+| Lograd | Tid (UTC) | Händelse |
+|--------|-----------|----------|
+| `1781449592` | 17:06:32 | Mosquitto startar |
+| `1781449602` | 17:06:42 | Ny anslutning från 192.168.50.112 |
+| `1781449603` | 17:06:43 | Klient `rfid-android-client` ansluten |
+| `1781451392` | 17:36:32 | Persistence sparas till disk |
+| `1781453193` | 18:06:33 | Persistence sparas till disk |
 
 ### Grundläggande administration
 
 ```bash
-# Starta brokern (om containern finns men är stoppad)
+# Om containern fortfarande finns (utan --rm) och är stoppad:
 docker start rfid-mqtt-test
 
-# Om containern är borttagen (--rm), återskapa den:
+# Om containern är borttagen, återskapa den:
 docker run -d --rm --name rfid-mqtt-test \
   -p 1883:1883 \
   -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
@@ -135,42 +166,66 @@ mosquitto_pub -h localhost -p 1883 -t "test" -m "hello"
 
 Det finns ingen `docker-compose.yml`. Brokern startas direkt med `docker run`. Detta är fullt tillräckligt för utvecklingsmiljön men kan vara värt att dokumentera om man vill återskapa miljön på en annan maskin.
 
+### Broker Quick Reference
+
+| Vad                                | Kommando                                                                                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Starta broker**                  | `docker run -d --rm --name rfid-mqtt-test -p 1883:1883 -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf` |
+| **Starta (om stoppad, utan --rm)** | `docker start rfid-mqtt-test`                                                                                                                                                                                 |
+| **Stoppa**                         | `docker stop rfid-mqtt-test`                                                                                                                                                                                  |
+| **Omstart**                        | `docker restart rfid-mqtt-test`                                                                                                                                                                               |
+| **Status**                         | `docker ps --filter name=rfid-mqtt-test`                                                                                                                                                                      |
+| **Loggar**                         | `docker logs rfid-mqtt-test`                                                                                                                                                                                  |
+| **Följ loggar**                    | `docker logs -f rfid-mqtt-test`                                                                                                                                                                               |
+| **Testa anslutning**               | `docker exec rfid-mqtt-test mosquitto_pub -h localhost -p 1883 -t "test" -m "ping"`                                                                                                                           |
+| **Lyssna på alla topics**          | `docker exec rfid-mqtt-test mosquitto_sub -h localhost -p 1883 -t "rfidmanager/#" -v`                                                                                                                         |
+| **Konfigurationsfil**              | `~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf`                                                                                                                                                           |
+| **Inuti containern**               | `docker exec -it rfid-mqtt-test sh`                                                                                                                                                                           |
+|                                    |                                                                                                                                                                                                               |
+
+**Version:** `eclipse-mosquitto:latest` — Mosquitto 2.1.2 (MQTT 3.1.1 / 5.0)
+
 ---
 
 ## 3. Topologi och nätverk
 
 ### Nätverksöversikt
 
+```mermaid
+%%{init: {'themeVariables': { 'fontSize': '10px' }}}%%
+flowchart LR
+    subgraph LAN["Hemmanätverk (192.168.50.0/24)"]
+        subgraph Phone["Samsung Galaxy Note 10 (192.168.50.112)"]
+            App["RFID Manager App"]
+            Client["Paho MQTT Client<br/>clientId: rfid-android-client"]
+            App --- Client
+        end
+        subgraph PC["PC (192.168.50.128)"]
+            Broker["Docker Mosquitto :1883"]
+            Subscriber["Python subscriber.py"]
+            Explorer["MQTT Explorer<br/>(valfritt GUI)"]
+        end
+    end
+
+    Phone <-.->|"WiFi"| PC
+    App -->|"publish rfidmanager/&lt;uid&gt;/telemetry"| Broker
+    Broker -->|"distribute rfidmanager/+/telemetry"| Subscriber
+    Broker -.->|"via MQTT Explorer"| Explorer
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Hemmanätverk (192.168.50.0/24)               │
-│                                                                  │
-│  ┌──────────────────────┐         WiFi         ┌──────────────┐ │
-│  │  Samsung Galaxy Note 10 │◄──────────────►│     PC       │ │
-│  │  RFID Manager App    │  192.168.50.112   │  192.168.50.128│ │
-│  │                      │                   │                │ │
-│  │  Paho MQTT Client    │                   │  Docker:       │ │
-│  │  clientId:           │                   │  Mosquitto :1883 │ │
-│  │  rfid-android-client │                   │                │ │
-│  └──────────────────────┘                   │  Python:       │ │
-│                                              │  subscriber.py │ │
-│                                              │                │ │
-│                                              │  MQTT Explorer │ │
-│                                              │  (valfritt GUI) │ │
-│                                              └────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
 ```
+
+<img src="assets/mqtt-natoversikt.svg" width="600" alt="Nätverksdiagram">
 
 ### Anslutningsparametrar
 
-| Parameter | Värde |
-|-----------|-------|
-| Broker IP | `192.168.50.128` |
-| Broker port | `1883` |
-| Protokoll | `tcp://` (cleartext) |
-| Android client ID | `rfid-android-client` |
-| Broker-URL i app | `tcp://192.168.50.128:1883` (konfigurerbar i Settings) |
-| WiFi-nätverk | Lokalt LAN, troligen via router med DHCP |
+| Parameter         | Värde                                       |
+|-------------------|---------------------------------------------|
+| Broker IP         | `192.168.50.128`                            |
+| Broker port       | `1883`                                      |
+| Protokoll         | `tcp://` (cleartext)                        |
+| Android client ID | `rfid-android-client`                       |
+| Broker-URL i app  | `tcp://192.168.50.128:1883` (konfigurerbar i Settings) |
+| WiFi-nätverk      | Lokalt LAN, troligen via router med DHCP    |
 
 ### Nätverkssäkerhet
 
@@ -184,30 +239,39 @@ Det finns ingen `docker-compose.yml`. Brokern startas direkt med `docker run`. D
 
 ### Aktiva topics
 
-| Topic | Riktning | QoS | Användning |
-|-------|----------|-----|------------|
-| `rfidmanager/<uid>/telemetry` | App → Broker | 1 | Publicera RFID-avläsning |
-| `rfidmanager/+/telemetry` | Broker → Subscriber | 1 | Python-lyssnaren prenumererar på alla UID:n |
+| Topic                         | Riktning            | QoS | Användning |
+|-------------------------------|---------------------|-----|------------|
+| `rfidmanager/<uid>/telemetry` | App → Broker        |  1  | Publicera RFID-avläsning |
+| `rfidmanager/+/telemetry`     | Broker → Subscriber |  1  | Python-lyssnaren prenumererar på alla UID:n |
 
 - **`<uid>`:** Unikt ID för RFID-taggen (t.ex. `047B05CA885884`)
 - **`+`:** Wildcard för en nivå (matchar alla UID:n)
 
 ### Planerade topics
 
-| Topic | Riktning | Status |
-|-------|----------|--------|
+| Topic                       | Riktning     | Status |
+|-----------------------------|--------------|--------|
 | `rfidmanager/<uid>/command` | Broker → App | Planerad — för att skicka kommandon från PC till appen |
 
 ### Exempel på topic-struktur
 
-```
-rfidmanager/
-├── 047B05CA885884/
-│   └── telemetry        ← RFID-avläsning från denna tagg
-├── 0479981A8A6A80/
-│   └── telemetry        ← RFID-avläsning från annan tagg
-└── <uid>/
-    └── command          ← Framtida: styrkommando från PC
+```mermaid
+%%{init: {'themeVariables': { 'fontSize': '10px' }}}%%
+graph TB
+    Root["rfidmanager/"]
+    Tag1["047B05CA885884/"]
+    Tag2["0479981A8A6A80/"]
+    TagN["&lt;uid&gt;/"]
+    Telemetry1["telemetry ← RFID-avläsning från denna tagg"]
+    Telemetry2["telemetry ← RFID-avläsning från annan tagg"]
+    Command["command ← Framtida: styrkommando från PC"]
+
+    Root --> Tag1
+    Root --> Tag2
+    Root --> TagN
+    Tag1 --> Telemetry1
+    Tag2 --> Telemetry2
+    TagN --> Command
 ```
 
 ### Designprinciper
@@ -322,22 +386,25 @@ Om brokern inte hör från klienten på 30 + 10 sekunder (tolerans) betraktas an
 
 Appen har en **custom coroutine-baserad** återanslutningsloop (inte Paho inbyggd auto-reconnect):
 
-```
-varje 35:e sekund:
-    om status != CONNECTED:
-        försök anslut igen
-```
+```mermaid
+%%{init: {'themeVariables': { 'fontSize': '10px' }}}%%
+flowchart TD
+    A["varje 35:e sekund:"] --> B{"status != CONNECTED?"}
+    B -->|"ja"| C["försök anslut igen"]
+    B -->|"nej"| A
 
 Detta är en enkel polling-mekanism. Paho har inbyggd auto-reconnect vilket vore ett alternativ.
 
 ### Återanslutningsflöde
 
-```
-1. WiFi försvinner eller broker kraschar
-2. connectionLost() anropas → status = "DISCONNECTED"
-3. Efter max 35 sekunder: nytt anslutningsförsök
-4. Om broker är tillbaka → status = "CONNECTED"
-5. Om broker fortfarande nere → vänta 35 sekunder till
+```mermaid
+%%{init: {'themeVariables': { 'fontSize': '10px' }}}%%
+flowchart TD
+    A["1. WiFi försvinner<br/>eller broker kraschar"] --> B["2. connectionLost() anropas → status = 'DISCONNECTED'"]
+    B --> C["3. Efter max 35 sekunder:<br/>nytt anslutningsförsök"]
+    C --> D{"4. Broker tillbaka?"}
+    D -->|"ja"| E["5. status = 'CONNECTED'"]
+    D -->|"nej"| C
 ```
 
 ---
@@ -384,6 +451,37 @@ Detta är en enkel polling-mekanism. Paho har inbyggd auto-reconnect vilket vore
 | **docker logs** | Broker-loggar | `docker logs rfid-mqtt-test` |
 | **Wireshark** | Paketanalys (nätverkssniffning) | `sudo wireshark` (filter: `mqtt`) |
 | **netcat** | Rå TCP-test | `echo "" | nc -v 192.168.50.128 1883` |
+
+### Installation av testverktyg
+
+För att köra `mosquitto_pub` och `mosquitto_sub` från terminalen finns två alternativ:
+
+**Alternativ 1: Installera mosquitto (standalone)**
+```bash
+sudo pacman -S mosquitto
+```
+Efter installation: `mosquitto_sub -h 192.168.50.128 -p 1883 -t "rfidmanager/#"`
+
+**Alternativ 2: Använd Docker-containern**
+```bash
+# Lyssna på alla rfidmanager-meddelanden
+docker exec rfid-mqtt-test mosquitto_sub -h localhost -p 1883 -t "rfidmanager/#" -v
+
+# Publicera ett testmeddelande
+docker exec rfid-mqtt-test mosquitto_pub -h localhost -p 1883 -t "rfidmanager/test-001/telemetry" -m '{"type":"test"}'
+```
+
+**Alternativ 3: MQTT Explorer (GUI)**
+Ladda ner från [GitHub Releases](https://github.com/thomasnordquist/MQTT-Explorer/releases). Anslut med:
+
+| Fält | Värde |
+|------|-------|
+| Host | `192.168.50.128` (eller `localhost` från PC) |
+| Port | `1883` |
+| SSL/TLS | Av |
+| Auth | Ingen |
+
+Prenumerera på `rfidmanager/#` för att se alla meddelanden i realtid.
 
 ### MQTT Explorer
 
