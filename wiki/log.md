@@ -3055,3 +3055,32 @@ Nästa steg: Fas 5 (dokumentation) eller Fas 6 (radar trail/efterglöd).
 - log.md: denna post
 - README.md: uppdaterad med Fas 200-info
 - Git commit förberedd
+
+---
+
+## [2026-06-19] fas-300 | MCP-server för RFID Manager Dashboard — skapad
+
+**Status:** Implementerad och testad.
+
+**Byggt:**
+- `~/rfid-manager/mcp-server/server.py` — MCP-server med 4 tools: get_stats, get_messages, publish_mqtt, get_live_events
+- `~/rfid-manager/mcp-server/requirements.txt` — mcp, httpx, paho-mqtt
+- `~/rfid-manager/mcp-server/README.md` — installationsinstruktioner
+- `~/rfid-manager/mcp-server/Dockerfile` — Docker-stöd (valfritt)
+
+**Testat:**
+- tools/list returnerar korrekt 4 verktyg
+- get_stats returnerar live-data från dashboard (`total=4, unique_uids=3`)
+- get_messages returnerar senaste meddelanden
+- publish_mqtt publicerar till broker och syns i get_stats
+- get_live_events prenumererar direkt på MQTT och samlar in 5 sekunders data
+
+**OpenCode-konfiguration:**
+- `~/.config/opencode/opencode.json` uppdaterad med MCP-server-entry
+- Ansluter till dashboard på port 8001 och MQTT på port 1883
+
+**Wiki uppdaterad:**
+- Kanban: Fas-300 i "Pågår"
+- index.md: Fas-300 status, länk till MCP-server-sektion
+- log.md: denna post
+- Fas-200-Web-Dashboard.md: MCP-server-avsnitt tillagt

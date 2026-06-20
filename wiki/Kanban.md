@@ -4,6 +4,12 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
+- [ ] **Fas-400 — Teknikmiljö validering** (installation via Git clone, verifieringsrutiner, bootstrap av OpenCode+Qwen2.5)
+	- [ ] **1. Kartläggning** — alla komponenter, beroenden, Makefile/start.sh
+	- [ ] **2. Verifieringsrutiner** — hur kund verifierar på annan maskin att varje komponent fungerar
+	- [ ] **3. Bootstrap** — OpenCode + Qwen2.5 installation och validering
+	- [ ] **4. Dokumentation** — komponentöversikt i index.md, roadmap
+
 - [ ] **Fas-101 — MQTT-klientkonfiguration i appen** (settings för host, port, TLS, auth, Sparkplug)
 	- [x] Wiki-sida skapad: [[Fas-101-MQTT-Configuration]]
 	- [ ] **1. Anslutning** — host, port, client ID
@@ -79,7 +85,15 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
-
+- [ ] **Fas-300 — MCP-server för RFID Manager Dashboard**
+	- [x] MCP-server skapad: `~/rfid-manager/mcp-server/`
+	- [x] Tools: `get_stats`, `get_messages`, `publish_mqtt`, `get_live_events`
+	- [x] Testad mot dashboard + broker (verifierad)
+	- [x] OpenCode-konfiguration i `~/.config/opencode/opencode.json`
+	- [ ] Wiki-dokumentation uppdaterad (Fas-200-Web-Dashboard.md, Kanban)
+	- [ ] UAT: Kund godkänner att AI-assistenten kan anropa MCP-tools
+	- [ ] log.md uppdaterad
+	- [ ] Git commit
 
 
 
