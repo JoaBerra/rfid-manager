@@ -1,7 +1,7 @@
 # RFID Manager — Projektöversikt
 
-> **Senaste milstolpe (2026-06-19):** Fas 200 — MQTT Realtidsdashboard godkänd av Kund.  
-> Webbaserad dashboard med FastAPI + SSE, live-flöde och statistik för MQTT-meddelanden.
+> **Senaste milstolpe (2026-06-19):** Fas 300 — MCP-server för RFID Manager Dashboard.  
+> Exponerar dashboardens API som MCP-verktyg för AI-assistenten: statistik, meddelanden, publicering, live-händelser.
 
 ---
 
@@ -13,6 +13,8 @@
 | **Fas-100** | MQTT-infrastruktur — fördjupning (pågående) | 🔄 ~30% |
 | **Fas-101** | MQTT-klientkonfiguration i appen | 📋 Planerad |
 | **Fas 200** | MQTT Realtidsdashboard — FastAPI, SSE, Docker Compose | ✅ Godkänd 2026-06-19 |
+| **Fas 300** | MCP-server — AI-assistentåtkomst till dashboard + MQTT | 🔄 Implementerad, UAT pågår |
+| **Fas 400** | Teknikmiljö validering — Git clone, verifiering, bootstrap | 📋 Planerad |
 
 ---
 
@@ -51,6 +53,18 @@ docker compose up --build
   - [[wiki/Fas-200-Web-Dashboard]] — Dashboardens arkitektur
 - `rfid-setup/` — UDEV-regler + ADB-skript
 - `~/rfid-manager/dashboard/` — Realtidsdashboard (FastAPI + SSE)
+- `~/rfid-manager/mcp-server/` — MCP-server (AI-assistentåtkomst till dashboard + MQTT)
+
+## MCP-server (AI-assistentåtkomst)
+
+```bash
+# Starta (kräver dashboard + broker igång)
+cd ~/rfid-manager/mcp-server
+../dashboard/.venv/bin/python server.py
+
+# Används automatiskt av opencode via konfigurationen i ~/.config/opencode/opencode.json
+# Fråga assistenten: "Vad är status på dashboarden?" eller "Visa senaste MQTT-meddelandena"
+```
 
 ---
 

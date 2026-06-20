@@ -54,7 +54,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
 - [[MQTT-Infrastruktur]] — Fördjupning (Fas-100): MQTT-protokollet, broker, topologi, topics, meddelandeformat, verktyg och hela dataflödet.
 - [[Fas-101-MQTT-Configuration]] — Praktisk implementation (Fas-101): Fullständig MQTT-konfiguration i appens Settings-skärm (host, port, TLS, auth, Sparkplug, topics, beteende).
-- [[Fas-200-Web-Dashboard]] — Realtidsdashboard (Fas-200): Webbaserad visualisering av MQTT-meddelanden med FastAPI + SSE + Docker Compose.
+- [[Fas-200-Web-Dashboard]] — Realtidsdashboard (Fas-200): Webbaserad visualisering av MQTT-meddelanden med FastAPI + SSE + Docker Compose. Inkluderar MCP-server (Fas-300) för AI-assistentåtkomst.
 - [[MQTT-Explorer]] — Gratis GUI-verktyg för att inspektera MQTT-meddelanden i realtid.
 - [[MQTT-Manual]] — Praktisk bruksanvisning: starta broker, dashboard, skicka data från telefonen, felsökning.
 
@@ -88,6 +88,10 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 **Fas-200 (MQTT Realtidsdashboard):** Implementerad och godkänd av Kund ✅. Webbaserad dashboard med FastAPI + SSE för realtidsvisualisering av MQTT-meddelanden. Docker Compose för enkel demo. Se [[Fas-200-Web-Dashboard]].
 
 **MQTT-Manual:** Praktisk bruksanvisning för hela MQTT-kedjan: broker, dashboard, kommandon, felsökning. Se [[MQTT-Manual]].
+
+**Fas-300 (MCP-server):** Implementerad och testad ✅. Exponerar dashboardens API som MCP-verktyg för AI-assistenten. Tools: `get_stats`, `get_messages`, `publish_mqtt`, `get_live_events`. Se [[Fas-200-Web-Dashboard#mcp-server-fas-300]].
+
+**Fas-400 (Teknikmiljö validering):** Planerad 📋. Installation via Git clone, verifieringsrutiner, bootstrap av OpenCode+Qwen2.5.
 
 **GitHub:** https://github.com/JoaBerra/rfid-manager
 
