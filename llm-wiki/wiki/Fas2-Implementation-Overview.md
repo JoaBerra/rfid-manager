@@ -68,7 +68,7 @@ com.joakim.rfidmanager
 - [[Figma-Design-Spec-Fas2]] (den detaljerade handoff-dokumentet från Figma AI)
 - [[Nomenclature-Figma-Android]] (exakta namn)
 - [[Figma-Steps-Fas2-Build-Guide]] (steg-för-steg för den som vill återskapa i Figma)
-- De tre referensbilderna i `~/Fas2-Figma-UI-Mocks/`
+- De tre referensbilderna i `~/projects/rfid/rfid-manager/test/fas2-mqtt/figma-mocks/`
 
 ## Status (2026-06-05)
 - Data-lager (entities, dao, repo, database) på plats.

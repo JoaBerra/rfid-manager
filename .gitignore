@@ -1,43 +1,7 @@
-<<<<<<< HEAD
-# Android / Gradle
-*.iml
-.gradle/
-local.properties
-.idea/
-build/
-captures/
-.externalNativeBuild/
-.cxx/
-*.apk
-*.aab
-*.ap_
-*.dex
-
-# Android Studio
-*.log
-.navigation/
-*.swp
-*~
-
-# Misc
-.DS_Store
-Thumbs.db
-
-# Wiki (valfritt — behåll .obsidian om du använder Obsidian lokalt)
-# llm-wiki/wiki/.obsidian/
-
-# rfid-setup (sensitive? udev är ok, men inga lösen etc.)
-# Inga hemligheter här.
-
-# Release-artefakter
-*.tar.gz
-*.zip
-RFIDManager-Release-*/
-=======
 # Raw source material (not part of published wiki)
 raw/
 
-# Obsidian local workspace (can be committed if you want shared workspace, but usually not)
+# Obsidian local workspace
 .obsidian/workspace.json
 .obsidian/graph.json
 
@@ -45,5 +9,11 @@ raw/
 *.tmp
 *.bak
 *~
->>>>>>> f5a37fe (chore: initial commit - Fas 2 UAT godkänd av Kund (2026-06-07))
-wiki/.obsidian/workspace.json
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

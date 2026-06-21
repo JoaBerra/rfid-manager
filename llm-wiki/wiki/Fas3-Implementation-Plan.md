@@ -22,10 +22,10 @@ updated: 2026-06-10
 **Huvudreferens:** [[Fas3-Navigation-Spacing-Design]] (den textbaserade specen som utvecklades först).
 
 ## Arbetssätt under implementering
-- Använd standardiserad path-struktur: `~/rfid-manager/`
+- Använd standardiserad path-struktur: `~/projects/rfid/rfid-manager/`
 - Fas-specifik tagg: `fas-3-ui-polish-2026-06`
 - Löpande uppdatering av [[log.md]] och denna plan.
-- Alla ändringar synkas till release-snapshot under `~/rfid-manager/releases/2026-06-Fas2/`
+- Alla ändringar synkas till release-snapshot under `~/projects/rfid/rfid-manager/releases/2026-06-Fas2/`
 - Breathing room check: Alla UI-ändringar granskas mot spacing-tabellen i design-noten.
 - Kod följer befintlig nomenclature och rich comments-princip.
 
@@ -107,7 +107,7 @@ updated: 2026-06-10
     - PersistedReadings (MainScreenHost): ikon + spinner + tomt tillstånd med instruktion
     - MqttStatusScreen: tomt tillstånd för meddelanden + dynamisk statusfärg + Wi-Fi/CloudOff-ikon
     - SettingsScreen: ny egen fil (storage mode, app info, version)
-16. Förbättra Python subscriber i `~/rfid-manager/test/fas2-mqtt/mqtt/` med bättre strukturerad loggning. ✅
+16. Förbättra Python subscriber i `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/` med bättre strukturerad loggning. ✅
     - Färgkodad output (ANSI) per meddelandetyp
     - Filtrering på uid (--uid-flagga)
     - Reconnect-hantering via on_disconnect
@@ -119,8 +119,8 @@ updated: 2026-06-10
 **Acceptanskriterier som täcks:** Grundläggande polish, lättviktigt PC-stöd.
 
 ## Synk & Release
-- Alla ändringar görs först i dev-miljön (`~/AndroidStudioProjects/RFIDManager`).
-- Synkas till `~/rfid-manager/releases/2026-06-Fas2/RFIDManager/`.
+- Alla ändringar görs först i dev-miljön (`~/projects/rfid/rfid-manager-android`).
+- Synkas till `~/projects/rfid/rfid-manager/releases/2026-06-Fas2/RFIDManager/`.
 - Ny tagg när delmål är klart: `fas-3-ui-polish-...`
 - Uppdatera `PUSH-TO-GITHUB.md` och `README.md` i release-mappen vid behov.
 

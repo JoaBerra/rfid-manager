@@ -3084,3 +3084,48 @@ Nästa steg: Fas 5 (dokumentation) eller Fas 6 (radar trail/efterglöd).
 - index.md: Fas-300 status, länk till MCP-server-sektion
 - log.md: denna post
 - Fas-200-Web-Dashboard.md: MCP-server-avsnitt tillagt
+
+---
+
+## [2026-06-21] fas-500 | Miljöflytt sixten → falstaff: inventering genomförd
+
+**Bakgrund:** Utvecklingsmiljön flyttad från host sixten till falstaff. Tre huvudkataloger samlade under `~/projects/rfid/`:
+- `llm-wiki/` (tidigare `/home/joakim/llm-wiki/`)
+- `rfid-manager/` (tidigare `/home/joakim/rfid-manager/`)
+- `rfid-manager-android/` (tidigare `/home/joakim/AndroidStudioProjects/RFIDManager/`)
+
+**Inventering utförd:**
+- Genomsökning av samtliga ~200+ wiki-filer, skript, källkod och konfigurationer
+- Identifierat 5 kategorier av hårdkodade sökvägar som måste uppdateras
+- Identifierat refererade men saknade filer på falstaff (.venv, releases, Android SDK, MCP-konfig)
+- Figma-mock-bilderna finns redan på rätt plats (`test/fas2-mqtt/figma-mocks/`)
+
+**Skapat:**
+- [[Fas-500-Miljo-flytt-sixten-till-falstaff]] — full inventeringsdokumentation
+- Kanban-kort för Fas-500 (punkt 1 klar, 2–10 i Att göra)
+- index.md uppdaterad med länk till Fas-500
+
+**Status:** Punkt 1 (Inventering) ✅ klar.
+
+## [2026-06-21] fas-500 | Docker + Mosquitto installerade på falstaff
+
+**Åtgärder:**
+- Docker installerad på Ubuntu 24.04 (version 29.1.3, `docker.io` + `docker-compose-v2`)
+- Användare `joakim` tillagd i `docker`-gruppen
+- Eclipse Mosquitto 2-container startad: `docker run -d --name rfid-mqtt -p 1883:1883 -p 9001:9001 eclipse-mosquitto:2`
+- Broker lyssnar på `192.168.50.107:1883` (kabelbundet nätverk)
+
+**Uppdaterat:** Kanban — punkt 2 bockad.
+
+**Åtgärder:**
+- Python .venv skapade:
+  - `test/fas2-mqtt/.venv` — paho-mqtt installerat
+  - `dashboard/.venv` — fastapi, uvicorn, paho-mqtt installerade
+- Shebang i `test_subscriber_persist.py` uppdaterad till ny .venv-sökväg
+- `DB_DIR` uppdaterad från `Path.home() / "rfid-manager" / "data"` till `Path.home() / "projects" / "rfid" / "rfid-manager" / "data"`
+
+**Uppdaterat:** Kanban — punkt 3 bockad.
+
+**Nästa:** Uppdatera IP i källkod + dokumentation. Vill du att jag börjar med det?
+
+Se [[Fas-500-Miljo-flytt-sixten-till-falstaff]] för detaljerad lista och [[Kanban]] för status.

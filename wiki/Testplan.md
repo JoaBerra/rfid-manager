@@ -2,7 +2,7 @@
 
 > **Fas:** 5.4  
 > **Senast uppdaterad:** 2026-06-13  
-> **Testmiljö:** Samsung Galaxy Note 10 (SM-N970F), Android 12, MQTT broker 192.168.50.128:1883  
+> **Testmiljö:** Samsung Galaxy Note 10 (SM-N970F), Android 12, MQTT broker 192.168.50.107:1883  
 > **Testtyp:** Manuell
 
 ---
@@ -21,7 +21,7 @@ Samtliga testfall körs manuellt på fysisk enhet med riktig NFC-tagg.
 | Telefon | Samsung Galaxy Note 10 (SM-N970F/DS) |
 | Android | 12 (One UI 4.1) |
 | NFC | Aktiverat, enhetens egna kontroller (S.LSI 4.5.11) |
-| MQTT-broker | `192.168.50.128:1883` (Docker eclipse-mosquitto) |
+| MQTT-broker | `192.168.50.107:1883` (Docker eclipse-mosquitto) |
 | Testtaggar | Minst 1 Mifare Ultralight / NTAG, minst 1 Mifare Classic 1K |
 | Appversion | Senaste debug-build från Android Studio |
 | Anslutning | USB ADB + MTP (filöverföring) |
@@ -209,7 +209,7 @@ Resultat:
 | **Beskrivning** | Transmit reading till MQTT |
 | **Förutsättningar** | MQTT-broker igång, enhet ansluten |
 | **Steg** | 1. Tryck "Transmit" på en reading |
-| **Förväntat resultat** | Status ändras till "Transmitted" (eller "Pending" om broker ej nås). Payload skickas till `192.168.50.128:1883`. |
+| **Förväntat resultat** | Status ändras till "Transmitted" (eller "Pending" om broker ej nås). Payload skickas till `192.168.50.107:1883`. |
 
 - [x] `Godkänt`
 - [ ] `Ej godkänt`

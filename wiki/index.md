@@ -9,7 +9,7 @@ created: 2026-05-26
 > **LLM Wiki** för utveckling av kostnadsfria Android-applikationer i Kotlin med fokus på RFID/NFC-integration — särskilt läsning och hantering av eskortminnen.  
 > Miljö: Arch Linux + Omarchy + Android Studio. Helt utan licens- eller distributionskostnader. AI-verktyg som primärt stöd i byggnationen.
 
-Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
+Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim/projects/rfid/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
 
 ## Projektmål
 
@@ -62,7 +62,11 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Kanban]] — Visuellt Kanban-board: vad som är kvar, pågår, klart och blockerat. Uppdateras löpande av AI-assistenten.
 - [[Rollfördelning-och-Arbetsätt]] — Explicit rollbaserat samarbete (Kund / Projektledare / Arkitekt / Technical Lead / Programmerare / Testare / DevOps / Wiki Curator). Working Agreement för 1-människa + AI-team. Uppdaterad 2026-06-06.
 - [[Kundrelationer-och-Acceptans]] — Formell dokumentation av relationer till Kund, UAT-tester utförda i kundrollen samt tidsstämplade godkännanden (sign-off) per fas. Innehåller mallar och den aktuella Fas 2 UAT-godkännandet 2026-06-07.
-- [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/rfid-manager/`.
+- [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/projects/rfid/rfid-manager/`.
+
+### Miljö och Infrastruktur
+- [[Fas-400-Teknikmiljo-Validering]] — Komponentkarta, bootstrap-script, verifieringsrutiner för att sätta upp miljön på ny Ubuntu 24.04-maskin.
+- [[Fas-500-Miljo-flytt-sixten-till-falstaff]] — Inventering av hårdkodade sökvägar efter flytt från sixten till falstaff. Kartläggning av refererade men saknade filer och förslag på placering.
 
 ### Felrapporter (Bugs)
 - `bugs/` — Katalog för formella felrapporter.
@@ -87,11 +91,13 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 
 **Fas-200 (MQTT Realtidsdashboard):** Implementerad och godkänd av Kund ✅. Webbaserad dashboard med FastAPI + SSE för realtidsvisualisering av MQTT-meddelanden. Docker Compose för enkel demo. Se [[Fas-200-Web-Dashboard]].
 
+**Fas-500 (Miljöflytt sixten → falstaff):** Klart ✅. Docker, Python-miljöer, Android Studio, ADB, MCP-konfig, E2E-verifiering. Se [[Fas-500-Miljo-flytt-sixten-till-falstaff]] och [[Kanban]].
+
 **MQTT-Manual:** Praktisk bruksanvisning för hela MQTT-kedjan: broker, dashboard, kommandon, felsökning. Se [[MQTT-Manual]].
 
 **Fas-300 (MCP-server):** Implementerad och testad ✅. Exponerar dashboardens API som MCP-verktyg för AI-assistenten. Tools: `get_stats`, `get_messages`, `publish_mqtt`, `get_live_events`. Se [[Fas-200-Web-Dashboard#mcp-server-fas-300]].
 
-**Fas-400 (Teknikmiljö validering):** Planerad 📋. Installation via Git clone, verifieringsrutiner, bootstrap av OpenCode+Qwen2.5.
+**Fas-400 (Teknikmiljö validering):** Klart ✅. Komponentkarta, bootstrap-script (`setup/bootstrap.sh`), 9 verifieringsrutiner. Se [[Fas-400-Teknikmiljo-Validering]].
 
 **GitHub:** https://github.com/JoaBerra/rfid-manager
 

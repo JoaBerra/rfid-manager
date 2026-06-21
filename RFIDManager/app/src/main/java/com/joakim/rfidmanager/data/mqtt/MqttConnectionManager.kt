@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MqttConnectionManager(
-    private val brokerUrl: String = "tcp://192.168.50.128:1883",
+    private val brokerUrl: String = "tcp://192.168.50.107:1883",
     private val clientId: String = "rfid-android-client"
 ) : MqttCallback {
 

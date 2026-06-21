@@ -3,7 +3,7 @@
 The release is prepared in this directory. Push from your local terminal.
 
 ```bash
-cd /home/joakim/rfid-manager/releases/2026-06-Fas4
+cd /home/joakim/projects/rfid/rfid-manager/releases/2026-06-Fas4
 
 # Initialize git
 git init
@@ -32,7 +32,7 @@ Lägg till release notes (se README.md för vad som ingår).
 ## Tarball (alternativ)
 
 ```bash
-cd /home/joakim/rfid-manager/releases
+cd /home/joakim/projects/rfid/rfid-manager/releases
 tar -czf ~/RFIDManager-Fas4-Sign-off-2026-06-11.tar.gz 2026-06-Fas4/
 ```
 

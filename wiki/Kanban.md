@@ -4,11 +4,7 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-- [ ] **Fas-400 — Teknikmiljö validering** (installation via Git clone, verifieringsrutiner, bootstrap av OpenCode+Qwen2.5)
-	- [ ] **1. Kartläggning** — alla komponenter, beroenden, Makefile/start.sh
-	- [ ] **2. Verifieringsrutiner** — hur kund verifierar på annan maskin att varje komponent fungerar
-	- [ ] **3. Bootstrap** — OpenCode + Qwen2.5 installation och validering
-	- [ ] **4. Dokumentation** — komponentöversikt i index.md, roadmap
+
 
 - [ ] **Fas-101 — MQTT-klientkonfiguration i appen** (settings för host, port, TLS, auth, Sparkplug)
 	- [x] Wiki-sida skapad: [[Fas-101-MQTT-Configuration]]
@@ -85,15 +81,7 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
-- [ ] **Fas-300 — MCP-server för RFID Manager Dashboard**
-	- [x] MCP-server skapad: `~/rfid-manager/mcp-server/`
-	- [x] Tools: `get_stats`, `get_messages`, `publish_mqtt`, `get_live_events`
-	- [x] Testad mot dashboard + broker (verifierad)
-	- [x] OpenCode-konfiguration i `~/.config/opencode/opencode.json`
-	- [ ] Wiki-dokumentation uppdaterad (Fas-200-Web-Dashboard.md, Kanban)
-	- [ ] UAT: Kund godkänner att AI-assistenten kan anropa MCP-tools
-	- [ ] log.md uppdaterad
-	- [ ] Git commit
+
 
 
 
@@ -135,6 +123,8 @@ kanban-plugin: board
 - [x] Fas 3 — Navigation, ViewModels, spacing, polish
 - [x] Fas 2 — MQTT, persistens, end-to-end
 - [x] **Fas 200 — MQTT Realtidsdashboard** — FastAPI/SSE, Docker Compose, live-flöde + statistik ([[Fas-200-Web-Dashboard]]) — ✅ Godkänt av Kund 2026-06-19
+- [x] **Fas-500 — Miljöflytt sixten → falstaff** — Docker, .venv, IP/sökvägsuppdateringar, Android Studio, ADB, MCP-konfig, E2E-verifiering ([[Fas-500-Miljo-flytt-sixten-till-falstaff]]) — ✅ Godkänt av Kund 2026-06-21
+- [x] **Fas-400 — Teknikmiljö validering** — Komponentkarta, bootstrap-script, verifieringsrutiner, dokumentation ([[Fas-400-Teknikmiljo-Validering]], [[Kanban]]) — ✅ 2026-06-21
 
 ## 📝 Anteckningar
 

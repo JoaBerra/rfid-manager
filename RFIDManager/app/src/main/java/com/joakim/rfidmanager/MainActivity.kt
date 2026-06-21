@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
         // If this succeeds but Paho still fails, the issue is inside Paho's socket handling on high targetSdk.
         Thread {
             try {
-                val socket = java.net.Socket("192.168.50.128", 1883)
+                val socket = java.net.Socket("192.168.50.107", 1883)
                 android.util.Log.d("MQTT_TEST", "RAW SOCKET SUCCESS: connected=${socket.isConnected}")
                 socket.close()
             } catch (e: Exception) {

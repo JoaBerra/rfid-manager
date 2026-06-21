@@ -9,7 +9,7 @@ created: 2026-05-26
 > **LLM Wiki** för utveckling av kostnadsfria Android-applikationer i Kotlin med fokus på RFID/NFC-integration — särskilt läsning och hantering av eskortminnen.  
 > Miljö: Arch Linux + Omarchy + Android Studio. Helt utan licens- eller distributionskostnader. AI-verktyg som primärt stöd i byggnationen.
 
-Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/joakim/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
+Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/joakim/projects/rfid/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
 
 ## Projektmål
 
@@ -61,7 +61,7 @@ Denna wiki följer strikt [[Karpathy LLM Wiki pattern]] (se [schema.md](/home/jo
 ### Projektstyrning och Arbetsätt
 - [[Rollfördelning-och-Arbetsätt]] — Explicit rollbaserat samarbete (Kund / Projektledare / Arkitekt / Technical Lead / Programmerare / Testare / DevOps / Wiki Curator). Working Agreement för 1-människa + AI-team. Uppdaterad 2026-06-06.
 - [[Kundrelationer-och-Acceptans]] — Formell dokumentation av relationer till Kund, UAT-tester utförda i kundrollen samt tidsstämplade godkännanden (sign-off) per fas. Innehåller mallar och den aktuella Fas 2 UAT-godkännandet 2026-06-07.
-- [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/rfid-manager/`.
+- [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/projects/rfid/rfid-manager/`.
 
 ### Felrapporter (Bugs)
 - `bugs/` — Katalog för formella felrapporter.

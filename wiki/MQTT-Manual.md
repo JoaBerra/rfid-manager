@@ -24,7 +24,7 @@ created: 2026-06-19
 ```bash
 docker run -d --rm --name rfid-mqtt-test \
   -p 1883:1883 \
-  -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
+  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
   eclipse-mosquitto \
   mosquitto -c /mosquitto/config/mosquitto.conf
 ```
@@ -40,7 +40,7 @@ docker run -d --rm --name rfid-mqtt-test \
 ### Alternativ A: Docker Compose (rekommenderat för demo)
 
 ```bash
-cd ~/rfid-manager/dashboard
+cd ~/projects/rfid/rfid-manager/dashboard
 docker compose up --build
 ```
 
@@ -49,7 +49,7 @@ Detta startar både Mosquitto och dashboarden. Öppna http://localhost:8000.
 ### Alternativ B: Manuellt (för utveckling)
 
 ```bash
-cd ~/rfid-manager/dashboard
+cd ~/projects/rfid/rfid-manager/dashboard
 .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -170,10 +170,10 @@ curl -s http://localhost:8000/api/stats
 
 | Sökväg | Beskrivning |
 |--------|-------------|
-| `~/rfid-manager/test/fas2-mqtt/mqtt/test_subscriber_persist.py` | Python-subscriber med SQLite-persistens |
-| `~/rfid-manager/test/fas2-mqtt/mqtt/simulate_mobile_publish.py` | Simulera app-publicering |
-| `~/rfid-manager/dashboard/` | Webbdashboard (FastAPI + SSE) |
-| `~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf` | Broker-konfiguration |
+| `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/test_subscriber_persist.py` | Python-subscriber med SQLite-persistens |
+| `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/simulate_mobile_publish.py` | Simulera app-publicering |
+| `~/projects/rfid/rfid-manager/dashboard/` | Webbdashboard (FastAPI + SSE) |
+| `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf` | Broker-konfiguration |
 
 ---
 

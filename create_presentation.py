@@ -93,7 +93,7 @@ add_card(slide, 0.5, 1.6, 3.8, 2.5,
 
 add_card(slide, 4.7, 1.6, 3.8, 2.5,
     "🌐 MQTT Broker (Mosquitto)",
-    "• Docker container\n• eclipse-mosquitto:latest\n• Port 1883 (TCP)\n• allow_anonymous: true\n• IP: 192.168.50.128\n• Mosquitto 2.1.2")
+    "• Docker container\n• eclipse-mosquitto:latest\n• Port 1883 (TCP)\n• allow_anonymous: true\n• IP: 192.168.50.107\n• Mosquitto 2.1.2")
 
 add_card(slide, 8.9, 1.6, 3.8, 2.5,
     "💾 Subscriber / Backend",
@@ -106,7 +106,7 @@ add_card(slide, 0.5, 4.5, 5.8, 2.5,
 
 add_card(slide, 6.7, 4.5, 5.8, 2.5,
     "🧪 Test Configuration",
-    "• Broker: 192.168.50.128:1883\n• Topic: rfidmanager/<uid>/telemetry\n• QoS: 1 (at least once)\n• Keep-alive: 30s\n• cleanSession: true\n• JSON format payload")
+    "• Broker: 192.168.50.107:1883\n• Topic: rfidmanager/<uid>/telemetry\n• QoS: 1 (at least once)\n• Keep-alive: 30s\n• cleanSession: true\n• JSON format payload")
 
 # === SLIDE 3: MQTT Infrastructure ===
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -126,7 +126,7 @@ add_card(slide, 0.5, 1.6, 6.0, 5.0,
     "       ▼                   ▼\n"
     "┌─────────────────────────────────┐\n"
     "│      MQTT BROKER (Mosquitto)     │\n"
-    "│   192.168.50.128:1883            │\n"
+    "│   192.168.50.107:1883            │\n"
     "└────────┬────────────────┬────────┘\n"
     "         │                │\n"
     "         ▼                ▼\n"
@@ -176,7 +176,7 @@ add_card(slide, 0.5, 1.6, 4.0, 2.2,
 
 add_card(slide, 4.8, 1.6, 4.0, 2.2,
     "💻 PC — Docker Host",
-    "• IP: 192.168.50.128\n• Mosquitto container\n  (port 1883)\n• Python subscriber\n• MQTT Explorer\n• All on same machine")
+    "• IP: 192.168.50.107\n• Mosquitto container\n  (port 1883)\n• Python subscriber\n• MQTT Explorer\n• All on same machine")
 
 add_card(slide, 9.1, 1.6, 3.6, 2.2,
     "🌍 External Tools",
@@ -189,10 +189,10 @@ add_card(slide, 0.5, 4.2, 12.0, 3.0,
     "│ Component         │ IP/Host          │ Connects To       │ Port │ Protocol │\n"
     "├──────────────────────────────────────────────────────────────────────────────┤\n"
     "│ Phone (App)       │ 192.168.50.112   │ Broker (WiFi)     │ 1883 │ MQTT     │\n"
-    "│ Broker (Container) │ 192.168.50.128  │ — (accepts all)   │ 1883 │ TCP      │\n"
+    "│ Broker (Container) │ 192.168.50.107  │ — (accepts all)   │ 1883 │ TCP      │\n"
     "│ Python Subscriber │ localhost        │ Broker (local)    │ 1883 │ MQTT     │\n"
-    "│ MQTT Explorer     │ 192.168.50.128   │ Broker            │ 1883 │ MQTT     │\n"
-    "│ mosquitto CLI     │ localhost/192.168.50.128 │ Broker    │ 1883 │ MQTT     │\n"
+    "│ MQTT Explorer     │ 192.168.50.107   │ Broker            │ 1883 │ MQTT     │\n"
+    "│ mosquitto CLI     │ localhost/192.168.50.107 │ Broker    │ 1883 │ MQTT     │\n"
     "│ Wireshark         │ any              │ Network interface │ —    │ MQTT ftr │\n"
     "└──────────────────────────────────────────────────────────────────────────────┘")
 
@@ -208,10 +208,10 @@ add_card(slide, 0.5, 1.6, 6.0, 2.5,
     "🔧 Method 1: Standalone mosquitto CLI",
     "Install:  sudo pacman -S mosquitto\n\n"
     "Listen on all topics:\n"
-    "  mosquitto_sub -h 192.168.50.128 -p 1883 \\\n"
+    "  mosquitto_sub -h 192.168.50.107 -p 1883 \\\n"
     "    -t \"rfidmanager/#\" -v\n\n"
     "Publish test message:\n"
-    "  mosquitto_pub -h 192.168.50.128 -p 1883 \\\n"
+    "  mosquitto_pub -h 192.168.50.107 -p 1883 \\\n"
     "    -t \"rfidmanager/test/telemetry\" \\\n"
     "    -m '{\"uid\":\"test\"}'")
 
@@ -231,7 +231,7 @@ add_card(slide, 0.5, 4.4, 6.0, 2.5,
     "🖥️ Method 3: MQTT Explorer (GUI)",
     "Download: github.com/thomasnordquist/MQTT-Explorer\n\n"
     "Connection settings:\n"
-    "  Host: 192.168.50.128\n"
+    "  Host: 192.168.50.107\n"
     "  Port: 1883\n"
     "  SSL/TLS: Off\n"
     "  Auth: None\n\n"
@@ -239,13 +239,13 @@ add_card(slide, 0.5, 4.4, 6.0, 2.5,
 
 add_card(slide, 6.8, 4.4, 6.0, 2.5,
     "🐍 Python Test Scripts",
-    "Location: ~/rfid-manager/test/fas2-mqtt/mqtt/\n\n"
+    "Location: ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/\n\n"
     "Subscriber (SQLite logging):\n"
     "  ./test_subscriber_persist.py\n"
     "  ./test_subscriber_persist.py --uid 047B\n\n"
     "Simulator (simulate phone):\n"
     "  ./simulate_mobile_publish.py\n\n"
-    "Output: ~/rfid-manager/data/rfid_readings.db")
+    "Output: ~/projects/rfid/rfid-manager/data/rfid_readings.db")
 
 # === SLIDE 6: Broker Administration ===
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -275,7 +275,7 @@ add_card(slide, 0.5, 1.6, 6.0, 5.0,
 
 add_card(slide, 6.8, 1.6, 5.8, 5.0,
     "mosquitto.conf",
-    "File: ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf\n\n"
+    "File: ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf\n\n"
     "Config:\n"
     "  listener 1883              # MQTT port\n"
     "  allow_anonymous true       # No auth required\n"
@@ -338,7 +338,7 @@ add_card(slide, 0.5, 1.6, 4.0, 5.0,
     "┌──────────────────────────────┐\n"
     "│ Parameter    │ Value         │\n"
     "├──────────────────────────────┤\n"
-    "│ Broker IP    │ 192.168.50.128│\n"
+    "│ Broker IP    │ 192.168.50.107│\n"
     "│ Port         │ 1883          │\n"
     "│ Protocol     │ MQTT 3.1.1   │\n"
     "│ Topic root   │ rfidmanager/  │\n"
@@ -401,6 +401,6 @@ line.line.fill.background()
 add_text_box(slide, 0.8, 4.3, 11.7, 0.5, "Joakim • 2026-06-14", font_size=18, color=GRAY)
 
 # Save
-output_path = "/home/joakim/llm-wiki/RFID-Manager-Test-Setup.pptx"
+output_path = "/home/joakim/projects/rfid/llm-wiki/RFID-Manager-Test-Setup.pptx"
 prs.save(output_path)
 print(f"Saved: {output_path}")

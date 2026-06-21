@@ -32,7 +32,7 @@ Istället för att enbart läsa rå JSON i terminalen via Python-subscribern ger
 
 | Fält | Värde |
 |---|---|
-| Host | `192.168.50.128` (eller `localhost` om subscribern körs på samma maskin som broker) |
+| Host | `192.168.50.107` (eller `localhost` om subscribern körs på samma maskin som broker) |
 | Port | `1883` |
 | Anslutning | Ingen autentisering / TLS (okrypterat — endast för utveckling) |
 
@@ -43,7 +43,7 @@ Efter anslutning ser du i realtid alla meddelanden som publiceras på `rfidmanag
 1. Starta Docker-brokern (om inte redan igång):
    ```bash
    docker run -d --rm --name rfid-mqtt-test -p 1883:1883 \
-     -v ~/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
+     -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
      eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf
    ```
 
@@ -53,7 +53,7 @@ Efter anslutning ser du i realtid alla meddelanden som publiceras på `rfidmanag
 
 4. Skicka ett testmeddelande från appen (Transmit ↑) eller från terminalen:
    ```bash
-   cd ~/rfid-manager/test/fas2-mqtt/mqtt
+   cd ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt
    ./.venv/bin/python simulate_mobile_publish.py
    ```
 

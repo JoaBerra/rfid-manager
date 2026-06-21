@@ -50,7 +50,7 @@ All dokumentation är **append-only** eller versionshanterad via log.md för max
 **Testmiljö:**
 - Enhet: Samsung Galaxy Note 10 (SM-N970F/DS, internationell Exynos)
 - App: RFID Manager (debug build byggd i Android Studio, targetSdk 36)
-- Nätverk: Lokal Wi-Fi, broker på 192.168.50.128:1883 (Docker eclipse-mosquitto)
+- Nätverk: Lokal Wi-Fi, broker på 192.168.50.107:1883 (Docker eclipse-mosquitto)
 - Valideringssida: Python subscriber (`test_subscriber_persist.py`) som lyssnar på `rfidmanager/+/telemetry` och persisterar till SQLite
 
 **Omfattning – Vad testades i UAT (Kund-perspektiv):**
@@ -142,9 +142,9 @@ UAT godkänd / ... av Kund för ...
 - Efter varje UAT/sign-off: Kort fas-retro (5–10 min) – vad fungerade i samarbetet? Vad ändra till nästa fas?
 - Använd alltid explicit roll ("Som Kund godkänner jag...").
 - Länka alltid till teknisk dokumentation + eventuella buggrapporter.
-- Använd standardiserad path-struktur `~/rfid-manager/` för test, setup, releases och artifacts.
+- Använd standardiserad path-struktur `~/projects/rfid/rfid-manager/` för test, setup, releases och artifacts.
 - Uppdatera denna sida + `log.md` + [[Produkt-Roadmap]] + relevant översiktssida vid varje sign-off.
-- Fas-specifika taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/rfid-manager/releases/`.
+- Fas-specifika taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/projects/rfid/rfid-manager/releases/`.
 
 ## Fas 3 Kick-off Check (driven by Lead, 2026-06-07)
 
@@ -167,8 +167,8 @@ Följande arbetssätt gäller explicit under Fas 3 (formaliserat i [[Rollfördel
 - Levande Roadmap som nav – kick-off + löpande uppdatering.
 - UI-andrum som explicit regel – "breathing room check" innan kod (textspecar + befintliga mocks för att spara bildkrediter; nya bilder endast vid kritisk validering).
 - Kort fas-retro efter UAT/sign-off.
-- Fas-specifika taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/rfid-manager/releases/`.
-- Standardiserad path-struktur: Allt stödmaterial (test, setup, releases, artifacts) under `~/rfid-manager/`. Alla referenser pekar dit.
+- Fas-specifika taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/projects/rfid/rfid-manager/releases/`.
+- Standardiserad path-struktur: Allt stödmaterial (test, setup, releases, artifacts) under `~/projects/rfid/rfid-manager/`. Alla referenser pekar dit.
 
 **Status:** Godkänt av Kund. Lead driver efterlevnad.
 
@@ -229,10 +229,10 @@ Se detaljerat utkast nedan (baserat på specifikationerna). Kriterierna är mät
 
 **Testmiljö:** 
 - Samsung Galaxy Note 10 (SM-N970F) eller motsvarande NFC-enhet.
-- Samma test-MQTT-miljö som i Fas 2 (`~/rfid-manager/test/fas2-mqtt/` + MQTT Explorer för inspektion).
+- Samma test-MQTT-miljö som i Fas 2 (`~/projects/rfid/rfid-manager/test/fas2-mqtt/` + MQTT Explorer för inspektion).
 
 **Omfattning (baserat på spec i [[Fas3-Navigation-Spacing-Design]]):**
-- Reallokering av funktionalitet från de tre trånga gränssnitten (huvudskärm med tabs, Persisted list, MQTT status) – se referensbilder i `~/rfid-manager/artifacts/` (fas2-main-rfid-screen.jpg, fas2-persisted-readings-list.jpg, fas2-mqtt-sparkplug-status.jpg) och [[Figma-Design-Spec-Fas2]].
+- Reallokering av funktionalitet från de tre trånga gränssnitten (huvudskärm med tabs, Persisted list, MQTT status) – se referensbilder i `~/projects/rfid/rfid-manager/artifacts/` (fas2-main-rfid-screen.jpg, fas2-persisted-readings-list.jpg, fas2-mqtt-sparkplug-status.jpg) och [[Figma-Design-Spec-Fas2]].
 
   **Navigation (konkreta acceptanskriterier):**
   - Bottom navigation bar med exakt 4 items: "Scan" (huvudskärm), "Readings", "Connectivity", "Settings".
@@ -278,10 +278,10 @@ UAT godkänd / Godkänd med anmärkning / Ej godkänd av Kund för Fas 3.
 - [[Produkt-Roadmap#fas-3-plan-ui-förbättringar--grundläggande-polish]]
 - [[Fas3-Navigation-Spacing-Design]] (full design note med låsta beslut, navigation-struktur och kodskiss)
 - [[Fas2-Implementation-Overview]] (öppna punkter från Fas 2)
-- Figma-mocks i `~/rfid-manager/artifacts/` och releases (fas2-main-rfid-screen.jpg, fas2-persisted-readings-list.jpg, fas2-mqtt-sparkplug-status.jpg)
+- Figma-mocks i `~/projects/rfid/rfid-manager/artifacts/` och releases (fas2-main-rfid-screen.jpg, fas2-persisted-readings-list.jpg, fas2-mqtt-sparkplug-status.jpg)
 - [[Nomenclature-Figma-Android]] och [[Figma-Design-Spec-Fas2]]
 - [[bugs/2026-06-07-mqtt-socket-epem-samsung-note10]] (Resolved)
-- Ny path-struktur: `~/rfid-manager/`
+- Ny path-struktur: `~/projects/rfid/rfid-manager/`
 
 ---
 
@@ -581,7 +581,7 @@ Punkt 4.5 (Haptic + ljud vid scan) godkänd av Kund för Fas 4.
 **Testmiljö:**
 - Enhet: Samsung Galaxy Note 10 (SM-N970F/DS)
 - App: RFID Manager (debug build via `adb install`)
-- Broker: 192.168.50.128:1883 (Docker eclipse-mosquitto)
+- Broker: 192.168.50.107:1883 (Docker eclipse-mosquitto)
 - MQTT-klient: Paho 1.2.5
 
 **Omfattning:**
@@ -596,7 +596,7 @@ Punkt 4.5 (Haptic + ljud vid scan) godkänd av Kund för Fas 4.
 **Testresultat (logcat):**
 ```
 I MqttSender: MqttSender initialized with shared MqttConnectionManager
-I MqttConnectionManager: Connected to tcp://192.168.50.128:1883
+I MqttConnectionManager: Connected to tcp://192.168.50.107:1883
 D MqttConnectionManager: Keep-alive OK
 ```
 

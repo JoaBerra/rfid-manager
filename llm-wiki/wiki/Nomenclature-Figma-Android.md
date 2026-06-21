@@ -130,7 +130,7 @@ com.joakim.rfidmanager
   ```
 - Full Sparkplug compliance (birth/death, aliases, protobuf option) later; start with JSON over MQTT as per simplicity.
 - **MessageType** enum i domain: `ReadEscortMemory`, `WriteEscortMemory`, `PersistReading`, `TransmitReadings`, `ScanBarcode`, `MqttStatusUpdate`.
-- See updated test scripts in ~/rfid-manager/test/fas2-mqtt/mqtt/ for examples.
+- See updated test scripts in ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/ for examples.
 
 ### Compose / UI
 - `RfidReadingCard(reading: RfidReading, onTransmit: () -> Unit)`

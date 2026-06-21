@@ -35,7 +35,7 @@ created: 2026-06-07
 
 **Fokus:** Gör appen användbar och luftig. Allokera om funktionalitet så att inget trängs ihop.
 
-**De tre gränssnitten från Figma (referensbilder i `~/rfid-manager/releases/2026-06-Fas2/Fas2-Figma-UI-Mocks/` och artifacts):**
+**De tre gränssnitten från Figma (referensbilder i `~/projects/rfid/rfid-manager/releases/2026-06-Fas2/Fas2-Figma-UI-Mocks/` och artifacts):**
 1. **Huvudskärm / Main RFID** (fas2-main-rfid-screen.jpg) – RadarView + StatCards + TabRow (READ | WRITE | PERSISTED) + systemstatus.
 2. **Persisted Readings List** (fas2-persisted-readings-list.jpg) – Lista med filter (All/RFID/EAN), PersistedListItem (rik metadata: UID, timestamp, Source/Location, dataPreview, status badges, Transmit/Details).
 3. **MQTT / Sparkplug Status** (fas2-mqtt-sparkplug-status.jpg) – Status, recent messages, test publish, heartbeat, version.
@@ -300,6 +300,6 @@ Se [[Kundrelationer-och-Acceptans#fas-3-uat-test-2026-06-10]] och [[Kundrelation
 - Lead har mandat att driva implementering.
 - Nästa steg: Börja kodning baserat på [[Fas3-Navigation-Spacing-Design]].
 
-Se även uppdaterad sökvägsstruktur i [[rfid-manager/README]] (~/rfid-manager/ samlar test, setup, releases och artifacts).
+Se även uppdaterad sökvägsstruktur i [[rfid-manager/README]] (~/projects/rfid/rfid-manager/ samlar test, setup, releases och artifacts).
 
 Se även [[index]] för översikt och [[Rollfördelning-och-Arbetsätt]] för hur vi samarbetar runt roadmapen.

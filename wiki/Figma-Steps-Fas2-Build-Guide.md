@@ -250,13 +250,13 @@ Skapa dessa som **Components** (högerklicka > Create Component). Namn exakt!
 **De genererade UI-mock-bilderna (från igår):**
 Jag har kopierat dem till lättillgängliga platser så du kan ladda upp dem direkt till Figmas AI-verktyg (t.ex. image-to-design, variations, eller FigJam AI):
 
-- `~/Fas2-Figma-UI-Mocks/fas2-main-rfid-screen.jpg`  (huvudskärm med radar, status, lista)
-- `~/Fas2-Figma-UI-Mocks/fas2-persisted-readings-list.jpg` (persisted readings list med filter, items, status badges)
-- `~/Fas2-Figma-UI-Mocks/fas2-mqtt-sparkplug-status.jpg` (MQTT/Sparkplug status, log, test publish)
+- `~/projects/rfid/rfid-manager/test/fas2-mqtt/figma-mocks/fas2-main-rfid-screen.jpg`  (huvudskärm med radar, status, lista)
+- `~/projects/rfid/rfid-manager/test/fas2-mqtt/figma-mocks/fas2-persisted-readings-list.jpg` (persisted readings list med filter, items, status badges)
+- `~/projects/rfid/rfid-manager/test/fas2-mqtt/figma-mocks/fas2-mqtt-sparkplug-status.jpg` (MQTT/Sparkplug status, log, test publish)
 
 Ytterligare kopior finns i:
-- `~/rfid-manager/test/fas2-mqtt/figma-mocks/`
-- `~/rfid-manager/releases/2026-06-Fas2/Fas2-Figma-UI-Mocks/`
+- `~/projects/rfid/rfid-manager/test/fas2-mqtt/figma-mocks/`
+- `~/projects/rfid/rfid-manager/releases/2026-06-Fas2/Fas2-Figma-UI-Mocks/`
 
 Dessa är de tre bilderna som skapades baserat på den industriella estetiken (identsys-inspiration + Fas1 Primary #00FF88 + clean professional layout). Använd dem som referens eller ladda upp till Figma AI för att generera/iterera lager i din design.
 
@@ -276,7 +276,7 @@ Dessa är de tre bilderna som skapades baserat på den industriella estetiken (i
   - Buttons: `Test Publish Reading`, `View Log`
 - Allmänna: correlationId/seq via messages, version hints like "v4.12.3 - identsys.se * Traceability Engine", nav labels "Scan Readings Dashboard Settings" or "Readings Assets"
 
-Använd dessa som text layers i komponenterna. Anpassa data till ditt projekt men behåll fältstrukturen för traceability (UID, timestamp, source, data details, Sparkplug metadata). Se bilderna i ~/Fas2-Figma-UI-Mocks/ för exakt visuell placering.
+Använd dessa som text layers i komponenterna. Anpassa data till ditt projekt men behåll fältstrukturen för traceability (UID, timestamp, source, data details, Sparkplug metadata). Se bilderna i ~/projects/rfid/rfid-manager/test/fas2-mqtt/figma-mocks/ för exakt visuell placering.
 
 **Begränsningar & Tips:**
 - Gratis konto: Funkar bra för detta (components, auto layout, prototype). Uppgradera om du vill ha bättre version history eller team.

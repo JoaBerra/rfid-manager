@@ -14,7 +14,7 @@ MCP-server som exponerar RFID-dashboardens API och MQTT-broker som verktyg för 
 ## Starta
 
 ```bash
-cd ~/rfid-manager/mcp-server
+cd ~/projects/rfid/rfid-manager/mcp-server
 ../dashboard/.venv/bin/python server.py
 ```
 
@@ -34,8 +34,8 @@ Lägg till följande i `~/.config/opencode/opencode.json`:
 {
   "mcpServers": {
     "rfid-manager": {
-      "command": "/home/joakim/rfid-manager/dashboard/.venv/bin/python",
-      "args": ["/home/joakim/rfid-manager/mcp-server/server.py"]
+      "command": "/home/joakim/projects/rfid/rfid-manager/dashboard/.venv/bin/python",
+      "args": ["/home/joakim/projects/rfid/rfid-manager/mcp-server/server.py"]
     }
   }
 }

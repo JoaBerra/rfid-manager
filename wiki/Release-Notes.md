@@ -132,7 +132,7 @@ created: 2026-06-13
 
 ```bash
 # Bygg och installera debug-APK
-cd ~/AndroidStudioProjects/RFIDManager
+cd ~/projects/rfid/rfid-manager-android
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 

@@ -52,7 +52,7 @@ Webbläsare (HTML/CSS/JS)
 
 ### ✅ 1. Infrastruktur
 - [x] Dashboard startas med `docker compose up` tillsammans med Mosquitto
-- [x] Finns i `~/rfid-manager/dashboard/` — sida vid sida med testinfrastrukturen
+- [x] Finns i `~/projects/rfid/rfid-manager/dashboard/` — sida vid sida med testinfrastrukturen
 - [x] Konfigurerbar via miljövariabler (`MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPIC`)
 - [x] Wiki-dokumentation finns (denna sida)
 
@@ -89,7 +89,7 @@ Webbläsare (HTML/CSS/JS)
 ## Filer och struktur
 
 ```
-~/rfid-manager/dashboard/
+~/projects/rfid/rfid-manager/dashboard/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI-app, routes, SSE
@@ -107,7 +107,7 @@ Webbläsare (HTML/CSS/JS)
 ### Med Docker Compose (rekommenderat för demo)
 
 ```bash
-cd ~/rfid-manager/dashboard
+cd ~/projects/rfid/rfid-manager/dashboard
 docker compose up --build
 ```
 
@@ -116,7 +116,7 @@ docker compose up --build
 ### Lokal utveckling (utan Docker)
 
 ```bash
-cd ~/rfid-manager/dashboard
+cd ~/projects/rfid/rfid-manager/dashboard
 
 # Skapa och aktivera venv (görs en gång)
 python3 -m venv .venv
@@ -140,7 +140,7 @@ MQTT_BROKER=localhost .venv/bin/python -m app.main
 
 Dashboardens API exponeras via en MCP-server som ger AI-assistenten direkt tillgång till live-data.
 
-**Plats:** `~/rfid-manager/mcp-server/`
+**Plats:** `~/projects/rfid/rfid-manager/mcp-server/`
 
 ### Verktyg
 
@@ -167,7 +167,7 @@ Dashboard + Broker
 ### Starta
 
 ```bash
-cd ~/rfid-manager/mcp-server
+cd ~/projects/rfid/rfid-manager/mcp-server
 ../dashboard/.venv/bin/python server.py
 ```
 
@@ -181,8 +181,8 @@ För att använda MCP-servern i opencode, lägg till i `~/.config/opencode/openc
 {
   "mcpServers": {
     "rfid-manager": {
-      "command": "/home/joakim/rfid-manager/dashboard/.venv/bin/python",
-      "args": ["/home/joakim/rfid-manager/mcp-server/server.py"],
+      "command": "/home/joakim/projects/rfid/rfid-manager/dashboard/.venv/bin/python",
+      "args": ["/home/joakim/projects/rfid/rfid-manager/mcp-server/server.py"],
       "env": {
         "DASHBOARD_URL": "http://localhost:8001",
         "MQTT_BROKER": "localhost",

@@ -30,7 +30,7 @@ Grundläggande parametrar för att nå brokern över nätverket.
 
 | Parameter | Default | Förklaring |
 |-----------|---------|------------|
-| **Broker host** | `192.168.50.128` | IP-adress eller hostnamn för MQTT-brokern |
+| **Broker host** | `192.168.50.107` | IP-adress eller hostnamn för MQTT-brokern |
 | **Broker port** | `1883` | TCP-port (1883 = okrypterat, 8883 = TLS) |
 | **Client ID** | `rfidmanager-<slump>` | Unikt ID så brokern känner igen klienten vid återanslutning |
 

@@ -47,7 +47,7 @@ graph TD
     end
 
     subgraph External["External"]
-        Mqtt["MQTT Broker<br/>192.168.50.128:1883"]
+        Mqtt["MQTT Broker<br/>192.168.50.107:1883"]
         Tag["RFID Tags<br/>NFC 13.56 MHz"]
     end
 
@@ -96,7 +96,7 @@ För Fas 2 har en kommunikationslager lagts till för att skicka persisterade l�
 - Krypteringsnycklar, certifikathantering och mTLS/autentisering skall definieras i ett senare skede av projektet.
 
 **Utveckling och test:**
-- Under utveckling och mot den lokala Docker-testmiljön (192.168.50.128:1883) accepteras okrypterad trafik (tcp://) för att hålla setup enkel och debugging effektiv.
+- Under utveckling och mot den lokala Docker-testmiljön (192.168.50.107:1883) accepteras okrypterad trafik (tcp://) för att hålla setup enkel och debugging effektiv.
 - Kryptering är ett senare problem i projektet och skjuts upp tills grundläggande persistens + kommunikation är validerad.
 
 Detta beslut dokumenteras här för att undvika att det glöms bort när projektet skalas eller flyttas till riktig infrastruktur.
@@ -257,7 +257,7 @@ Språk hanteras av `LocalizationManager` (separat från AppSettings).
 - Automatisk återanslutning var 35:e sekund. Keep-alive var 30:e sekund.
 - `MqttSender` använder delad anslutning från MqttConnectionManager (ingen egen connect).
 - `ConnectivityViewModel` läser från MqttConnectionManager — ingen demo-data.
-- Broker: `192.168.50.128:1883` (Docker eclipse-mosquitto, okrypterat för dev).
+- Broker: `192.168.50.107:1883` (Docker eclipse-mosquitto, okrypterat för dev).
 
 ## Temahantering (Fas 4)
 
@@ -351,7 +351,7 @@ graph TD
 
 ### Testmiljö (lokal på dev-maskin)
 
-- **MQTT Broker:** Docker `eclipse-mosquitto` (anonymous för test, port 1883). Se `~/rfid-manager/test/fas2-mqtt/mqtt/`.
+- **MQTT Broker:** Docker `eclipse-mosquitto` (anonymous för test, port 1883). Se `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/`.
 - **Persistence i test:** Python venv + paho-mqtt + sqlite3. Script som subscribar på telemetry och sparar.
 - **Simulering:** Enklare Python "mobil-sim" som publicerar test-data.
 - **Inspektion:** `docker logs` eller utökad web-UI (t.ex. Node-RED eller custom) vid behov.

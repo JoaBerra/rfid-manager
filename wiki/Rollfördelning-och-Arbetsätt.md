@@ -133,8 +133,8 @@ För att göra samarbetet ännu effektivare har vi formaliserat följande efter 
 - **Levande Roadmap som nav**: Varje ny fas börjar med en kort kick-off där vi låser acceptanskriterier i [[Kundrelationer-och-Acceptans]] + uppdaterar [[Produkt-Roadmap]]. Roadmapen är single source of truth för vad som är gjort och planerat.
 - **UI-andrum som explicit regel**: Innan kodning av UI sker en "breathing room check" (se detaljer i [[Produkt-Roadmap#fas-3-plan-ui-förbättringar--grundläggande-polish]]). Vi använder befintliga Figma-mocks + textbaserade specar (nomenclature + detaljerade markdown-beskrivningar) för att spara krediter. Nya bilder genereras endast för 1–2 kritiska valideringar per fas.
 - **Fas-retro efter UAT/sign-off**: Efter varje godkännande gör vi en kort retro (5–10 min): Vad fungerade i samarbetet? Vad ska vi ändra till nästa fas? (t.ex. detaljnivå, separation mobil vs PC-stöd).
-- **Fas-specifika taggar + artifacts**: Systematisk användning av taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/rfid-manager/releases/` och `artifacts/`.
-- **Standardiserad path-struktur**: Allt stödmaterial (test, setup, releases, artifacts) ligger under `~/rfid-manager/`. Alla framtida referenser i wiki, kod och instruktioner pekar dit för att eliminera "var ligger sakerna?"-friktion.
+- **Fas-specifika taggar + artifacts**: Systematisk användning av taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/projects/rfid/rfid-manager/releases/` och `artifacts/`.
+- **Standardiserad path-struktur**: Allt stödmaterial (test, setup, releases, artifacts) ligger under `~/projects/rfid/rfid-manager/`. Alla framtida referenser i wiki, kod och instruktioner pekar dit för att eliminera "var ligger sakerna?"-friktion.
 
 Dessa punkter uppdateras löpande i denna sida och i [[Kundrelationer-och-Acceptans]].
 

@@ -303,6 +303,6 @@ line = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(4.0), Inches(
 line.fill.solid(); line.fill.fore_color.rgb = ACCENT; line.line.fill.background()
 tbox(s, 0.8, 4.3, 11.7, 0.5, "Joakim • 2026-06-14", size=18, color=GRAY)
 
-output_path = "/home/joakim/llm-wiki/RFID-Manager-Arbetssatt.pptx"
+output_path = "/home/joakim/projects/rfid/llm-wiki/RFID-Manager-Arbetssatt.pptx"
 prs.save(output_path)
 print(f"Saved: {output_path}")
