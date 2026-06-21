@@ -68,5 +68,63 @@ cd ~/rfid-manager/mcp-server
 
 ---
 
-**GitHub:** https://github.com/JoaBerra/rfid-manager  
+**GitHub:** <https://github.com/JoaBerra/rfid-manager>  
 **Wiki-index:** [wiki/index.md](wiki/index.md)
+=======
+
+# rfid-manager – Projektstöd och artefakter
+
+Detta är den logiska samlingsplatsen för stödjande filer, testmiljöer, release-snapshots och artefakter för projektet **RFID Manager** (GitHub: [JoaBerra/rfid-manager](https://github.com/JoaBerra/rfid-manager)).
+
+## Struktur
+
+- **setup/**  
+  Udev-regler och ADB-fix-skript för Samsung Note 10 (plugdev, USB debugging).  
+  Används vid hårdvaruinstallation.
+
+- **test/fas2-mqtt/**  
+  Dedikerad testmiljö för Fas 2 MQTT/Sparkplug.  
+  Innehåller:
+  - Docker Mosquitto-konfiguration
+  - Python subscriber + simulate scripts (`test_subscriber_persist.py`, `simulate_mobile_publish.py`)
+  - Test-databas (`test_persisted_readings.db`)
+  - Figma-mocks (kopia)
+
+- **releases/2026-06-Fas2/**  
+  Paketerad release-snapshot för taggen `fas-2-uat-godkand-2026-06-07`.  
+  Detta är den katalog som används för `git push` till GitHub (innehåller kopior av källkod, llm-wiki, setup, Figma-mocks).  
+  Se `releases/2026-06-Fas2/PUSH-TO-GITHUB.md` för instruktioner.
+
+- **artifacts/**  
+  Byggda tarballer, genererade PDF-rapporter (t.ex. buggrapporter) och äldre release-paket.
+
+- **llm-wiki/** (ligger bredvid denna mapp)  
+  Källan till all projektdokumentation (Karpathy-style wiki).  
+  Aktiv utveckling sker här. Innehållet kopieras in i release-snapshots.
+
+## Koppling till huvudprojektet
+
+- Android-källkod utvecklas i `~/AndroidStudioProjects/RFIDManager` (standard för Android Studio).
+- Dokumentation utvecklas i `~/llm-wiki`.
+- Release-processen paketerar allt i `releases/2026-06-Fas2/` och pushar till GitHub.
+- Taggen `fas-2-uat-godkand-2026-06-07` markerar Fas 2 UAT-godkännande av Kund (2026-06-07).
+
+## Vanliga kommandon
+
+```bash
+# Starta MQTT testmiljö
+cd ~/rfid-manager/test/fas2-mqtt/mqtt
+# (se instruktioner i wiki/log.md eller App-Architecture.md)
+
+# Kör setup för telefon
+cd ~/rfid-manager/setup
+./fix-usb-adb.sh
+
+# Arbeta med aktuell release-snapshot
+cd ~/rfid-manager/releases/2026-06-Fas2
+git status
+# ... redigera, commit, push enligt PUSH-TO-GITHUB.md
+```
+
+Uppdaterad 2026-06-07 efter Fas 2 UAT-godkännande.
+>>>>>>> 64f3e2a (Initial commit: rfid-manager release & documentation repo)

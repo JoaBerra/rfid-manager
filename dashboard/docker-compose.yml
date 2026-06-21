@@ -1,0 +1,28 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: rfid-mqtt-broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ../test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - rfid-net
+
+  dashboard:
+    build: .
+    container_name: rfid-mqtt-dashboard
+    ports:
+      - "8000:8000"
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=rfidmanager/+/telemetry
+    depends_on:
+      - mosquitto
+    networks:
+      - rfid-net
+
+networks:
+  rfid-net:
+    driver: bridge
