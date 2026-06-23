@@ -28,21 +28,21 @@ def set_notification_queue(q):
     notification_queue = q
 
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, userdata, flags, reasonCode, properties=None):
     global mqtt_connected
-    mqtt_connected = rc == 0
+    mqtt_connected = reasonCode == 0
     topic = os.getenv("MQTT_TOPIC", "rfidmanager/+/telemetry")
     if mqtt_connected:
         logger.info("Connected to MQTT broker, subscribing to %s", topic)
         client.subscribe(topic)
     else:
-        logger.error("MQTT connection failed with code %d", rc)
+        logger.error("MQTT connection failed with code %s", reasonCode)
 
 
-def on_disconnect(client, userdata, rc):
+def on_disconnect(client, userdata, flags, reasonCode, properties=None):
     global mqtt_connected
     mqtt_connected = False
-    logger.warning("Disconnected from MQTT broker (rc=%d)", rc)
+    logger.warning("Disconnected from MQTT broker (rc=%s)", reasonCode)
 
 
 def on_message(client, userdata, msg):
@@ -116,7 +116,7 @@ def start_client():
     port = int(os.getenv("MQTT_PORT", "1883"))
     client_id = os.getenv("MQTT_CLIENT_ID", "rfid-dashboard")
 
-    client = mqtt.Client(client_id=client_id)
+    client = mqtt.Client(client_id=client_id, callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.on_message = on_message

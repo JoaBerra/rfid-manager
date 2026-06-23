@@ -13,7 +13,7 @@ from mcp.types import ServerCapabilities, ToolsCapability
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rfid-mcp")
 
-DASHBOARD_URL = os.getenv("DASHBOARD_URL", "http://localhost:8001")
+DASHBOARD_URL = os.getenv("DASHBOARD_URL", "http://localhost:8000")
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 

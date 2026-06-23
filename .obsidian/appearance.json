@@ -1,1 +1,6 @@
-{}
+{
+  "baseFontSize": 12,
+  "baseFontSizeAction": false,
+  "theme": "obsidian",
+  "cssTheme": "Wasp"
+}

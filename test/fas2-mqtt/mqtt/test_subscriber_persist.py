@@ -1,4 +1,4 @@
-#!/home/joakim/rfid-manager/test/fas2-mqtt/.venv/bin/python3
+#!/home/joakim/projects/rfid/rfid-manager/test/fas2-mqtt/.venv/bin/python3
 """
 Enhanced MQTT subscriber with structured, color-coded logging.
 
@@ -37,7 +37,7 @@ class Color:
 BROKER = "localhost"
 PORT = 1883
 TOPIC = "rfidmanager/+/telemetry"
-DB_DIR = Path.home() / "rfid-manager" / "data"
+DB_DIR = Path.home() / "projects" / "rfid" / "rfid-manager" / "data"
 DB_PATH = DB_DIR / "rfid_readings.db"
 
 stats = {"received": 0, "persisted": 0, "errors": 0}

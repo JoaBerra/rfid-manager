@@ -2,7 +2,7 @@
 title: Rollfördelning och Arbetsätt
 tags: [process, roller, arbetsätt, projektledning, governance, karpathy-wiki, funktionell-nomenklatur]
 created: 2026-06-06
-updated: 2026-06-10
+updated: 2026-06-23
 ---
 
 # Rollfördelning och Arbetsätt – RFID Manager
@@ -136,6 +136,21 @@ För att göra samarbetet ännu effektivare har vi formaliserat följande efter 
 - **Fas-specifika taggar + artifacts**: Systematisk användning av taggar (t.ex. `fas-3-ui-polish-...`) + artifacts under `~/projects/rfid/rfid-manager/releases/` och `artifacts/`.
 - **Standardiserad path-struktur**: Allt stödmaterial (test, setup, releases, artifacts) ligger under `~/projects/rfid/rfid-manager/`. Alla framtida referenser i wiki, kod och instruktioner pekar dit för att eliminera "var ligger sakerna?"-friktion.
 
+### 8. Versionshantering & Git Branch-strategi
+
+Vi använder en enkel **master/develop-modell** som passar ett 1-människa + AI-team:
+
+- **`master`** — Stabil/release-klar kod. Endast merges från `develop`. Taggas vid sign-off: `fas-3-sign-off-2026-06-10`.
+- **`develop`** — Aktiv utvecklingsbranch. Här samlas alla ändringar mellan releaser. Pushas löpande som backup.
+- **Arbetsflöde:**
+  1. Utveckling sker lokalt på `develop` (eller feature-branch → `develop`)
+  2. Vid fas-godkännande: merge `develop` → `master`, skapa tag, pusha båda
+  3. `master` förblir ren och historisk
+- **Repositoryn:**
+  - `JoaBerra/rfid-manager` (monorepo: wiki + verktyg) — `main`-branch som stabil
+  - `JoaBerra/rfid-manager-android` (Android-app) — `master` = stabil, `develop` = aktiv utveckling
+- **Commit-meddelanden:** Kort beskrivning på svenska eller engelska, t.ex. `Fas-500: uppdatera MQTT broker IP`.
+
 Dessa punkter uppdateras löpande i denna sida och i [[Kundrelationer-och-Acceptans]].
 
 ## Nästa steg (rekommendation)
@@ -147,7 +162,7 @@ Dessa punkter uppdateras löpande i denna sida och i [[Kundrelationer-och-Accept
 ---
 
 **Skapad**: 2026-06-06 efter din reflektion om roller.  
-**Uppdaterad**: 2026-06-10 (funktionell nomenklatur + Grok → AI-assistenten).  
+**Uppdaterad**: 2026-06-23 (funktionell nomenklatur + Grok → AI-assistenten + git branch-strategi).  
 **Ägare**: Båda (du som Projektledare har sista ordet).  
 **Uppdateras**: Vid varje större fas-skifte eller när ni vill ändra mandat.
 

@@ -2,7 +2,7 @@
 """
 Simple simulator for 'mobile' publishing a reading over MQTT.
 Uses the local test broker.
-Run from the venv: ~/rfid-fas2-test/.venv/bin/python simulate_mobile_publish.py
+Run: ../.venv/bin/python simulate_mobile_publish.py
 """
 import json
 import time

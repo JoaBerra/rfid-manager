@@ -21,17 +21,35 @@ created: 2026-06-19
 
 ## 1. Starta brokern
 
+### Från kallstart (datorn har varit avstängd)
+
 ```bash
-docker run -d --rm --name rfid-mqtt-test \
+docker run -d --name rfid-mqtt \
   -p 1883:1883 \
-  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
-  eclipse-mosquitto \
-  mosquitto -c /mosquitto/config/mosquitto.conf
+  -p 9001:9001 \
+  eclipse-mosquitto:2
 ```
 
-**Verifiera:** `docker ps | grep rfid-mqtt-test` → containern ska vara `Up`.
+**Verifiera:** `docker ps | grep rfid-mqtt` → containern ska vara `Up`.
 
-**Loggar:** `docker logs rfid-mqtt-test`
+**Loggar:** `docker logs rfid-mqtt`
+
+### Om containern redan finns (stoppad efter tidigare start)
+
+```bash
+docker start rfid-mqtt
+```
+
+### Med custom config (MQTT-persistens)
+
+```bash
+docker run -d --name rfid-mqtt \
+  -p 1883:1883 \
+  -p 9001:9001 \
+  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
+  eclipse-mosquitto:2 \
+  mosquitto -c /mosquitto/config/mosquitto.conf
+```
 
 ---
 
@@ -73,13 +91,13 @@ Meddelandet publiceras på topic `rfidmanager/<uid>/telemetry`.
 mosquitto_sub -h localhost -p 1883 -t "rfidmanager/#" -v
 
 # Eller via Docker
-docker exec rfid-mqtt-test mosquitto_sub -h localhost -p 1883 -t "rfidmanager/#" -v
+docker exec rfid-mqtt mosquitto_sub -h localhost -p 1883 -t "rfidmanager/#" -v
 ```
 
 Simulera ett meddelande:
 
 ```bash
-docker exec rfid-mqtt-test mosquitto_pub -h localhost -p 1883 \
+docker exec rfid-mqtt mosquitto_pub -h localhost -p 1883 \
   -t "rfidmanager/047B05CA885884/telemetry" \
   -m '{"type":"ReadEscortMemory","uid":"047B05CA885884","timestamp":1780816291332,"source":"Manual write page 8","sparkplug":true,"data":{"memoryBank":3,"address":8,"length":4,"payload":"74657374"}}'
 ```
@@ -126,7 +144,7 @@ docker exec rfid-mqtt-test mosquitto_pub -h localhost -p 1883 \
 echo "" | nc -v localhost 1883
 
 # Se alla MQTT-meddelanden i terminalen
-docker exec rfid-mqtt-test mosquitto_sub -h localhost -p 1883 -t "#" -v
+docker exec rfid-mqtt mosquitto_sub -h localhost -p 1883 -t "#" -v
 
 # Dashboard-loggar
 cat /tmp/dashboard.log
@@ -143,11 +161,12 @@ curl -s http://localhost:8000/api/stats
 
 | Kommando | Beskrivning |
 |----------|-------------|
-| `docker run ... eclipse-mosquitto ...` | Starta broker |
-| `docker start rfid-mqtt-test` | Starta stoppad broker (utan `--rm`) |
-| `docker stop rfid-mqtt-test` | Stoppa broker |
-| `docker logs rfid-mqtt-test` | Visa loggar |
-| `docker logs -f rfid-mqtt-test` | Följ loggar i realtid |
+| `docker run -d --name rfid-mqtt -p 1883:1883 -p 9001:9001 eclipse-mosquitto:2` | Starta broker (kallstart) |
+| `docker start rfid-mqtt` | Starta stoppad broker |
+| `docker stop rfid-mqtt` | Stoppa broker |
+| `docker rm -f rfid-mqtt` | Ta bort och återskapa containern |
+| `docker logs rfid-mqtt` | Visa loggar |
+| `docker logs -f rfid-mqtt` | Följ loggar i realtid |
 
 ### Dashboard
 
@@ -163,17 +182,29 @@ curl -s http://localhost:8000/api/stats
 |----------|-------------|
 | `mosquitto_sub -h localhost -t "rfidmanager/#" -v` | Lyssna på alla topics |
 | `mosquitto_pub -h localhost -t "test" -m "hello"` | Publicera testmeddelande |
-| `docker exec rfid-mqtt-test mosquitto_sub ...` | Kör sub i Docker-containern |
+| `docker exec rfid-mqtt mosquitto_sub ...` | Kör sub i Docker-containern |
 | `MQTT Explorer` | GUI-verktyg (se [[MQTT-Explorer]]) |
 
 ### Testverktyg
 
 | Sökväg | Beskrivning |
 |--------|-------------|
-| `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/test_subscriber_persist.py` | Python-subscriber med SQLite-persistens |
-| `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/simulate_mobile_publish.py` | Simulera app-publicering |
-| `~/projects/rfid/rfid-manager/dashboard/` | Webbdashboard (FastAPI + SSE) |
-| `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf` | Broker-konfiguration |
+| `test/fas2-mqtt/.venv/` | Python-venv med paho-mqtt |
+| `test/fas2-mqtt/mqtt/test_subscriber_persist.py` | Python-subscriber med SQLite-persistens |
+| `test/fas2-mqtt/mqtt/simulate_mobile_publish.py` | Simulera app-publicering |
+| `test/fas2-mqtt/mqtt/mosquitto.conf` | Broker-konfiguration |
+| `dashboard/` | Webbdashboard (FastAPI + SSE) |
+| `data/rfid_readings.db` | SQLite-databas (skapas av subscribern) |
+
+### Starta subscribern
+
+```bash
+cd ~/projects/rfid/rfid-manager
+test/fas2-mqtt/.venv/bin/python test/fas2-mqtt/mqtt/test_subscriber_persist.py
+
+# Med UID-filter:
+test/fas2-mqtt/.venv/bin/python test/fas2-mqtt/mqtt/test_subscriber_persist.py --uid 047B
+```
 
 ---
 

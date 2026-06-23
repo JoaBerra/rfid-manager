@@ -9,7 +9,7 @@ created: 2026-05-26
 > **LLM Wiki** för utveckling av kostnadsfria Android-applikationer i Kotlin med fokus på RFID/NFC-integration — särskilt läsning och hantering av eskortminnen.  
 > Miljö: Arch Linux + Omarchy + Android Studio. Helt utan licens- eller distributionskostnader. AI-verktyg som primärt stöd i byggnationen.
 
-Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim/projects/rfid/llm-wiki/schema.md)) och underhålls av LLM som wiki-maintainer.
+Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim/projects/rfid/rfid-manager/schema.md)) och underhålls av LLM som wiki-maintainer.
 
 ## Projektmål
 
@@ -65,6 +65,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/projects/rfid/rfid-manager/`.
 
 ### Miljö och Infrastruktur
+- [[Startup-Procedure]] — Steg-för-steg från kallstart till alla tjänster uppe (broker, dashboard, subscriber, MCP). Uppdateras löpande.
 - [[Fas-400-Teknikmiljo-Validering]] — Komponentkarta, bootstrap-script, verifieringsrutiner för att sätta upp miljön på ny Ubuntu 24.04-maskin.
 - [[Fas-500-Miljo-flytt-sixten-till-falstaff]] — Inventering av hårdkodade sökvägar efter flytt från sixten till falstaff. Kartläggning av refererade men saknade filer och förslag på placering.
 

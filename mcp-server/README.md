@@ -15,7 +15,7 @@ MCP-server som exponerar RFID-dashboardens API och MQTT-broker som verktyg för 
 
 ```bash
 cd ~/projects/rfid/rfid-manager/mcp-server
-../dashboard/.venv/bin/python server.py
+.venv/bin/python server.py
 ```
 
 ## Konfiguration (miljövariabler)
