@@ -2,7 +2,7 @@
 title: Utvecklingsmiljö — fakir
 tags: [fakir, arch-linux, android-sdk, omarchy, setup]
 created: 2026-07-11
-updated: 2026-07-11
+updated: 2026-07-12
 ---
 
 # Utvecklingsmiljö — fakir
@@ -31,15 +31,40 @@ cd ~/Projects/rfid-manager/RFIDManager
 
 **Status 2026-07-11:** `BUILD SUCCESSFUL` (~61 s, första körning).
 
-## Android Studio (valfritt)
+## Beslutsregel: SDK vs Android Studio
 
-Full IDE via AUR när sudo finns:
+**Behåll command-line SDK** som standard för Gradle-byggen, Cursor och agentdriven utveckling (Uppdrag 001/002). Det räcker för `./gradlew assembleDebug` och behöver inte ersättas.
+
+**"System-wide"** på Arch betyder att *IDE:n* hamnar i `/opt/android-studio` (AUR) — **inte** att SDK flyttas ut ur hemkatalogen. Google installerar SDK i `~/Android/Sdk` även med Studio. Det finns ingen praktisk fördel med "system-wide SDK" för detta projekt.
+
+| Behov | Rekommendation |
+|-------|----------------|
+| Gradle, CI, agent (Qwen/Grok) | Command-line SDK (nuvarande) |
+| Emulator, Logcat, Compose preview | Android Studio (AUR) |
+| `adb` utan hela Studio | `sudo pacman -S android-tools` |
+
+### Installera Studio när du själv behöver
+
+- Debugga NFC mot fysisk enhet (Galaxy Note 10) med Logcat
+- Köra Android-emulator
+- Jobba visuellt med Compose/layout
+
+**Inte** som blockerare för bygg eller Uppdrag 002.
+
+### Om du installerar Studio
+
+1. AUR: `paru -S android-studio` (se [[Android-Studio-Installation]] för Hyprland-fixar)
+2. Vid första start: välj **befintlig SDK** `~/Android/Sdk` — undvik dubbel installation
+3. Låt `RFIDManager/local.properties` peka på samma `sdk.dir`
+4. Verifiera: `./gradlew assembleDebug` ska fortfarande fungera
+
+### Valfritt: system-`adb` utan Studio
 
 ```bash
-sudo pacman -S android-studio
+sudo pacman -S android-tools
 ```
 
-SDK ovan räcker för Gradle-byggen från terminal/Cursor.
+Ger system-`adb`/`fastboot` (~10 MB). Vissa föredrar Studios inbyggda `adb` — testa vid behov.
 
 ## Lokal AI (Utvecklare-roll)
 
