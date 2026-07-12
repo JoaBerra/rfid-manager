@@ -15,15 +15,18 @@ Gratis GUI-klient för MQTT — körs **på fakir vid behov**, ansluter till bro
 
 | Fält | Värde |
 |------|-------|
-| Binär | `~/.local/opt/mqtt-explorer/MQTT-Explorer-0.3.5.AppImage` |
+| Launcher | `~/.local/opt/mqtt-explorer/mqtt-explorer-launcher.sh` |
+| Extraherad | `~/.local/opt/mqtt-explorer/squashfs-root/` |
 | Kommando | `mqtt-explorer` (symlink i `~/.local/bin`) |
-| Skript | `setup/install-mqtt-explorer-fakir.sh` (återinstallera) |
+| Skript | `setup/install-mqtt-explorer-fakir.sh` |
 
 ```bash
 mqtt-explorer
 ```
 
-Kräver inga bakgrundstjänster — stäng appen när du inte debuggar (vänligt mot inferens på fakir).
+**Arch/Omarchy:** AppImage kräver `fuse2` om den körs direkt. Vi använder **extraherad** kopia (ingen FUSE, inget sudo). Valfritt: `sudo pacman -S fuse2` om du föredrar AppImage-raden.
+
+Kräver inga bakgrundstjänster — stäng appen när du inte debuggar.
 
 ## Anslutning
 
