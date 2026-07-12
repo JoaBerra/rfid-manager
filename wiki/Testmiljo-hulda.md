@@ -191,6 +191,7 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | Docker på ishtar | ✅ `docker.io` + `docker-compose` |
 | MQTT-broker `rfid-mqtt-hulda` | ✅ `192.168.50.151:1883` |
 | Dashboard `rfid-mqtt-dashboard` | ✅ `http://192.168.50.151:8000` |
+| E2E app → broker → dashboard | ✅ Principal 2026-07-12 |
 | Verifierat från fakir | ✅ MQTT + dashboard API |
 
 ## Relaterat
