@@ -9,6 +9,16 @@ updated: 2026-07-12
 
 Workstation **fakir** (Arch Linux, Hyprland, RTX 3090). Repo: `/home/joakim/Projects/rfid-manager/`.
 
+## Hosts i testmiljön
+
+| Host | Roll | MQTT |
+|------|------|------|
+| **fakir** | Bygg (`gradlew`), ADB, Ollama/Qwen | **Nej** — ingen broker här |
+| **falstaff** | MQTT-broker Docker, subscriber, tidigare dev-host | **Ja** — `192.168.50.107:1883` |
+| **Galaxy Note 10** | Primär testenhet (NFC) | Klient mot falstaff |
+
+Appens default: `tcp://192.168.50.107:1883` (`MqttConnectionManager.kt`). Telefonen måste nå falstaff på LAN; fakir behöver inte installera Mosquitto för smoke test.
+
 ## Android SDK (user-local, utan sudo)
 
 Installerad 2026-07-11 via Google command-line tools (alternativ till AUR `android-studio`):
