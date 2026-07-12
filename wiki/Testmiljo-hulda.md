@@ -150,10 +150,10 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | Proxmox `.100:8006` | Bekräftad |
 | Testlab-gäst **ishtar** `.151` | Vald |
 | `docker-compose.hulda.yml` | Klar |
-| SSH `ssh hulda` | **Klar** (nyckelbaserat) |
-| Docker på ishtar | **Väntar** — `~/ishtar-install-docker.sh` (sudo) |
-| MQTT-filer på ishtar | Synkade via scp |
-| MQTT-broker | Ej startad |
+| SSH `ssh hulda` | ✅ Klar |
+| Docker på ishtar | ✅ `docker.io` + `docker-compose` |
+| MQTT-broker `rfid-mqtt-hulda` | ✅ `192.168.50.151:1883` |
+| Verifierat från fakir | ✅ port 1883 + `mosquitto_pub` |
 
 ## Relaterat
 
