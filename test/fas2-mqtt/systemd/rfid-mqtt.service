@@ -1,0 +1,15 @@
+[Unit]
+Description=RFID Manager MQTT broker (hulda testlab)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/joakim/Projects/rfid-manager/test/fas2-mqtt
+ExecStart=/usr/bin/docker compose -f docker-compose.hulda.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.hulda.yml down
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

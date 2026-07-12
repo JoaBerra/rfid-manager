@@ -1,0 +1,17 @@
+# Persistent MQTT broker for hulda testlab (Uppdrag 003 / Fas D.2)
+# Start from repo root on hulda:
+#   docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: rfid-mqtt-hulda
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+
+volumes:
+  mosquitto-data:
