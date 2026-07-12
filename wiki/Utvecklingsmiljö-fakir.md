@@ -3,6 +3,7 @@ title: Utvecklingsmiljö — fakir
 tags: [fakir, arch-linux, android-sdk, omarchy, setup]
 created: 2026-07-11
 updated: 2026-07-12
+smoke_test: godkänd (Uppdrag 002)
 ---
 
 # Utvecklingsmiljö — fakir
@@ -14,10 +15,25 @@ Workstation **fakir** (Arch Linux, Hyprland, RTX 3090). Repo: `/home/joakim/Proj
 | Host | Roll | MQTT |
 |------|------|------|
 | **fakir** | Bygg (`gradlew`), ADB, Ollama/Qwen | **Nej** — ingen broker här |
-| **falstaff** | MQTT-broker Docker, subscriber, tidigare dev-host | **Ja** — `192.168.50.107:1883` |
-| **Galaxy Note 10** | Primär testenhet (NFC) | Klient mot falstaff |
+| **hulda** | Proxmox hypervisor `.100` | Nej |
+| **ishtar** | Testlab-gäst (Debian) | **Ja** — `192.168.50.151:1883` |
+| **falstaff** | Legacy broker | `192.168.50.107:1883` (app default tills D.4) |
+| **Galaxy Note 10** | Primär testenhet (NFC) | Klient mot ishtar (Settings) eller falstaff |
 
-Appens default: `tcp://192.168.50.107:1883` (`MqttConnectionManager.kt`). Telefonen måste nå falstaff på LAN; fakir behöver inte installera Mosquitto för smoke test.
+Appens default: `tcp://192.168.50.107:1883` (`MqttConnectionManager.kt`). Smoke test 2026-07-12: MQTT via Settings mot **ishtar** — se [[UAT-fakir-smoke-test]].
+
+## ADB / USB (fakir)
+
+```bash
+# Om enhet ej syns
+bash ~/Projects/rfid-manager/setup/fix-usb-adb.sh   # kan kräva sudo
+adb devices
+export ANDROID_HOME=~/Android/Sdk
+cd ~/Projects/rfid-manager/RFIDManager
+./gradlew installDebug
+```
+
+Note 10: USB-felsökning på, auktorisera fakir. Valfritt: `sudo pacman -S android-tools`.
 
 ## Android SDK (user-local, utan sudo)
 
