@@ -14,25 +14,22 @@ Permanent RFID/MQTT-testlabb i garaget. Del av **Fas D** ([Uppdrag 003](https://
 | Lager | IP / åtkomst | Roll |
 |-------|--------------|------|
 | **Hypervisor** | `192.168.50.100`, Proxmox `:8006` | VM/LXC-drift (root UI) |
-| **Testlab-gäst** | TBD i `192.168.50.0/24` | MQTT, subscriber, Docker |
+| **Testlab-gäst** | **ishtar** — `192.168.50.151/24` | MQTT, subscriber, Docker |
 
 `192.168.50.100` är **inte** MQTT-värden — tjänsterna körs i en vald VM eller LXC.
 
 **Legacy broker:** falstaff `192.168.50.107` — appens default tills Uppdrag 004 (D.4).
 
-## D.0 — Proxmox och gäst-val (Principal)
+## D.0 — Proxmox och gäst-val ✅
 
-1. Öppna `http://192.168.50.100:8006/` — logga in som root
-2. Inventera VM och LXC (kända: Debian, Slackware, Ubuntu, MariaDB, …)
-3. Välj **en gäst** som testlab (rekommendation: Ubuntu eller Debian)
-4. Sätt **statisk IP** på gästen (eller DHCP-reservation i router)
-5. Fyll i beslut i AH-uppdraget eller tabellen nedan
+| Fält | Värde |
+|------|-------|
+| Gäst | **ishtar** (på) |
+| OS | Debian |
+| IP | `192.168.50.151/24` statisk |
+| SSH-användare | `joakim` *(rekommenderat; justera om annat)* |
 
-### Gäst-inventering
-
-| Namn | Typ | OS | IP | Status | Testlab? |
-|------|-----|-----|-----|--------|----------|
-| *(fylls i Proxmox UI)* | VM/LXC | | | | |
+**SSH-setup:** se [`setup/ishtar-ssh-setup.md`](../setup/ishtar-ssh-setup.md) — port 22 var stängd 2026-07-12.
 
 ### OS-rekommendation
 
@@ -42,21 +39,29 @@ Permanent RFID/MQTT-testlabb i garaget. Del av **Fas D** ([Uppdrag 003](https://
 | Slackware | Möjligt — mer manuellt |
 | MariaDB (dedikerad) | Nej — håll databas separat |
 
-## D.1 — SSH från fakir (mot testlab-gäst)
+## D.1 — SSH från fakir → ishtar
 
-Ersätt `<gäst-ip>` och `<användare>` efter D.0-beslut.
+### 1a. På ishtar (Proxmox Console) — SSH-server
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_hulda -N ""
-ssh-copy-id -i ~/.ssh/id_ed25519_hulda.pub <användare>@<gäst-ip>
+sudo apt update && sudo apt install -y openssh-server
+sudo systemctl enable --now ssh
 ```
 
-`~/.ssh/config` på fakir (ej i git) — `Host hulda` pekar på **gästen**:
+Eller kör skriptet `setup/ishtar-enable-ssh.sh` i konsolen.
+
+### 1b. Nyckel från fakir
+
+```bash
+ssh-copy-id -i ~/.ssh/id_ed25519_hulda.pub joakim@192.168.50.151
+```
+
+`~/.ssh/config` på fakir:
 
 ```
-Host hulda
-  HostName <gäst-ip>
-  User <användare>
+Host hulda ishtar
+  HostName 192.168.50.151
+  User joakim
   IdentityFile ~/.ssh/id_ed25519_hulda
   IdentitiesOnly yes
 ```
@@ -101,11 +106,11 @@ ssh hulda 'docker logs rfid-mqtt-hulda --tail 50'
 
 ### Verifiering från fakir
 
-Använd **gäst-IP**, inte `.100`:
+Broker-IP = **ishtar** `192.168.50.151`:
 
 ```bash
-python3 -c "import socket; s=socket.socket(); s.settimeout(3); print(s.connect_ex(('<gäst-ip>',1883)))"
-docker run --rm eclipse-mosquitto:2 mosquitto_pub -h <gäst-ip> -p 1883 -t test/uppdrag003 -m ok
+python3 -c "import socket; s=socket.socket(); s.settimeout(3); print(s.connect_ex(('192.168.50.151',1883)))"
+docker run --rm eclipse-mosquitto:2 mosquitto_pub -h 192.168.50.151 -p 1883 -t test/uppdrag003 -m ok
 ssh hulda "ss -tlnp | grep 1883"
 ```
 
@@ -143,9 +148,10 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | Del | Status |
 |-----|--------|
 | Proxmox `.100:8006` | Bekräftad |
-| Testlab-gäst valt | **Väntar Principal** |
+| Testlab-gäst **ishtar** `.151` | Vald |
 | `docker-compose.hulda.yml` | Klar |
-| SSH + broker | Ej klart |
+| SSH på ishtar | **Pågår** — installera `openssh-server` |
+| MQTT-broker | Ej startad |
 
 ## Relaterat
 
