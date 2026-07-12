@@ -18,7 +18,7 @@ Permanent RFID/MQTT-testlabb i garaget. Del av **Fas D** ([Uppdrag 003](https://
 
 `192.168.50.100` är **inte** MQTT-värden — tjänsterna körs i en vald VM eller LXC.
 
-**Legacy broker:** falstaff `192.168.50.107` — appens default tills Uppdrag 004 (D.4).
+**Legacy broker:** falstaff `192.168.50.107` — avvecklas (D.5). App default → ishtar `.151` (Uppdrag 004 / D.4).
 
 ## D.0 — Proxmox och gäst-val ✅
 

@@ -17,10 +17,10 @@ Workstation **fakir** (Arch Linux, Hyprland, RTX 3090). Repo: `/home/joakim/Proj
 | **fakir** | Bygg (`gradlew`), ADB, Ollama/Qwen | **Nej** — ingen broker här |
 | **hulda** | Proxmox hypervisor `.100` | Nej |
 | **ishtar** | Testlab-gäst (Debian) | **Ja** — broker `:1883`, dashboard `:8000` |
-| **falstaff** | Legacy broker | `192.168.50.107:1883` (app default tills D.4) |
-| **Galaxy Note 10** | Primär testenhet (NFC) | Klient mot ishtar (Settings) eller falstaff |
+| **falstaff** | Legacy broker | `192.168.50.107:1883` (avvecklas, D.5) |
+| **Galaxy Note 10** | Primär testenhet (NFC) | Klient mot ishtar (app default) |
 
-Appens default: `tcp://192.168.50.107:1883` (`MqttConnectionManager.kt`). Testinfra på **ishtar**: broker + dashboard; fakir använder webbläsare/Explorer mot `.151` — se [[Testmiljo-hulda]], [[UAT-fakir-smoke-test]].
+Appens default: `tcp://192.168.50.151:1883` (`MqttConnectionManager.kt`, Uppdrag 004). Testinfra på **ishtar**: broker + dashboard; fakir använder webbläsare/Explorer mot `.151` — se [[Testmiljo-hulda]], [[UAT-fakir-smoke-test]].
 
 ## ADB / USB (fakir)
 

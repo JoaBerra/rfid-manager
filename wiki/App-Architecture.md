@@ -47,7 +47,7 @@ graph TD
     end
 
     subgraph External["External"]
-        Mqtt["MQTT Broker<br/>192.168.50.107:1883"]
+        Mqtt["MQTT Broker<br/>192.168.50.151:1883"]
         Tag["RFID Tags<br/>NFC 13.56 MHz"]
     end
 
@@ -96,7 +96,7 @@ För Fas 2 har en kommunikationslager lagts till för att skicka persisterade l�
 - Krypteringsnycklar, certifikathantering och mTLS/autentisering skall definieras i ett senare skede av projektet.
 
 **Utveckling och test:**
-- Under utveckling och mot den lokala Docker-testmiljön (192.168.50.107:1883) accepteras okrypterad trafik (tcp://) för att hålla setup enkel och debugging effektiv.
+- Under utveckling och mot testlab-brokern på ishtar (192.168.50.151:1883) accepteras okrypterad trafik (tcp://) för att hålla setup enkel och debugging effektiv.
 - Kryptering är ett senare problem i projektet och skjuts upp tills grundläggande persistens + kommunikation är validerad.
 
 Detta beslut dokumenteras här för att undvika att det glöms bort när projektet skalas eller flyttas till riktig infrastruktur.
@@ -257,7 +257,7 @@ Språk hanteras av `LocalizationManager` (separat från AppSettings).
 - Automatisk återanslutning var 35:e sekund. Keep-alive var 30:e sekund.
 - `MqttSender` använder delad anslutning från MqttConnectionManager (ingen egen connect).
 - `ConnectivityViewModel` läser från MqttConnectionManager — ingen demo-data.
-- Broker: `192.168.50.107:1883` (Docker eclipse-mosquitto, okrypterat för dev).
+- Broker: `192.168.50.151:1883` (ishtar, Docker eclipse-mosquitto, okrypterat för dev).
 
 ## Temahantering (Fas 4)
 

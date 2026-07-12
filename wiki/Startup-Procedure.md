@@ -249,15 +249,15 @@ Appen ansluter till brokern som MQTT-klient (`rfid-android-client`), publicerar 
 
 | Parameter | Värde | Fil |
 |-----------|-------|-----|
-| Broker IP | `192.168.50.107` (falstaff wired) | `AppSettings.kt:31`, `MqttConnectionManager.kt:13`, `MainActivity.kt:59`, `SettingsScreen.kt:42` |
-| Port | `1883` | `AppSettings.kt:34`, `MqttConnectionManager.kt:14` |
+| Broker IP | `192.168.50.151` (ishtar testlab) | `MqttConnectionManager.kt:13`, `MainActivity.kt:75` |
+| Port | `1883` | `MqttConnectionManager.kt` |
 | Client ID | `rfid-android-client` | `MqttConnectionManager.kt:15` |
 | Topic | `rfidmanager/<uid>/telemetry` | `MqttSender.kt:54` |
 | QoS | 1 | `MqttSender.kt:52` |
 
 ### Nätverkssäkerhet
 
-Android 9+ kräver `network_security_config.xml` för cleartext TCP. Domen `192.168.50.107` är vitlistad (tidigare `.128`).
+Android 9+ kräver `network_security_config.xml` för cleartext TCP. Domäner `192.168.50.151` (ishtar) och `192.168.50.107` (legacy falstaff) är vitlistade.
 
 ### Förutsättningar
 
@@ -267,7 +267,7 @@ Android 9+ kräver `network_security_config.xml` för cleartext TCP. Domen `192.
 
 ### Verifiering (utan fysisk enhet)
 
-Källkoden är verifierad och IP är uppdaterad från `192.168.50.128` (sixten) → `192.168.50.107` (falstaff). För full E2E-test krävs en fysisk Android-enhet med appen installerad.
+Källkoden är verifierad och default-IP är `192.168.50.151` (ishtar, Uppdrag 004). Tidigare: `.128` (sixten) → `.107` (falstaff). För full E2E-test krävs en fysisk Android-enhet med appen installerad.
 
 ### Fel som åtgärdades under verifiering
 

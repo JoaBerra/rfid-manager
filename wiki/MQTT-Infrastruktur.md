@@ -200,14 +200,18 @@ flowchart LR
             Client["Paho MQTT Client<br/>clientId: rfid-android-client"]
             App --- Client
         end
-        subgraph PC["PC (192.168.50.107)"]
+        subgraph Testlab["ishtar (192.168.50.151)"]
             Broker["Docker Mosquitto :1883"]
             Subscriber["Python subscriber.py"]
-            Explorer["MQTT Explorer<br/>(valfritt GUI)"]
+            Dashboard["Webb-dashboard :8000"]
+        end
+        subgraph DevPC["fakir (valfritt)"]
+            Explorer["MQTT Explorer"]
         end
     end
 
-    Phone <-.->|"WiFi"| PC
+    Phone <-.->|"WiFi"| Testlab
+    DevPC -.->|"WiFi"| Testlab
     App -->|"publish rfidmanager/&lt;uid&gt;/telemetry"| Broker
     Broker -->|"distribute rfidmanager/+/telemetry"| Subscriber
     Broker -.->|"via MQTT Explorer"| Explorer
@@ -220,11 +224,11 @@ flowchart LR
 
 | Parameter         | Värde                                       |
 |-------------------|---------------------------------------------|
-| Broker IP         | `192.168.50.107`                            |
+| Broker IP         | `192.168.50.151` (ishtar)                   |
 | Broker port       | `1883`                                      |
 | Protokoll         | `tcp://` (cleartext)                        |
 | Android client ID | `rfid-android-client`                       |
-| Broker-URL i app  | `tcp://192.168.50.107:1883` (konfigurerbar i Settings) |
+| Broker-URL i app  | `tcp://192.168.50.151:1883` (default i `MqttConnectionManager.kt`) |
 | WiFi-nätverk      | Lokalt LAN, troligen via router med DHCP    |
 
 ### Nätverkssäkerhet
@@ -418,7 +422,7 @@ flowchart TD
 | Transport | Cleartext TCP (`tcp://`) |
 | Autentisering | Ingen (`allow_anonymous true`) |
 | Kryptering | Ingen |
-| Nätverkssäkerhet | Cleartext tillåten för `192.168.50.107` via `network_security_config.xml` |
+| Nätverkssäkerhet | Cleartext tillåten för `.151` och legacy `.107` via `network_security_config.xml` |
 
 ### Risker
 
@@ -446,11 +450,11 @@ flowchart TD
 | **Python subscriber** | Logga meddelanden till SQLite | `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/test_subscriber_persist.py` |
 | **Python simulator** | Simulera app-publicering | `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/simulate_mobile_publish.py` |
 | **MQTT Explorer** | GUI-utforskare | [Ladda ner](https://github.com/thomasnordquist/MQTT-Explorer/releases) |
-| **mosquitto_sub** | CLI-prenumerant | `mosquitto_sub -h 192.168.50.107 -p 1883 -t "rfidmanager/#"` |
-| **mosquitto_pub** | CLI-publicerare | `mosquitto_pub -h 192.168.50.107 -p 1883 -t "test" -m "hello"` |
+| **mosquitto_sub** | CLI-prenumerant | `mosquitto_sub -h 192.168.50.151 -p 1883 -t "rfidmanager/#"` |
+| **mosquitto_pub** | CLI-publicerare | `mosquitto_pub -h 192.168.50.151 -p 1883 -t "test" -m "hello"` |
 | **docker logs** | Broker-loggar | `docker logs rfid-mqtt-test` |
 | **Wireshark** | Paketanalys (nätverkssniffning) | `sudo wireshark` (filter: `mqtt`) |
-| **netcat** | Rå TCP-test | `echo "" | nc -v 192.168.50.107 1883` |
+| **netcat** | Rå TCP-test | `echo "" | nc -v 192.168.50.151 1883` |
 
 ### Installation av testverktyg
 
@@ -460,7 +464,7 @@ För att köra `mosquitto_pub` och `mosquitto_sub` från terminalen finns två a
 ```bash
 sudo pacman -S mosquitto
 ```
-Efter installation: `mosquitto_sub -h 192.168.50.107 -p 1883 -t "rfidmanager/#"`
+Efter installation: `mosquitto_sub -h 192.168.50.151 -p 1883 -t "rfidmanager/#"`
 
 **Alternativ 2: Använd Docker-containern**
 ```bash
@@ -476,7 +480,7 @@ Ladda ner från [GitHub Releases](https://github.com/thomasnordquist/MQTT-Explor
 
 | Fält | Värde |
 |------|-------|
-| Host | `192.168.50.107` (eller `localhost` från PC) |
+| Host | `192.168.50.151` (ishtar) |
 | Port | `1883` |
 | SSL/TLS | Av |
 | Auth | Ingen |
@@ -487,7 +491,7 @@ Prenumerera på `rfidmanager/#` för att se alla meddelanden i realtid.
 
 | Fält | Värde |
 |------|-------|
-| Host | `192.168.50.107` (eller `localhost` från PC) |
+| Host | `192.168.50.151` (ishtar; körs på fakir) |
 | Port | `1883` |
 | SSL/TLS | Av |
 | Auth | Ingen |

@@ -20,8 +20,8 @@ updated: 2026-07-12
 | Dev-host | fakir (Arch, `~/Projects/rfid-manager`) |
 | Testenhet | Samsung Galaxy Note 10 (SM-N970F) |
 | Nätverk | `192.168.50.0/24` (Wi-Fi) |
-| MQTT-broker | **ishtar** `192.168.50.151:1883` *(via app Settings; Uppdrag 003)* |
-| App default broker | falstaff `192.168.50.107` *(oförändrad — Uppdrag 004)* |
+| MQTT-broker | **ishtar** `192.168.50.151:1883` *(via app Settings vid test; Uppdrag 003)* |
+| App default broker | ishtar `192.168.50.151` *(Uppdrag 004 — kräver ny installDebug för verifiering)* |
 | Hypervisor | hulda Proxmox `192.168.50.100` |
 
 ## Resultat per kriterium
