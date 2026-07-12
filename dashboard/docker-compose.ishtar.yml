@@ -1,0 +1,14 @@
+# Dashboard only — connects to existing broker on ishtar (rfid-mqtt-hulda).
+# Build/run from dashboard/ on ishtar:
+#   docker-compose -f docker-compose.ishtar.yml up -d --build
+services:
+  dashboard:
+    build: .
+    container_name: rfid-mqtt-dashboard
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MQTT_BROKER=192.168.50.151
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=rfidmanager/+/telemetry

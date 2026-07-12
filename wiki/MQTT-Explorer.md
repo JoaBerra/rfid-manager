@@ -32,7 +32,7 @@ Istället för att enbart läsa rå JSON i terminalen via Python-subscribern ger
 
 | Fält | Värde |
 |---|---|
-| Host | `192.168.50.107` (eller `localhost` om subscribern körs på samma maskin som broker) |
+| Host | `192.168.50.151` (ishtar testlab) — legacy falstaff: `192.168.50.107` |
 | Port | `1883` |
 | Anslutning | Ingen autentisering / TLS (okrypterat — endast för utveckling) |
 

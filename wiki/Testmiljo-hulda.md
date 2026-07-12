@@ -121,6 +121,43 @@ scp test/fas2-mqtt/systemd/rfid-mqtt.service hulda:/tmp/
 ssh hulda 'sudo cp /tmp/rfid-mqtt.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now rfid-mqtt'
 ```
 
+## MQTT Dashboard (på ishtar, ingen egen broker)
+
+Webb-UI för realtidsflöde. Ansluter till **befintlig** broker `192.168.50.151:1883` — startar **inte** extra Mosquitto.
+
+| Fält | Värde |
+|------|-------|
+| URL | `http://192.168.50.151:8000` |
+| Compose | `dashboard/docker-compose.ishtar.yml` |
+| Container | `rfid-mqtt-dashboard` |
+
+### Starta / stoppa
+
+```bash
+ssh hulda '~/ishtar-start-dashboard.sh'
+# eller
+ssh hulda 'cd ~/Projects/rfid-manager/dashboard && docker-compose -f docker-compose.ishtar.yml up -d --build'
+```
+
+```bash
+ssh hulda 'cd ~/Projects/rfid-manager/dashboard && docker-compose -f docker-compose.ishtar.yml down'
+ssh hulda 'docker logs rfid-mqtt-dashboard --tail 30'
+```
+
+### Från fakir
+
+Öppna webbläsare: **http://192.168.50.151:8000**
+
+```bash
+curl -s http://192.168.50.151:8000/api/stats
+```
+
+Loggar ska visa: `Connected to MQTT broker, subscribing to rfidmanager/+/telemetry`.
+
+### MQTT Explorer (fakir, on-demand)
+
+AppImage på fakir — anslut till `192.168.50.151:1883`. Se [[MQTT-Explorer]].
+
 ## Python-subscriber (på gäst)
 
 ```bash
@@ -153,7 +190,8 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | SSH `ssh hulda` | ✅ Klar |
 | Docker på ishtar | ✅ `docker.io` + `docker-compose` |
 | MQTT-broker `rfid-mqtt-hulda` | ✅ `192.168.50.151:1883` |
-| Verifierat från fakir | ✅ port 1883 + `mosquitto_pub` |
+| Dashboard `rfid-mqtt-dashboard` | ✅ `http://192.168.50.151:8000` |
+| Verifierat från fakir | ✅ MQTT + dashboard API |
 
 ## Relaterat
 
