@@ -54,7 +54,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Android-Studio-Installation]] — Fullständig installationsdokumentation (primär referens för detta steg).
 - [[MQTT-Infrastruktur]] — Fördjupning (Fas-100): MQTT-protokollet, broker, topologi, topics, meddelandeformat, verktyg och hela dataflödet.
 - [[Fas-101-MQTT-Configuration]] — Praktisk implementation (Fas-101): Fullständig MQTT-konfiguration i appens Settings-skärm (host, port, TLS, auth, Sparkplug, topics, beteende).
-- [[Fas-200-Web-Dashboard]] — Realtidsdashboard (Fas-200): Webbaserad visualisering av MQTT-meddelanden med FastAPI + SSE + Docker Compose. Inkluderar MCP-server (Fas-300) för AI-assistentåtkomst.
+- [[Fas-200-Web-Dashboard]] — Realtidsdashboard (Fas-200): FastAPI + SSE på ishtar `:8000`.
 - [[MQTT-Explorer]] — Gratis GUI-verktyg för att inspektera MQTT-meddelanden i realtid.
 - [[MQTT-Manual]] — Praktisk bruksanvisning: starta broker, dashboard, skicka data från telefonen, felsökning.
 
@@ -65,7 +65,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Produkt-Roadmap]] — Översikt över slutfört (Fas 2–4), planerat (Fas 5–6) och framtida features. Single source of truth för roadmap + backlog. Uppdaterad 2026-06-11. Länkar även till ny samlad struktur under `~/projects/rfid/rfid-manager/`.
 
 ### Miljö och Infrastruktur
-- [[Startup-Procedure]] — Steg-för-steg från kallstart till alla tjänster uppe (broker, dashboard, subscriber, MCP). Uppdateras löpande.
+- [[Startup-Procedure]] — Kallstart testmiljö (broker, dashboard på ishtar; Explorer på fakir).
 - [[Fas-400-Teknikmiljo-Validering]] — Komponentkarta, bootstrap-script, verifieringsrutiner för att sätta upp miljön på ny Ubuntu 24.04-maskin.
 - [[Fas-500-Miljo-flytt-sixten-till-falstaff]] — Inventering av hårdkodade sökvägar efter flytt från sixten till falstaff. Kartläggning av refererade men saknade filer och förslag på placering.
 
@@ -96,7 +96,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 
 **MQTT-Manual:** Praktisk bruksanvisning för hela MQTT-kedjan: broker, dashboard, kommandon, felsökning. Se [[MQTT-Manual]].
 
-**Fas-300 (MCP-server):** Implementerad och testad ✅. Exponerar dashboardens API som MCP-verktyg för AI-assistenten. Tools: `get_stats`, `get_messages`, `publish_mqtt`, `get_live_events`. Se [[Fas-200-Web-Dashboard#mcp-server-fas-300]].
+**Fas-300 (MCP-server):** Parkerad som idé i AH (2026-07-12). Kod i `mcp-server/` — aktiv drift: [[MQTT-Explorer]] + [[Fas-200-Web-Dashboard]] mot ishtar.
 
 **Fas-400 (Teknikmiljö validering):** Klart ✅. Komponentkarta, bootstrap-script (`setup/bootstrap.sh`), 9 verifieringsrutiner. Se [[Fas-400-Teknikmiljo-Validering]].
 

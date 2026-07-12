@@ -156,7 +156,11 @@ Loggar ska visa: `Connected to MQTT broker, subscribing to rfidmanager/+/telemet
 
 ### MQTT Explorer (fakir, on-demand)
 
-AppImage på fakir — anslut till `192.168.50.151:1883`. Se [[MQTT-Explorer]].
+```bash
+mqtt-explorer   # ~/.local/bin, v0.3.5 — host 192.168.50.151:1883
+```
+
+Se [[MQTT-Explorer]].
 
 ## Python-subscriber (på gäst)
 

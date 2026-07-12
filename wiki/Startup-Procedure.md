@@ -209,77 +209,25 @@ python3 -m venv .venv
 
 ---
 
-## Objekt 4: MCP Server
+## Objekt 4: MQTT Explorer (fakir)
 
-**Verifierad:** 2026-06-23 ✅
+**Aktiv setup:** 2026-07-12 (Fas D)
 
-MCP-server som exponerar RFID-dashboardens API och MQTT-broker som verktyg för AI-assistenten (OpenCode).
-
-### Verktyg
-
-| Tool | Beskrivning |
-|------|-------------|
-| `get_stats` | Hämta dashboard-statistik (totalt, unika UID, anslutning) |
-| `get_messages(limit)` | Hämta senaste N meddelanden |
-| `publish_mqtt(topic, payload)` | Publicera MQTT-meddelande direkt till brokern |
-| `get_live_events` | Hämta nya realtidshändelser (pollar broker 5s) |
-
-### Förutsättningar
-
-- Python .venv skapat: `mcp-server/.venv/` (mcp, httpx, paho-mqtt)
-- Dashboard igång på localhost:8000 (Objekt 3)
-- MQTT Broker igång (Objekt 1)
-
-### Starta
+GUI-klient på fakir — ansluter till ishtar `192.168.50.151:1883`. Ingen bakgrundstjänst.
 
 ```bash
-cd ~/projects/rfid/rfid-manager/mcp-server
-.venv/bin/python server.py
+mqtt-explorer    # ~/.local/bin, AppImage v0.3.5
 ```
 
-Servern lyssnar på stdin/stdout och svarar på JSON-RPC MCP-anrop.
+Se [[MQTT-Explorer]] och `setup/install-mqtt-explorer-fakir.sh`.
 
-### Miljövariabler
+---
 
-| Variabel | Default | Beskrivning |
-|----------|---------|-------------|
-| `DASHBOARD_URL` | `http://localhost:8000` | URL till dashboard |
-| `MQTT_BROKER` | `localhost` | MQTT broker host |
-| `MQTT_PORT` | `1883` | MQTT broker port |
+## Objekt 4b: MCP Server — parkerad
 
-### Installation (första gången)
+**Historik:** Verifierad 2026-06-23 på falstaff/OpenCode. **Ej** del av aktiv drift 2026-07-12.
 
-```bash
-cd ~/projects/rfid/rfid-manager/mcp-server
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-### Användning med OpenCode
-
-```json
-{
-  "mcpServers": {
-    "rfid-manager": {
-      "command": "/home/joakim/projects/rfid/rfid-manager/mcp-server/.venv/bin/python",
-      "args": ["/home/joakim/projects/rfid/rfid-manager/mcp-server/server.py"]
-    }
-  }
-}
-```
-
-### Fel som åtgärdades under verifiering
-
-| Fel | Orsak | Lösning |
-|-----|-------|---------|
-| `DASHBOARD_URL` pekade på port 8001 | Gammal default | Uppdaterad till 8000 |
-| MQTT disconnect loop (rc=Unspecified error) | Två dashboard-processer med samma client ID (`rfid-dashboard`) slogss om anslutningen | Döda båda, starta en |
-| `on_connect`/`on_disconnect` callback crash | paho VERSION2 har annan signatur | Uppdaterade callback-signaturer |
-
-### Länkar
-
-- [[MQTT-Manual]] — Fullständig bruksanvisning
-- `mcp-server/README.md` — Serverdokumentation
+MCP flyttad till idé i Andra Hjärnan: [2026-07-12-rfid-manager-mcp-server](https://github.com/JoaBerra/andra-hjarna/blob/main/Ideer/2026-07-12-rfid-manager-mcp-server.md). Kod: `mcp-server/`.
 
 ---
 

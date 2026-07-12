@@ -136,62 +136,21 @@ MQTT_BROKER=localhost .venv/bin/python -m app.main
 | SSE kopplar från | Nätverksproblem | Webbläsaren återansluter automatiskt inom 3 sekunder |
 | Port 8000 upptagen | Annan process | Ändra port via `docker-compose.yml` eller `--port` |
 
-## MCP-server (Fas-300)
+## Drift på ishtar (Fas D)
 
-Dashboardens API exponeras via en MCP-server som ger AI-assistenten direkt tillgång till live-data.
+Dashboard körs på **ishtar** mot befintlig broker — se `dashboard/docker-compose.ishtar.yml` och [[Testmiljo-hulda]].
 
-**Plats:** `~/projects/rfid/rfid-manager/mcp-server/`
+| URL | `http://192.168.50.151:8000` |
+| Broker | `192.168.50.151:1883` (ingen extra Mosquitto) |
 
-### Verktyg
+Från **fakir:** öppna URL i webbläsare. För topic-debug: [[MQTT-Explorer]] (`mqtt-explorer`).
 
-| MCP Tool | Dashboard-anrop | Beskrivning |
-|----------|----------------|-------------|
-| `get_stats` | `GET /api/stats` | Statistik (totalt, unika UID, anslutning, per_minute, driftid) |
-| `get_messages(limit)` | `GET /api/messages` | Senaste N meddelanden |
-| `publish_mqtt(topic, payload)` | direkt mot MQTT-broker | Publicera MQTT-meddelande |
-| `get_live_events` | prenumerera på `rfidmanager/+/telemetry` | Lyssna på nya meddelanden i 5 sekunder |
+## MCP-server (Fas-300) — parkerad
 
-### Arkitektur
+MCP för AI-agenter är flyttad till idé i Andra Hjärnan — **ej** del av aktiv setup.
 
-```
-AI-assistent
-  │  MCP-protokoll (stdin/stdout)
-  ▼
-MCP-server (mcp-server/server.py)
-  │  HTTP GET ───→ Dashboard API (port 8001)
-  │  MQTT pub/sub ───→ Mosquitto Broker (port 1883)
-  ▼
-Dashboard + Broker
-```
-
-### Starta
-
-```bash
-cd ~/projects/rfid/rfid-manager/mcp-server
-../dashboard/.venv/bin/python server.py
-```
-
-MCP-servern ansluter automatiskt till dashboarden på `DASHBOARD_URL` (default `http://localhost:8001`) samt till MQTT-brokern.
-
-### OpenCode-konfiguration
-
-För att använda MCP-servern i opencode, lägg till i `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "mcpServers": {
-    "rfid-manager": {
-      "command": "/home/joakim/projects/rfid/rfid-manager/dashboard/.venv/bin/python",
-      "args": ["/home/joakim/projects/rfid/rfid-manager/mcp-server/server.py"],
-      "env": {
-        "DASHBOARD_URL": "http://localhost:8001",
-        "MQTT_BROKER": "localhost",
-        "MQTT_PORT": "1883"
-      }
-    }
-  }
-}
-```
+- Idé: [2026-07-12-rfid-manager-mcp-server](https://github.com/JoaBerra/andra-hjarna/blob/main/Ideer/2026-07-12-rfid-manager-mcp-server.md)
+- Kod kvar: `mcp-server/` (referens)
 
 ### Relation till andra komponenter
 

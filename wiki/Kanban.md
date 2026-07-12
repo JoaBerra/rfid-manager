@@ -59,7 +59,7 @@ kanban-plugin: board
 		- [ ] Dokumentation: Dokumentera säkerhetsläge och rekommendationer
 		- [ ] Test: Säkerhetsgenomgång av nuvarande setup
 	- [ ] **9. Verktyg**
-		- [ ] Utbildning: Prova MQTT Explorer, mosquitto_sub, mosquitto_pub
+		- [x] Utbildning: MQTT Explorer installerad på fakir (2026-07-12)
 		- [ ] Konfiguration: Notera anslutningsinställningar per verktyg
 		- [ ] Dokumentation: Skapa "lathund" för varje verktyg
 		- [ ] Test: Använd varje verktyg för att publicera/lyssna

@@ -35,6 +35,15 @@ cd ~/Projects/rfid-manager/RFIDManager
 
 Note 10: USB-felsökning på, auktorisera fakir. Valfritt: `sudo pacman -S android-tools`.
 
+## MQTT-verktyg (fakir, on-demand)
+
+| Verktyg | Kommando | Mål |
+|---------|----------|-----|
+| MQTT Explorer | `mqtt-explorer` | `192.168.50.151:1883` |
+| Dashboard (webb) | webbläsare | `http://192.168.50.151:8000` |
+
+Installerat: AppImage v0.3.5 — `setup/install-mqtt-explorer-fakir.sh`. Se [[MQTT-Explorer]].
+
 ## Android SDK (user-local, utan sudo)
 
 Installerad 2026-07-11 via Google command-line tools (alternativ till AUR `android-studio`):

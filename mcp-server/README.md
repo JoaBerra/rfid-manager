@@ -1,42 +1,24 @@
 # RFID Manager MCP-server
 
-MCP-server som exponerar RFID-dashboardens API och MQTT-broker som verktyg för AI-assistenten.
+> **Parkerad (2026-07-12).** Ej del av aktiv drift. Se [AH-idé](https://github.com/JoaBerra/andra-hjarna/blob/main/Ideer/2026-07-12-rfid-manager-mcp-server.md).
+
+MCP-server som exponerar dashboard-API och MQTT som verktyg för AI-agenter. Kod behålls som referens.
 
 ## Verktyg
 
 | Tool | Beskrivning |
 |------|-------------|
-| `get_stats` | Hämta dashboard-statistik (totalt, unika UID, anslutning) |
-| `get_messages(limit)` | Hämta senaste N meddelanden |
-| `publish_mqtt(topic, payload)` | Publicera MQTT-meddelande direkt till brokern |
-| `get_live_events` | Hämta nya realtidshändelser från SSE-strömmen |
+| `get_stats` | Dashboard `/api/stats` |
+| `get_messages(limit)` | Dashboard `/api/messages` |
+| `publish_mqtt(topic, payload)` | Direkt mot broker |
+| `get_live_events` | MQTT-prenumeration 5 s |
 
-## Starta
+## Om aktiverad mot ishtar
 
 ```bash
-cd ~/projects/rfid/rfid-manager/mcp-server
-.venv/bin/python server.py
+export DASHBOARD_URL=http://192.168.50.151:8000
+export MQTT_BROKER=192.168.50.151
+export MQTT_PORT=1883
 ```
 
-## Konfiguration (miljövariabler)
-
-| Variabel | Default | Beskrivning |
-|----------|---------|-------------|
-| `DASHBOARD_URL` | `http://localhost:8001` | URL till dashboard |
-| `MQTT_BROKER` | `localhost` | MQTT broker host |
-| `MQTT_PORT` | `1883` | MQTT broker port |
-
-## Användning med opencode
-
-Lägg till följande i `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "mcpServers": {
-    "rfid-manager": {
-      "command": "/home/joakim/projects/rfid/rfid-manager/dashboard/.venv/bin/python",
-      "args": ["/home/joakim/projects/rfid/rfid-manager/mcp-server/server.py"]
-    }
-  }
-}
-```
+Aktiv testmiljö idag: [[MQTT-Explorer]] + dashboard på ishtar (wiki).

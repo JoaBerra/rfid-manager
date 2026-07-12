@@ -1,76 +1,70 @@
 ---
 title: MQTT Explorer — PC-verktyg för transaktionsinspektion
-tags: [pc, mqtt, verktyg, test, transaktionslogg]
+tags: [pc, mqtt, verktyg, test, fakir, ishtar]
 created: 2026-06-10
+updated: 2026-07-12
 ---
 
 # MQTT Explorer
 
-> **Gratis GUI-verktyg** för att inspektera MQTT-meddelanden i realtid.  
-> Rekommenderas som PC-stöd för transaktionsinspektion under utveckling och test.
+Gratis GUI-klient för MQTT — körs **på fakir vid behov**, ansluter till brokern på **ishtar**.
 
-## Varför MQTT Explorer?
+## Installation (fakir)
 
-Istället för att enbart läsa rå JSON i terminalen via Python-subscribern ger MQTT Explorer dig:
-
-- **Trädstruktur** över topics — se alla meddelanden sorterade per topic
-- **Färgkodade meddelanden** — lätt att skilja på olika typer
-- **Historik** — spara och bläddra i tidigare meddelanden
-- **Publish-stöd** — skicka testmeddelanden direkt från GUI:t
-- **Cross-platform** — Linux, Windows, macOS
-
-## Installation
-
-1. Gå till [MQTT Explorer GitHub releases](https://github.com/thomasnordquist/MQTT-Explorer/releases)
-2. Ladda ner rätt version för ditt OS:
-   - **Linux**: `.AppImage` (kräver ingen installation — kör direkt)
-   - **Windows**: `.exe`-installerare
-   - **macOS**: `.dmg`
-3. Gör `.AppImage` körbar vid behov: `chmod +x MQTT-Explorer-*.AppImage`
-
-## Anslut till testmiljön
+**Status 2026-07-12:** Installerad via AppImage v0.3.5.
 
 | Fält | Värde |
-|---|---|
-| Host | `192.168.50.151` (ishtar testlab) — legacy falstaff: `192.168.50.107` |
+|------|-------|
+| Binär | `~/.local/opt/mqtt-explorer/MQTT-Explorer-0.3.5.AppImage` |
+| Kommando | `mqtt-explorer` (symlink i `~/.local/bin`) |
+| Skript | `setup/install-mqtt-explorer-fakir.sh` (återinstallera) |
+
+```bash
+mqtt-explorer
+```
+
+Kräver inga bakgrundstjänster — stäng appen när du inte debuggar (vänligt mot inferens på fakir).
+
+## Anslutning
+
+| Fält | Värde |
+|------|-------|
+| Host | `192.168.50.151` (ishtar) |
 | Port | `1883` |
-| Anslutning | Ingen autentisering / TLS (okrypterat — endast för utveckling) |
+| Auth | Ingen (dev) |
+| Topic | `rfidmanager/#` |
 
-Efter anslutning ser du i realtid alla meddelanden som publiceras på `rfidmanager/#`.
+Legacy falstaff: `192.168.50.107` (avvecklas).
 
-## Användning med RFID Manager
+## Arbetsflöde med RFID Manager
 
-1. Starta Docker-brokern (om inte redan igång):
-   ```bash
-   docker run -d --rm --name rfid-mqtt-test -p 1883:1883 \
-     -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
-     eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf
-   ```
+1. Broker igång på ishtar — se [[Testmiljo-hulda]]
+2. Starta `mqtt-explorer` på fakir
+3. Anslut till `192.168.50.151:1883`
+4. Skicka från appen (Transmit) eller publicera i Explorer
+5. Jämför med webb-dashboard: `http://192.168.50.151:8000`
 
-2. Starta MQTT Explorer och anslut till brokern.
+Alternativ CLI-test:
 
-3. Prenumerera på `rfidmanager/#` i MQTT Explorer.
+```bash
+docker run --rm eclipse-mosquitto:2 mosquitto_pub \
+  -h 192.168.50.151 -p 1883 -t rfidmanager/test/telemetry -m '{"type":"test"}'
+```
 
-4. Skicka ett testmeddelande från appen (Transmit ↑) eller från terminalen:
-   ```bash
-   cd ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt
-   ./.venv/bin/python simulate_mobile_publish.py
-   ```
+## Verktygsjämförelse
 
-5. Meddelandet syns omedelbart i MQTT Explorer — med full JSON, topic, och tidsstämpel.
+| Aspekt | MQTT Explorer (fakir) | Dashboard (ishtar) | Python subscriber (ishtar) |
+|--------|----------------------|--------------------|---------------------------|
+| Plats | Lokal GUI-klient | Webb :8000 | SSH/tmux |
+| Bäst för | Topic-träd, publish-test | Demo, statistik, SSE | Loggning, SQLite |
+| Belastar fakir | Bara när öppen | Nej (webbläsare) | Nej |
 
-## Fördelar jämfört med terminal-subscribern
+## MCP-server
 
-| Aspekt | Python subscriber | MQTT Explorer |
-|---|---|---|
-| Realtidsöversikt | Scrollande text | Trädstruktur + färger |
-| Filtrering | `--uid`-flagga | Klicka på topic |
-| Historik | SQLite-fil | Inbyggd sessionhistorik |
-| Publish från PC | `simulate_mobile_publish.py` | Inbyggd "Publish"-flik |
-| Installation | Kräver Python + venv | `.AppImage`, ingen setup |
-| Bäst för | Automation, loggning | Visuell inspektion, debugging |
+AI-agent-åtkomst via MCP är **parkerad** — se [AH-idé](https://github.com/JoaBerra/andra-hjarna/blob/main/Ideer/2026-07-12-rfid-manager-mcp-server.md). Aktiv drift: Explorer + dashboard räcker.
 
 ## Länkar
 
-- [MQTT Explorer GitHub](https://github.com/thomasnordquist/MQTT-Explorer)
 - [Releases](https://github.com/thomasnordquist/MQTT-Explorer/releases)
+- [[Testmiljo-hulda]] — broker + dashboard
+- [[Fas-200-Web-Dashboard]] — webb-UI

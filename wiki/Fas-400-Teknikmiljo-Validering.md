@@ -34,7 +34,7 @@
 |---|---|---|---|
 | Test subscriber | `test/fas2-mqtt/.venv` | — | `paho-mqtt` |
 | Dashboard | `dashboard/.venv` | `dashboard/requirements.txt` | `fastapi`, `uvicorn`, `paho-mqtt` |
-| MCP-server | (delar dashboardens .venv) | `mcp-server/requirements.txt` | `mcp`, `httpx` |
+| MCP-server | *(parkerad idé)* | `mcp-server/requirements.txt` | ej aktiv drift |
 
 **Skapa alla:**
 ```bash
@@ -102,9 +102,9 @@ export PATH=$PATH:$ANDROID_HOME/platform-tools
 | OpenCode | Ladda ner från https://opencode.ai och lägg i PATH |
 | Qwen2.5 GGUF | Ladda ner från Hugging Face (Qwen/Qwen2.5-Coder-7B-Instruct-GGUF) |
 
-### 1.8 MCP-server
+### 1.8 MCP-server — parkerad (2026-07-12)
 
-Används av OpenCode för att ge AI-assistenten tillgång till dashboard-data.
+Ej del av aktiv Fas D-setup. Se AH-idé `2026-07-12-rfid-manager-mcp-server`.
 
 **Starta:**
 ```bash
@@ -297,4 +297,4 @@ ls -lh ~/Hämtningar/qwen2.5-coder-7b-instruct-q4_k_m.gguf 2>/dev/null && echo "
 
 ---
 
-Se även [[Kanban]] för status, [[MQTT-Infrastruktur]] för MQTT-detaljer, [[Fas-200-Web-Dashboard]] för dashboard/MCP.
+Se även [[Kanban]], [[MQTT-Infrastruktur]], [[Fas-200-Web-Dashboard]], [[MQTT-Explorer]].
