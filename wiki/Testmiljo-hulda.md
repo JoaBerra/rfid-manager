@@ -46,13 +46,23 @@ Verifiering:
 ssh hulda true && echo "SSH OK"
 ```
 
+### Alternativ: manuell nyckel (konsol på hulda)
+
+Om `ssh-copy-id` misslyckas (fel lösenord), lägg till fakir-nyckeln direkt på hulda:
+
+```bash
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHYWMe5KubRM+IT/SeYk7M5I5Cf+T6raEQq5ur7jpQgH fakir-hulda' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
 ### Blockerare (2026-07-12)
 
 | Problem | Status |
 |---------|--------|
 | hulda pingbar på `192.168.50.100` | OK |
 | SSH port 22 öppen | OK |
-| Nyckelbaserad inloggning | **Väntar på `ssh-copy-id`** (lösenord krävs) |
+| Nyckelbaserad inloggning | **Väntar** — `ssh-copy-id` misslyckades; manuell nyckel via konsol |
 
 ## D.2 — MQTT-broker (Docker Compose)
 
