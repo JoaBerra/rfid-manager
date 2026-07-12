@@ -150,7 +150,9 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | Proxmox `.100:8006` | Bekräftad |
 | Testlab-gäst **ishtar** `.151` | Vald |
 | `docker-compose.hulda.yml` | Klar |
-| SSH på ishtar | **Pågår** — installera `openssh-server` |
+| SSH `ssh hulda` | **Klar** (nyckelbaserat) |
+| Docker på ishtar | **Väntar** — `~/ishtar-install-docker.sh` (sudo) |
+| MQTT-filer på ishtar | Synkade via scp |
 | MQTT-broker | Ej startad |
 
 ## Relaterat

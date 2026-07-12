@@ -10,7 +10,7 @@
 | Hypervisor | hulda Proxmox `192.168.50.100:8006` |
 | Broker (efter D.2) | `192.168.50.151:1883` |
 
-**Status 2026-07-12:** ishtar svarar på ping från fakir; port 22 stängd (SSH ej installerat/igång).
+**Status 2026-07-12:** SSH från fakir (`ssh hulda`) — **klar**. Docker ej installerat än (kräver sudo på ishtar).
 
 ---
 
@@ -115,18 +115,30 @@ Förväntat svar: `ishtar` (eller gästens hostname).
 
 ---
 
-## Steg 6 — Efter SSH (agent / nästa uppdragsteg)
+## Steg 6 — Docker + MQTT (på ishtar, kräver sudo)
 
-När `ssh hulda true` fungerar:
+`ssh hulda` fungerar utan lösenord. Docker kräver **sudo-lösenord** — kör interaktivt:
 
 ```bash
-# Docker på ishtar (om saknas)
-ssh hulda 'sudo apt install -y docker.io docker-compose-plugin && sudo usermod -aG docker joakim'
-
-# MQTT-broker
-ssh hulda 'git clone https://github.com/JoaBerra/rfid-manager.git ~/Projects/rfid-manager || true'
-ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker compose -f docker-compose.hulda.yml up -d'
+ssh hulda
+bash ~/Projects/rfid-manager/test/fas2-mqtt/../../setup/ishtar-install-docker.sh
 ```
+
+Eller manuellt på ishtar:
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker joakim
+exit
+ssh hulda
+newgrp docker
+cd ~/Projects/rfid-manager/test/fas2-mqtt
+docker compose -f docker-compose.hulda.yml up -d
+```
+
+*(Repo-filer kan synkas från fakir med `scp` om `git` saknas.)*
 
 Test från fakir:
 
