@@ -11,7 +11,7 @@ Gratis GUI-klient för MQTT — körs **på fakir vid behov**, ansluter till bro
 
 ## Installation (fakir)
 
-**Status 2026-07-12:** Installerad via AppImage v0.3.5.
+**Status 2026-07-12:** Installerad (extraherad AppImage v0.3.5). E2E verifierad — Principal: läsning synlig mot ishtar `.151`.
 
 | Fält | Värde |
 |------|-------|
