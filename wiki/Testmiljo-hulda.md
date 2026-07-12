@@ -88,19 +88,19 @@ Källa: `test/fas2-mqtt/docker-compose.hulda.yml`
 
 ### Förutsättningar
 
-- Docker + `docker compose` på gästen
+- Docker + `docker-compose` på gästen (Debian trixie: paketet `docker-compose`, inte `docker-compose-plugin`)
 - Repo: `~/Projects/rfid-manager/`
 
 ```bash
 ssh hulda 'git clone https://github.com/JoaBerra/rfid-manager.git ~/Projects/rfid-manager || true'
-ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker compose -f docker-compose.hulda.yml up -d'
+ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker-compose -f docker-compose.hulda.yml up -d'
 ```
 
 ### Stoppa / omstart / loggar
 
 ```bash
-ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker compose -f docker-compose.hulda.yml down'
-ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker compose -f docker-compose.hulda.yml restart'
+ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker-compose -f docker-compose.hulda.yml down'
+ssh hulda 'cd ~/Projects/rfid-manager/test/fas2-mqtt && docker-compose -f docker-compose.hulda.yml restart'
 ssh hulda 'docker logs rfid-mqtt-hulda --tail 50'
 ```
 
@@ -139,7 +139,7 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 |---------|--------|
 | SSH till `.100` nekas | Förväntat — SSH ska gå till **gäst-IP** |
 | Gäst startar inte | Proxmox UI → starta VM/LXC |
-| Port 1883 stängd | `docker compose … up -d` på gästen |
+| Port 1883 stängd | `docker-compose … up -d` på gästen |
 | Telefon når inte broker | Wi-Fi samma LAN; broker-IP = gäst-IP |
 | App DISCONNECTED | App pekar på falstaff — Settings eller Uppdrag 004 |
 

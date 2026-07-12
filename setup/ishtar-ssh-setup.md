@@ -135,7 +135,7 @@ exit
 ssh hulda
 newgrp docker
 cd ~/Projects/rfid-manager/test/fas2-mqtt
-docker compose -f docker-compose.hulda.yml up -d
+docker-compose -f docker-compose.hulda.yml up -d
 ```
 
 *(Repo-filer kan synkas från fakir med `scp` om `git` saknas.)*

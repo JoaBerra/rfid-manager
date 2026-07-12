@@ -1,6 +1,6 @@
 # Persistent MQTT broker for hulda testlab (Uppdrag 003 / Fas D.2)
 # Start from repo root on hulda:
-#   docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d
+#   docker-compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d
 services:
   mosquitto:
     image: eclipse-mosquitto:2
