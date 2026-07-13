@@ -7,7 +7,33 @@ created: 2026-06-13
 # Release Notes — RFID Manager
 
 > **Dokument:** 5.3  
-> **Senast uppdaterad:** 2026-06-13
+> **Senast uppdaterad:** 2026-07-14
+
+---
+
+## v1.0.1 — Fas D testmiljö (ishtar default broker)
+
+**Tag:** `v1.0.1`  
+**Datum:** 2026-07-14  
+**Default branch:** `main` (GitHub)  
+**APK:** `app-debug.apk` (debug-signerad)
+
+### Nytt i denna version
+
+- **Default MQTT-broker** ändrad till **ishtar** `192.168.50.151:1883` (Fas D / Uppdrag 004) — ersätter legacy falstaff `.107` och sixten `.128`.
+- **Appkälla synkad** från sixten (`AndroidStudioProjects/RFIDManager`) — full Fas 6-app med MQTT Settings UI och egen launcher-ikon.
+- **fakir dev-baseline** verifierad: `assembleDebug`, `installDebug`, UAT mot ishtar-testlabb (Uppdrag 004 godkänd 2026-07-13).
+
+### Installera
+
+1. Ladda ner `app-debug.apk` från GitHub Release.
+2. Installera på Android-enhet (USB eller filöverföring).
+3. Broker ska ansluta mot ishtar utan manuell Settings-override om testlabbet kör på `.151`.
+
+### Kända begränsningar
+
+- Oförändrat från v1.0 — se avsnittet nedan (Room/KSP, MQTT utan TLS, m.m.).
+- Debug-signerad APK — inte för produktionsdistribution.
 
 ---
 
