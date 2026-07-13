@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,27 +35,7 @@ import com.joakim.rfidmanager.ui.theme.Dimens
 import com.joakim.rfidmanager.ui.str
 
 /**
- * MainScreenHost for Fas 3.
- *
- * Replaces the old TabRow in RFIDManagerScreen with proper bottom navigation.
- * This directly addresses the "trång" (cramped) experience from Fas 2 by giving
- * each major view (Scan, Readings, Connectivity) its own dedicated screen with breathing room.
- *
- * Uses Compose Navigation as per locked architecture decision.
- * Bottom nav items match the 4-item structure in the Fas 3 design note and acceptance criteria.
- *
- * State (e.g. current readings, MQTT status) will be lifted to ViewModels in next step (Fas 3.2).
- */
-/**
- * Fas 3 Delivery: MainScreenHost
- * 
- * This is the official bottom navigation host for the Fas 3 navigation foundation delivery.
- * 
- * To use from MainActivity (or a test host):
- *   MainScreenHost(persistedReadingRepository = appContainer.persistedReadingRepository)
- *
- * The repository is passed in for the Readings tab. In later steps this will be replaced
- * by proper ViewModel creation (using viewModel() factory) and full DI.
+ * Main bottom navigation host with four dedicated screens: Scan, Readings, Connectivity, Settings.
  */
 @Composable
 fun MainScreenHost(
@@ -65,14 +46,13 @@ fun MainScreenHost(
     scanningEnabled: Boolean = false,
     onToggleScan: () -> Unit = {},
     detectedTags: List<com.joakim.rfidmanager.ui.model.RFIDTag> = emptyList(),
-    onWrite: (String, Int) -> Unit = { _, _ -> },
+    onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Fas 3.2: ScanViewModel — flyttar selectedTagId från MainActivity
     val scanViewModel = remember { ScanViewModel() }
 
     // Session-scoped: tracks UIDs persisted in this session, survives nav because
@@ -95,7 +75,7 @@ fun MainScreenHost(
                 NavigationBarItem(
                     selected = currentRoute == Screen.Readings.route,
                     onClick = { navController.navigate(Screen.Readings.route) { launchSingleTop = true } },
-                    icon = { Icon(Icons.Default.List, contentDescription = null) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                     label = { Text("Readings") }
                 )
                 NavigationBarItem(
@@ -133,7 +113,7 @@ fun MainScreenHost(
                 )
             }
             composable(Screen.Readings.route) {
-                // Dedicated Readings view – full screen, no internal tabs (Fas 3 goal).
+                // Dedicated Readings view – full screen, no internal tabs.
                 if (persistedReadingRepository != null) {
                     val viewModel = remember(persistedReadingRepository, settings) {
                         ReadingsViewModel(persistedReadingRepository, settings!!)
@@ -144,7 +124,6 @@ fun MainScreenHost(
                     val hasMore by viewModel.hasMore.collectAsState()
                     val pageSize by settings?.pageSize?.collectAsState() ?: remember { mutableStateOf(50) }
                     val fontSizeScale by settings?.fontSizeScale?.collectAsState() ?: remember { mutableStateOf(1.0f) }
-                    // Tracks loading delay for demo purposes
                     var isLoading by remember { mutableStateOf(true) }
 
                     LaunchedEffect(readings) {
@@ -157,13 +136,35 @@ fun MainScreenHost(
                             .padding(Dimens.screenHorizontalPadding)
                             .background(MaterialTheme.colorScheme.background)
                     ) {
-                        Text(
-                            str("screen.readings.title"),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 18.sp,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(vertical = Dimens.smallGap)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                str("screen.readings.title"),
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(vertical = Dimens.smallGap)
+                            )
+                            if (readings.isNotEmpty()) {
+                                TextButton(
+                                    onClick = {
+                                        viewModel.clearAll()
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    Text(
+                                        str("screen.readings.clear_all"),
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
 
                         // Search field
                         OutlinedTextField(
@@ -332,6 +333,10 @@ fun MainScreenHost(
                 SettingsScreen(
                     settings = settings,
                     repository = persistedReadingRepository,
+                    mqttStatus = mqttManager?.connectionStatus,
+                    onReconnect = { host, port ->
+                        mqttManager?.reconnect(host, port)
+                    },
                     modifier = Modifier.background(MaterialTheme.colorScheme.background)
                 )
             }

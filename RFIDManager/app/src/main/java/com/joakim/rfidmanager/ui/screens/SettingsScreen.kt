@@ -1,6 +1,8 @@
 package com.joakim.rfidmanager.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,12 +21,17 @@ import com.joakim.rfidmanager.data.settings.AppSettings
 import com.joakim.rfidmanager.ui.LocalLocalization
 import com.joakim.rfidmanager.ui.str
 import com.joakim.rfidmanager.ui.theme.Dimens
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(
     settings: AppSettings? = null,
     repository: PersistedReadingRepository? = null,
+    mqttStatus: StateFlow<String>? = null,
+    onReconnect: (host: String, port: Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val fontSizeScale by settings?.fontSizeScale?.collectAsState() ?: remember { mutableStateOf(1.0f) }
@@ -31,16 +39,32 @@ fun SettingsScreen(
     val soundEnabled by settings?.soundEnabled?.collectAsState() ?: remember { mutableStateOf(true) }
     val themeMode by settings?.themeMode?.collectAsState() ?: remember { mutableStateOf(com.joakim.rfidmanager.data.settings.ThemeMode.DARK) }
     val pageSize by settings?.pageSize?.collectAsState() ?: remember { mutableStateOf(50) }
+    val brokerHost by settings?.brokerHost?.collectAsState() ?: remember { mutableStateOf("192.168.50.151") }
+    val brokerPort by settings?.brokerPort?.collectAsState() ?: remember { mutableStateOf(1883) }
+    var hostInput by remember { mutableStateOf(brokerHost) }
+    var portInput by remember { mutableStateOf(brokerPort.toString()) }
+    val focusManager = LocalFocusManager.current
     val loc = LocalLocalization.current
     val currentLang by loc.currentLanguage.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val connectingStr = str("screen.settings.broker_connecting")
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { focusManager.clearFocus() }
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
         Text(str("screen.settings.title"), fontFamily = FontFamily.Monospace, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(Dimens.sectionSpacing))
 
@@ -217,6 +241,58 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(Dimens.sectionSpacing))
 
+        // MQTT broker card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(Dimens.cardPadding)) {
+                Text(str("screen.settings.broker_title"), fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(Dimens.smallGap))
+                OutlinedTextField(
+                    value = hostInput,
+                    onValueChange = { hostInput = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(str("screen.settings.broker_host"), fontFamily = FontFamily.Monospace, fontSize = 11.sp) },
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                )
+                Spacer(Modifier.height(Dimens.smallGap))
+                OutlinedTextField(
+                    value = portInput,
+                    onValueChange = { portInput = it.filter { c -> c.isDigit() } },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(str("screen.settings.broker_port"), fontFamily = FontFamily.Monospace, fontSize = 11.sp) },
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                )
+                Spacer(Modifier.height(Dimens.smallGap))
+                Button(
+                    onClick = {
+                        val port = portInput.toIntOrNull() ?: 1883
+                        settings?.setBrokerHost(hostInput)
+                        settings?.setBrokerPort(port)
+                        onReconnect(hostInput, port)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("$hostInput:$port — $connectingStr")
+                            mqttStatus?.first { it == "CONNECTING..." }
+                            mqttStatus?.first { it != "CONNECTING..." }?.let { status ->
+                                when (status) {
+                                    "CONNECTED" -> snackbarHostState.showSnackbar("$hostInput:$port — Ansluten ✓")
+                                    else -> snackbarHostState.showSnackbar("$hostInput:$port — Misslyckades ✗")
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(str("screen.settings.broker_connect"), fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(Dimens.sectionSpacing))
+
         // Export card
         val context = LocalContext.current
         var allReadings by remember(repository) { mutableStateOf<List<com.joakim.rfidmanager.domain.model.PersistedReading>>(emptyList()) }
@@ -260,7 +336,7 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(Dimens.cardPadding)) {
                 Text(str("screen.settings.app_info"), fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(Dimens.smallGap))
-                InfoRow(str("screen.settings.version"), "1.0.0 (debug)")
+                InfoRow(str("screen.settings.version"), "1.0.0")
                 InfoRow(str("screen.settings.build"), str("screen.settings.build_label"))
                 InfoRow(str("screen.settings.framework"), "Compose + Material 3")
                 InfoRow(str("screen.settings.mqtt"), "Paho 1.2.5")
@@ -278,6 +354,11 @@ fun SettingsScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+    }
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier.align(Alignment.BottomCenter)
+    )
     }
 }
 

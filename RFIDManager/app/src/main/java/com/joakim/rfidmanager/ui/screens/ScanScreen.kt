@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.SearchOff
@@ -16,20 +17,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.CircleShape
 import com.joakim.rfidmanager.ui.theme.Dimens
 import com.joakim.rfidmanager.ui.str
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * ScanScreen – dedikerad vy för live scanning + Radar + översikt (Fas 3).
- *
- * Innehåller radarvisualisering, scan-knapp, detected-taggar och persist-flöde.
+ * ScanScreen — live scanning view with radar visualization, detected tags and persist flow.
  */
 @Composable
 fun ScanScreen(
@@ -38,7 +42,7 @@ fun ScanScreen(
     detectedTags: List<com.joakim.rfidmanager.ui.model.RFIDTag> = emptyList(),
     onTagSelected: (String) -> Unit = {},
     selectedTagUid: String? = null,
-    onWrite: (String, Int) -> Unit = { _, _ -> },
+    onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
     persistedUids: Set<String> = emptySet(),
     fontSizeScale: Float = 1.0f,
@@ -98,15 +102,39 @@ fun ScanScreen(
                     // Center
                     drawCircle(color = primaryColor, radius = 2.5.dp.toPx(), center = c)
 
-                    // Blips for currently detected tags
+                    // Tag data — computed once per frame
                     val show = detectedTags.take(6)
-                    show.forEachIndexed { idx, tag ->
+                    data class TagVisual(val angleDeg: Float, val dist: Float, val pos: Offset)
+                    val tagVisuals = show.mapIndexed { idx, tag ->
                         val seed = tag.id.hashCode() + idx * 23
-                        val ang = Math.toRadians((seed % 360).toDouble()).toFloat()
+                        val angleDeg = (seed % 360).toFloat()
                         val dist = rMax * (0.32f + ((seed % 4) * 0.14f))
-                        val bx = c.x + cos(ang) * dist
-                        val by = c.y + sin(ang) * dist
-                        drawCircle(color = primaryColor, radius = 3.5.dp.toPx(), center = Offset(bx, by))
+                        val angRad = Math.toRadians(angleDeg.toDouble()).toFloat()
+                        TagVisual(angleDeg, dist, Offset(c.x + cos(angRad) * dist, c.y + sin(angRad) * dist))
+                    }
+
+                    // Tag tails — arc som växer från punkten framåt i svepriktning (endast vid aktiv skanning)
+                    if (scanningEnabled) {
+                        tagVisuals.forEach { tv ->
+                            val diff = (sweepAngleDeg - tv.angleDeg).mod(360f)
+                            if (diff in 2f..<72f) {
+                                val alpha = 0.4f * (1f - diff / 72f)
+                                drawArc(
+                                    color = primaryColor.copy(alpha = alpha),
+                                    startAngle = tv.angleDeg,
+                                    sweepAngle = diff,
+                                    useCenter = false,
+                                    style = Stroke(width = 4.dp.toPx()),
+                                    topLeft = Offset(c.x - tv.dist, c.y - tv.dist),
+                                    size = androidx.compose.ui.geometry.Size(tv.dist * 2, tv.dist * 2)
+                                )
+                            }
+                        }
+                    }
+
+                    // Tag blips (ritas ovanpå svansarna)
+                    tagVisuals.forEach { tv ->
+                        drawCircle(color = primaryColor, radius = 3.5.dp.toPx(), center = tv.pos)
                     }
 
                     // Animated sweep line
@@ -119,6 +147,26 @@ fun ScanScreen(
                         end = Offset(sx, sy),
                         strokeWidth = 2.dp.toPx()
                     )
+
+                    // Trail/efterglöd — fading wedge bakom svep-linjen (endast vid aktiv skanning)
+                    if (scanningEnabled) {
+                        val trailR = rMax * 0.92f
+                        val n = 72
+                        for (i in 0 until n) {
+                            val fraction = i.toFloat() / n
+                            val alpha = 0.25f + 0.40f * fraction
+                            val sliceDeg = 72f / n
+                            drawArc(
+                                color = primaryColor.copy(alpha = alpha),
+                                startAngle = sweepAngleDeg - 72f + i * sliceDeg,
+                                sweepAngle = sliceDeg,
+                                useCenter = true,
+                                style = Fill,
+                                topLeft = Offset(c.x - trailR, c.y - trailR),
+                                size = androidx.compose.ui.geometry.Size(trailR * 2, trailR * 2)
+                            )
+                        }
+                    }
                 }
 
                 // Overlay label (bottom)
@@ -211,16 +259,22 @@ fun ScanScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing)
             ) {
                 items(detectedTags.toList(), key = { it.id }) { tag ->
+                    val isSelected = selectedTagUid == tag.uid
+                    var writeAddress by remember { mutableStateOf("") }
+                    var writeData by remember { mutableStateOf("") }
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onTagSelected(tag.id) }
                             .padding(horizontal = 4.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp),
+                        colors = if (isSelected) CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                        ) else CardDefaults.cardColors()
                     ) {
                         Column(modifier = Modifier.padding(Dimens.cardPadding)) {
-                            Text(tag.uid, fontFamily = FontFamily.Monospace, fontSize = (9 * fontSizeScale).sp)
-                            Text("${str("screen.scan.type")}: ${tag.type}", fontSize = (12 * fontSizeScale).sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(tag.uid, fontFamily = FontFamily.Monospace, fontSize = (9 * fontSizeScale).sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text("${str("screen.scan.type")}: ${tag.type}", fontSize = (12 * fontSizeScale).sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(4.dp))
                             val alreadyPersisted = tag.uid in persistedUids
                             Button(
@@ -239,6 +293,73 @@ fun ScanScreen(
                                     fontSize = (12 * fontSizeScale).sp
                                 )
                             }
+
+                            if (isSelected) {
+                                val lockedPages = remember(tag.fullSectors) { parseLockedPages(tag.fullSectors) }
+                                val addrInt = writeAddress.toIntOrNull()
+                                val addrLocked = addrInt?.let { isPageLocked(it, lockedPages) } ?: false
+                                val addrColor = if (addrInt == null) MaterialTheme.colorScheme.onSurfaceVariant
+                                    else if (addrLocked) Color(0xFFEF4444) else Color(0xFF22C55E)
+
+                                Spacer(Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = writeAddress,
+                                    onValueChange = { writeAddress = it },
+                                    label = { Text(str("screen.scan.write_address"), fontFamily = FontFamily.Monospace, fontSize = (10 * fontSizeScale).sp) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = (12 * fontSizeScale).sp, color = addrColor),
+                                    supportingText = if (addrInt != null) {
+                                        {
+                                            Text(
+                                                if (addrLocked) "🔒 Sidan är låst" else "✓ Sidan är skrivbar",
+                                                fontSize = (9 * fontSizeScale).sp,
+                                                color = addrColor
+                                            )
+                                        }
+                                    } else null,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = addrColor,
+                                        unfocusedBorderColor = addrColor.copy(alpha = 0.5f)
+                                    )
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                MemoryMapSection(
+                                    fullSectors = tag.fullSectors,
+                                    currentAddress = writeAddress,
+                                    onAddressClick = { writeAddress = it }
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = writeData,
+                                    onValueChange = { writeData = it },
+                                    label = { Text(str("screen.scan.write_data"), fontFamily = FontFamily.Monospace, fontSize = (10 * fontSizeScale).sp) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = (12 * fontSizeScale).sp)
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Button(
+                                    onClick = {
+                                        val addr = writeAddress.toIntOrNull() ?: 0
+                                        onWrite(writeData, addr, tag.uid)
+                                        writeAddress = ""
+                                        writeData = ""
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (addrLocked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                                        contentColor = if (addrLocked) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onTertiary
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        if (addrLocked) "⚠ Låst adress" else str("screen.scan.write_save"),
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = (12 * fontSizeScale).sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -251,21 +372,87 @@ fun ScanScreen(
     }
 }
 
+private fun parseLockedPages(fullSectors: Map<Int, String>): Set<Int> {
+    val page2 = fullSectors[2] ?: return emptySet()
+    val bytes = page2.split(" ").mapNotNull { it.toIntOrNull(16) }
+    if (bytes.size < 2) return emptySet()
+    val lb0 = bytes[0]
+    val lb1 = bytes[1]
+    val locked = mutableSetOf<Int>()
+    for (bit in 0..3) {
+        if ((lb0 shr bit) and 1 == 1) {
+            locked.addAll((4 + bit * 4) until (8 + bit * 4))
+        }
+    }
+    for (bit in 0..3) {
+        if ((lb1 shr bit) and 1 == 1) {
+            locked.addAll((20 + bit * 4) until (24 + bit * 4))
+        }
+    }
+    return locked
+}
+
+private fun isPageLocked(page: Int, lockedPages: Set<Int>): Boolean {
+    if (page < 4) return true
+    return page in lockedPages
+}
+
 @Composable
-private fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(Dimens.cardPadding)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+private fun MemoryMapSection(
+    fullSectors: Map<Int, String>,
+    currentAddress: String,
+    onAddressClick: (String) -> Unit
+) {
+    val lockedPages = remember(fullSectors) { parseLockedPages(fullSectors) }
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        TextButton(
+            onClick = { expanded = !expanded },
+            modifier = Modifier.padding(top = 4.dp)
         ) {
-            Text(title, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(4.dp))
-            Text(value, fontFamily = FontFamily.Monospace, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
+            Text(
+                if (expanded) "▲ Minne (klicka för att dölja)" else "▼ Minne (klicka för att visa)",
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (expanded) {
+            for (block in 0..7) {
+                val start = 4 + block * 4
+                val end = start + 3
+                val blockLocked = (start..end).any { it in lockedPages }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onAddressClick(start.toString()) }
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(
+                                if (blockLocked) Color(0xFFEF4444) else Color(0xFF22C55E),
+                                CircleShape
+                            )
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "p$start\u2013p$end",
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        if (blockLocked) " l\u00E5st" else " skrivbar",
+                        fontSize = 10.sp,
+                        color = if (blockLocked) Color(0xFFEF4444) else Color(0xFF22C55E)
+                    )
+                }
+            }
         }
     }
 }

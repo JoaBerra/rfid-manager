@@ -35,3 +35,7 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Staging copy from sixten (sync source, not committed)
+RFIDManager-sixten/
+RFIDManager/.kotlin/

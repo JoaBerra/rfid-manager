@@ -28,6 +28,12 @@ class AppSettings(context: Context) {
     private val _pageSize = MutableStateFlow(prefs.getInt(KEY_PAGE_SIZE, 50))
     val pageSize: StateFlow<Int> = _pageSize.asStateFlow()
 
+    private val _brokerHost = MutableStateFlow(prefs.getString(KEY_BROKER_HOST, "192.168.50.151") ?: "192.168.50.151")
+    val brokerHost: StateFlow<String> = _brokerHost.asStateFlow()
+
+    private val _brokerPort = MutableStateFlow(prefs.getInt(KEY_BROKER_PORT, 1883))
+    val brokerPort: StateFlow<Int> = _brokerPort.asStateFlow()
+
     fun setFontSizeScale(scale: Float) {
         val clamped = scale.coerceIn(1.0f, 1.8f)
         prefs.edit().putFloat(KEY_FONT_SIZE, clamped).apply()
@@ -55,11 +61,23 @@ class AppSettings(context: Context) {
         _pageSize.value = clamped
     }
 
+    fun setBrokerHost(host: String) {
+        prefs.edit().putString(KEY_BROKER_HOST, host).apply()
+        _brokerHost.value = host
+    }
+
+    fun setBrokerPort(port: Int) {
+        prefs.edit().putInt(KEY_BROKER_PORT, port).apply()
+        _brokerPort.value = port
+    }
+
     companion object {
         private const val KEY_FONT_SIZE = "font_size_scale"
         private const val KEY_HAPTIC = "haptic_enabled"
         private const val KEY_SOUND = "sound_enabled"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_PAGE_SIZE = "page_size"
+        private const val KEY_BROKER_HOST = "broker_host"
+        private const val KEY_BROKER_PORT = "broker_port"
     }
 }

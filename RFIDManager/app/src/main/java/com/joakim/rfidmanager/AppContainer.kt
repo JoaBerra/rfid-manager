@@ -15,7 +15,9 @@ class AppContainer(context: Context) {
     val localizationManager: LocalizationManager by lazy { LocalizationManager(context) }
 
     val mqttManager: MqttConnectionManager by lazy {
-        MqttConnectionManager().also {
+        val host = settings.brokerHost.value
+        val port = settings.brokerPort.value
+        MqttConnectionManager(host = host, port = port).also {
             MqttSender.init(it)
         }
     }

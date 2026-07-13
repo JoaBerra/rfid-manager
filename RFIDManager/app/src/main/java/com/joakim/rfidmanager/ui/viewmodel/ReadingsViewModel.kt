@@ -106,4 +106,10 @@ class ReadingsViewModel(
             repository.markAsTransmitted(reading.id)
         }
     }
+
+    fun clearAll() {
+        viewModelScope.launch {
+            repository.clearAll()
+        }
+    }
 }

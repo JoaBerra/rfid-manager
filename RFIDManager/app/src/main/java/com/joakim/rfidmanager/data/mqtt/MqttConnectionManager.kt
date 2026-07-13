@@ -10,11 +10,14 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MqttConnectionManager(
-    private val brokerUrl: String = "tcp://192.168.50.151:1883",
+    host: String = "192.168.50.151",
+    port: Int = 1883,
     private val clientId: String = "rfid-android-client"
 ) : MqttCallback {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    private var brokerUrl = "tcp://$host:$port"
 
     private val _connectionStatus = MutableStateFlow("DISCONNECTED")
     val connectionStatus: StateFlow<String> = _connectionStatus.asStateFlow()
@@ -34,10 +37,10 @@ class MqttConnectionManager(
     }
 
     fun connect() {
+        keepAliveJob?.cancel()
         scope.launch {
             connectInternal()
         }
-        keepAliveJob?.cancel()
         keepAliveJob = scope.launch {
             delay(35_000)
             while (isActive) {
@@ -51,6 +54,18 @@ class MqttConnectionManager(
                 delay(30_000)
             }
         }
+    }
+
+    fun reconnect(host: String, port: Int) {
+        brokerUrl = "tcp://$host:$port"
+        keepAliveJob?.cancel()
+        try {
+            client?.disconnect()
+            client?.close()
+            client = null
+        } catch (_: Exception) {}
+        _connectionStatus.value = "DISCONNECTED"
+        connect()
     }
 
     private suspend fun connectInternal() = withContext(Dispatchers.IO) {

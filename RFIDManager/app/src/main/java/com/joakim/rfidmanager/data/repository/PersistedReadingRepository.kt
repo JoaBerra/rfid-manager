@@ -19,10 +19,8 @@ import java.io.File
  *
  * Triple mode:
  * - If dao != null: real Room + SQLite (requires room-compiler processor at build time).
- * - If dao == null && context != null: JSON file-backed storage (survives app restart). No annotation processor needed.
+ * - If dao == null && context != null: JSON file-backed storage (survives app restart).
  * - If dao == null && context == null: pure in-memory (MutableStateFlow). Data lost on process death.
- *
- * The JSON file fallback makes Fas 3.4 (persistence survives restart) work without KSP.
  */
 class PersistedReadingRepository(
     private val dao: PersistedReadingDao? = null,

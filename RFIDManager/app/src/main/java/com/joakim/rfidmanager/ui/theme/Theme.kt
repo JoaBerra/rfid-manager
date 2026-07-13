@@ -46,8 +46,8 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Primary,
-    onPrimary = PrimaryForeground,
+    primary = Color(0xFF004225),  // British Racing Green (ljusläge)
+    onPrimary = Color(0xFFFFFFFF),
     secondary = Color(0xFFE5E7EB),
     onSecondary = Color(0xFF1F2937),
     tertiary = Color(0xFFD97706),
@@ -57,7 +57,7 @@ private val LightColorScheme = lightColorScheme(
     surface = Color(0xFFFFFFFF),
     onSurface = Color(0xFF1F2937),
     surfaceVariant = Color(0xFFF3F4F6),
-    onSurfaceVariant = Color(0xFF6B7280),
+    onSurfaceVariant = Color(0xFF2D6A3B),  // Mörkgrön (British Racing Green-tonad)
     error = Destructive,
     onError = DestructiveForeground,
     outline = Color(0x14000000),

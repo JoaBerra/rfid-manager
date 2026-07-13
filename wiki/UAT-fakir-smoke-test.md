@@ -21,7 +21,7 @@ updated: 2026-07-12
 | Testenhet | Samsung Galaxy Note 10 (SM-N970F) |
 | Nätverk | `192.168.50.0/24` (Wi-Fi) |
 | MQTT-broker | **ishtar** `192.168.50.151:1883` *(via app Settings vid test; Uppdrag 003)* |
-| App default broker | ishtar `192.168.50.151` *(Uppdrag 004 — kräver ny installDebug för verifiering)* |
+| App default broker | ishtar `192.168.50.151` *(Uppdrag 004 — godkänd 2026-07-13)* |
 | Hypervisor | hulda Proxmox `192.168.50.100` |
 
 ## Resultat per kriterium
@@ -63,6 +63,16 @@ updated: 2026-07-12
 | Broker-IP | Smoke test mot **ishtar** (`.151`), inte falstaff (`.107`) — medvetet via Settings tills Uppdrag 004 |
 | NFC | Ej testad i denna session — rekommenderas vid nästa UAT eller separat körning |
 | ADB på fakir | `adb` ej i PATH i agent-session; enhetsverifiering via Principal |
+
+## Uppdrag 004 — broker-default + sixten-källsynk (2026-07-13)
+
+| # | Kriterium | Resultat | Notis |
+|---|-----------|----------|-------|
+| 1 | Appkälla från sixten (`AndroidStudioProjects/RFIDManager`) | **PASS** | MQTT Settings + egen ikon |
+| 2 | Default broker `192.168.50.151` utan Settings-override | **PASS** *(Kund)* | `installDebug` fakir |
+| 3 | App-ikon och Settings som förväntat | **PASS** *(Kund)* | — |
+
+**Uppdrag 004 — GODKÄND** (Kund 2026-07-13).
 
 ## Slutsats
 

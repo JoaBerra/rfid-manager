@@ -63,7 +63,6 @@ val Chart3 = Color(0xFF3B82F6)
 val Chart4 = Color(0xFFA855F7)
 val Chart5 = Color(0xFFEF4444)
 
-// Fas 2 - Type badges (from Figma Design Specification)
 val BadgeRFID = Color(0xFF10B981)
 val BadgeEAN = Color(0xFF3B82F6)
 val BadgeUID = Color(0xFF8B5CF6)

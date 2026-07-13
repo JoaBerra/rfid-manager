@@ -102,19 +102,3 @@ val Typography = Typography(
     ),
 )
 
-// Custom text styles (cannot be added directly to Typography anymore because the constructor is internal in recent Material3)
-// Dessa används explicit i koden (t.ex. fontFamily = FontFamily.Monospace) snarare än via MaterialTheme.typography.
-val bodyLargeMonospace = TextStyle(
-    fontFamily = JetBrainsMono,
-    fontWeight = FontWeight.Normal,
-    fontSize = 14.sp,
-    lineHeight = 20.sp,
-    letterSpacing = 0.05.sp,
-)
-
-val labelSmallMonospace = TextStyle(
-    fontFamily = JetBrainsMono,
-    fontWeight = FontWeight.Medium,
-    fontSize = 11.sp,
-    lineHeight = 14.sp,
-)

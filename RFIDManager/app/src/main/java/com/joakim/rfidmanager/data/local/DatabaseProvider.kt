@@ -20,7 +20,7 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "rfid_manager_database"
             )
-                .fallbackToDestructiveMigration() // För utveckling – ta bort i produktion
+                .fallbackToDestructiveMigration() // Room inaktivt (KSP inte tillgängligt i AGP 9); JSON-fallback används
                 .build()
             INSTANCE = instance
             instance

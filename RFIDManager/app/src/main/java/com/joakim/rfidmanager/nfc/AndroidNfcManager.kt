@@ -17,8 +17,6 @@ import android.util.Log
 import androidx.core.content.getSystemService
 import com.joakim.rfidmanager.domain.model.RfidTag
 import com.joakim.rfidmanager.domain.model.TagType
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 /**
  * # NFC Layer — AndroidNfcManager (Architecture: NFC Layer, real impl of NfcManager)
@@ -92,6 +90,32 @@ class AndroidNfcManager(
     init {
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
         beepSoundId = soundPool?.load(activity, com.joakim.rfidmanager.R.raw.beep, 1) ?: 0
+        // Start reader mode immediately so tags are always detectable
+        // (background NDEF, write execution, etc.)
+        enableReaderMode()
+    }
+
+    /**
+     * Enable reader mode with full flags but no tagListener yet.
+     * Called once at init; [startScanning] later sets the listener.
+     */
+    private fun enableReaderMode() {
+        val adapter = nfcAdapter ?: return
+        if (!adapter.isEnabled) return
+        adapter.disableReaderMode(activity)
+        val flags = NfcAdapter.FLAG_READER_NFC_A or
+                NfcAdapter.FLAG_READER_NFC_B or
+                NfcAdapter.FLAG_READER_NFC_F or
+                NfcAdapter.FLAG_READER_NFC_V or
+                NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS
+        val options = Bundle().apply {
+            putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 5000)
+        }
+        adapter.enableReaderMode(activity, { tag ->
+            Log.d(TAG, "Reader mode callback received tag")
+            onTagDiscovered(tag)
+        }, flags, options)
+        Log.i(TAG, "Reader mode ENABLED (background NDEF ready)")
     }
 
     override fun isNfcEnabled(): Boolean {
@@ -99,60 +123,33 @@ class AndroidNfcManager(
     }
 
     override fun startScanning(onTagDetected: (RfidTag) -> Unit) {
-        val adapter = nfcAdapter
-        if (adapter == null) {
+        if (nfcAdapter == null) {
             Log.w(TAG, "NFC adapter is null - NFC not supported or not available")
             return
         }
-        if (!adapter.isEnabled) {
+        if (!nfcAdapter!!.isEnabled) {
             Log.w(TAG, "NFC is not enabled on the device. Please enable NFC in settings.")
             return
         }
 
-        // Always disable previous reader mode first to ensure clean state
-        adapter.disableReaderMode(activity)
-
         tagListener = onTagDetected
         isScanning = true
-
-        /**
-         * **enableReaderMode flags (NFC-READER-MODE / Architecture + Android NFC stack)**
-         *
-         * FLAG_READER_* begränsar till relevanta teknologier.
-         * **FLAG_READER_NO_PLATFORM_SOUNDS** är kritisk: den hindrar Android från att visa systemets NFC-chooser + ljud.
-         * Utan den hamnar användaren i Chrome (NDEF) istället för att appens READ LOG fylls (se log.md 2026-06-02 "Fix: System chooser").
-         *
-         * Fallback: AndroidManifest + onNewIntent (TECH_DISCOVERED + NDEF) så appen kan väljas manuellt och ändå fylla listan.
-         */
-        val flags = NfcAdapter.FLAG_READER_NFC_A or
-                NfcAdapter.FLAG_READER_NFC_B or
-                NfcAdapter.FLAG_READER_NFC_F or
-                NfcAdapter.FLAG_READER_NFC_V or
-                NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS
-
-        val options = Bundle().apply {
-            putInt(NfcAdapter.EXTRA_READER_PRESENCE_CHECK_DELAY, 5000)
-        }
-
-        adapter.enableReaderMode(activity, { tag ->
-            Log.d(TAG, "Reader mode callback received tag")
-            onTagDiscovered(tag)
-        }, flags, options)
-
-        Log.i(TAG, "Reader mode ENABLED successfully - tags should now be delivered to app only (no system chooser)")
+        // Reader mode already active since init; just ensure callback is set
+        enableReaderMode()
+        Log.i(TAG, "Scanning STARTED — tags will appear in UI list")
     }
 
     override fun stopScanning() {
-        nfcAdapter?.disableReaderMode(activity)
         isScanning = false
-        tagListener = null
-        Log.d(TAG, "Reader mode disabled")
+        // Keep reader mode active for background NDEF + pending write execution
+        Log.d(TAG, "Scanning STOPPED — reader mode stays active for background NDEF")
     }
 
     override fun restartReaderMode() {
         val adapter = nfcAdapter
         val listener = tagListener
         if (adapter == null || listener == null || !adapter.isEnabled) return
+        isScanning = true
         adapter.disableReaderMode(activity)
         val flags = NfcAdapter.FLAG_READER_NFC_A or
                 NfcAdapter.FLAG_READER_NFC_B or
@@ -208,8 +205,7 @@ class AndroidNfcManager(
             else -> TagType.UNKNOWN
         }
 
-        // Simple RSSI proxy (real signal strength not directly exposed by Android NFC stack for most tags)
-        val rssi = -50  // placeholder; can improve with presence checks later
+        val rssi = -50
 
         var sectorsRead = emptyMap<Int, ByteArray>()
 

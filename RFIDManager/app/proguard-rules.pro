@@ -1,21 +1,21 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Jetpack Compose
+-keep class * extends androidx.compose.runtime.Composable { *; }
+-dontwarn androidx.compose.**
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Paho MQTT
+-keep class org.eclipse.paho.** { *; }
+-dontwarn org.eclipse.paho.**
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Room (runtime entities for JSON serialization)
+-keep class com.joakim.rfidmanager.data.local.entities.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Domain models serialized via org.json
+-keep class com.joakim.rfidmanager.domain.model.** { *; }
+-keep class com.joakim.rfidmanager.ui.model.** { *; }
+
+# App settings serialized via SharedPreferences
+-keep class com.joakim.rfidmanager.data.settings.** { *; }
+
+# Keep line numbers for crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

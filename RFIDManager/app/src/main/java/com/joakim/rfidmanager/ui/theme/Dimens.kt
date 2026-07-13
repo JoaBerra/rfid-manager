@@ -3,14 +3,7 @@ package com.joakim.rfidmanager.ui.theme
 import androidx.compose.ui.unit.dp
 
 /**
- * Fas 3 locked breathing room / spacing values.
- *
- * Directly implements the measurable rules from:
- * - [[Fas3-Navigation-Spacing-Design]]
- * - Kundrelationer-och-Acceptans UAT-kriterier for "andrum"
- *
- * All new cards, lists, radar, stat cards etc. shall use these.
- * Reference the 3 Figma images (fas2-*.jpg) for visual validation.
+ * Spacing and sizing constants for consistent layout across screens.
  */
 object Dimens {
     // Card / container inner padding (min 16 dp rule)

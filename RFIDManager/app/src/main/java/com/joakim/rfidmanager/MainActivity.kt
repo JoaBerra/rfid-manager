@@ -29,23 +29,7 @@ import com.joakim.rfidmanager.ui.LocalLocalization
 import com.joakim.rfidmanager.AppContainer
 
 /**
- * # MainActivity — Lifecycle + NFC Host (Fas 3 architecture)
- *
- * I Fas 3 är MainActivity **inte längre** den stora UI-värden med TabRow och all state hoisting.
- * Den har två huvudsakliga ansvarsområden:
- *
- * 1. **NFC-livscykel** (reader mode, onResume/onPause/onNewIntent, tag callbacks).
- * 2. **Armed write-mekanism** (pendingWrite + "hold tag NOW" pattern) – detta är den tekniska kärnan
- *    som gjorde pålitliga writes till eskortminne möjligt i Fas 2. Den behålls här tills write-formen
- *    flyttas in i den dedikerade ScanScreen.
- *
- * All UI är nu flyttad till `MainScreenHost` (bottom navigation + 4 dedikerade vyer).
- * State som bara behövdes för den gamla TabRow-vyn (t.ex. detectedTags för listan) kan gradvis lyftas
- * till ViewModels i kommande steg.
- *
- * **Fas 3 leveransnotering:**
- * Denna fil är en del av "Navigation Foundation + initial dedicated views" delivery.
- * Se snapshot wiki för full leveransbeskrivning och acceptanskriterier.
+ * MainActivity — Lifecycle host for NFC reader mode and app container initialization.
  */
 class MainActivity : ComponentActivity() {
     private lateinit var nfcManager: AndroidNfcManager
@@ -106,16 +90,20 @@ class MainActivity : ComponentActivity() {
                         nfcManager.startScanning { domainTag: DomainRfidTag ->
                             val uiTag = domainTag.toUiTag()
                             Log.i("RFIDManager", "scanCallback: uid=${uiTag.uid} dataPreview='${uiTag.dataPreview}' fullSectors.size=${uiTag.fullSectors.size}")
-                            val existingIndex = detectedTags.indexOfFirst { it.uid == uiTag.uid }
-                            if (existingIndex >= 0) {
-                                detectedTags[existingIndex] = uiTag  // update with latest read (e.g. after write)
-                                Log.i("RFIDManager", "scanCallback: UPDATED index=$existingIndex")
-                            } else {
-                                detectedTags.add(0, uiTag)
-                                Log.i("RFIDManager", "scanCallback: ADDED at front, list now has ${detectedTags.size} entries")
+
+                            // Only update the UI list when scanning is active
+                            if (scanningEnabled) {
+                                val existingIndex = detectedTags.indexOfFirst { it.uid == uiTag.uid }
+                                if (existingIndex >= 0) {
+                                    detectedTags[existingIndex] = uiTag  // update with latest read (e.g. after write)
+                                    Log.i("RFIDManager", "scanCallback: UPDATED index=$existingIndex")
+                                } else {
+                                    detectedTags.add(0, uiTag)
+                                    Log.i("RFIDManager", "scanCallback: ADDED at front, list now has ${detectedTags.size} entries")
+                                }
                             }
 
-                            // If there is a pending write for this tag, execute it now while the tag (and lastTag) is fresh
+                            // Always check pending writes (works even when scanning is "paused")
                             pendingWrite?.let { pw ->
                                 if (uiTag.uid == pw.uidHex) {
                                     val uidB = pw.uidHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
@@ -181,8 +169,8 @@ class MainActivity : ComponentActivity() {
                         }
                     } else {
                         nfcManager.stopScanning()
-                        pendingWrite = null
-                        writeStatusMessage = null
+                        detectedTags.clear()
+                        // Keep reader mode alive for background NDEF — don't null pendingWrite
                     }
                 }
 
@@ -194,11 +182,35 @@ class MainActivity : ComponentActivity() {
                  * **armar** pendingWrite, sätter UI-status som visas i Accent i formen.
                  * Den faktiska writen sker senare i LaunchedEffect-callbacken när en fresh detection matchar.
                  */
-                val onWrite: (String, Int) -> Unit = { text, addr ->
-                    // selectedTagId moved to ScanViewModel (Fas 3.2).
-                    // Write form is not active in current ScanScreen — this lambda is a no-op
-                    // until the write UI is re-integrated.
-                    Log.i("RFIDManager", "onWrite called but write UI not active in this version")
+                val onWrite: (String, Int, String) -> Unit = { text, addr, uidHex ->
+                    val matchTag = detectedTags.firstOrNull { it.uid == uidHex }
+                    if (matchTag == null) {
+                        Log.w("RFIDManager", "onWrite: no matching tag for uid=$uidHex")
+                    } else {
+                        val isUltra = matchTag.type.contains("ULTRALIGHT", ignoreCase = true) || matchTag.type.contains("NTAG", ignoreCase = true)
+                        val cleanHex = text.filter { !it.isWhitespace() }
+                        val bytes = try {
+                            if (cleanHex.length % 2 == 0) {
+                                cleanHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+                            } else {
+                                byteArrayOf()
+                            }
+                        } catch (e: NumberFormatException) {
+                            Log.e("RFIDManager", "write: invalid hex \"$cleanHex\" — ${e.message}")
+                            byteArrayOf()
+                        }
+                        if (bytes.isEmpty()) {
+                            writeStatusMessage = "Invalid hex data"
+                            Toast.makeText(this@MainActivity, "Invalid hex data", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val padded = if (isUltra) bytes.copyOf(4) else bytes.copyOf(16)
+                            pendingWrite = PendingWrite(uidHex = uidHex, addr = addr, data = padded, isUltra = isUltra)
+                            val msg = "\u26A1 Save ready \u2013 hold tag to the phone"
+                            writeStatusMessage = msg
+                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                            Log.i("RFIDManager", "onWrite: armed write for $uidHex addr=$addr isUltra=$isUltra data=${padded.joinToString(" ") { "%02X".format(it) }}")
+                        }
+                    }
                 }
 
                 val onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = { tag ->
@@ -232,8 +244,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Fas 3: Endast den nya MainScreenHost (bottom nav + 4 dedikerade vyer).
-                // Detta ersätter den gamla TabRow / RFIDManagerScreen för andrum.
+                // MainScreenHost with bottom navigation (4 dedicated screens).
                 CompositionLocalProvider(LocalLocalization provides appContainer.localizationManager) {
                     MainScreenHost(
                         mqttManager = appContainer.mqttManager,

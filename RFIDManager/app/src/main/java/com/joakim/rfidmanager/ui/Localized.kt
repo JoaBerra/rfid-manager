@@ -16,8 +16,3 @@ fun str(key: String): String {
     return strings[key] ?: key
 }
 
-@Composable
-fun currentLang(): String {
-    val lang by LocalLocalization.current.currentLanguage.collectAsState()
-    return lang
-}
