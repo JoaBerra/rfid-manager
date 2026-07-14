@@ -3,7 +3,7 @@ title: Fas D — falstaff-avveckling (D.5)
 tags: [fas-d, falstaff, legacy, mqtt, infrastruktur]
 created: 2026-07-14
 updated: 2026-07-14
-status: dokumentärt-avvecklad
+status: fysiskt-städad
 ---
 
 # Fas D — falstaff-avveckling (D.5)
@@ -27,9 +27,20 @@ Historik: [[Fas-500-Miljo-flytt-sixten-till-falstaff]], [[Release-Notes]] v1.0.1
 - [[Utvecklingsmiljö-fakir]] — falstaff borttagen från aktiv host-tabell
 - Verifiering från fakir: `192.168.50.107` ej pingbar (ingen aktiv broker-dependency)
 
-## Principal-checklista (fysisk avveckling)
+## Fysisk städning (2026-07-14) ✅
 
-Kör på **falstaff** när maskinen är tillgänglig. Inget blockerar rfid-manager-utveckling om detta skjuts upp.
+Utförd via `ssh falstaff` från fakir efter SSH-setup (`ssh-copy-id`).
+
+| Åtgärd | Resultat |
+|--------|----------|
+| Container `rfid-mqtt` | Borttagen (var redan stoppad) |
+| Mosquitto-volymer (2 st) | Backup + borttagna |
+| Port `1883` | Stängd |
+| Backup | `~/backup/falstaff-mqtt-20260714/` på falstaff |
+
+Övriga Docker-volymer på falstaff (4 st) tillhör **inte** rfid-mqtt — lämnades orörda.
+
+## Principal-checklista (referens)
 
 ### 1. Inventera
 
