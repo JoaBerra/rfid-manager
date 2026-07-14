@@ -68,6 +68,8 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[Startup-Procedure]] — Kallstart testmiljö (broker, dashboard på ishtar; Explorer på fakir).
 - [[Fas-400-Teknikmiljo-Validering]] — Komponentkarta, bootstrap-script, verifieringsrutiner för att sätta upp miljön på ny Ubuntu 24.04-maskin.
 - [[Fas-500-Miljo-flytt-sixten-till-falstaff]] — Inventering av hårdkodade sökvägar efter flytt från sixten till falstaff. Kartläggning av refererade men saknade filer och förslag på placering.
+- [[Fas-D-falstaff-avveckling]] — D.5: falstaff avvecklad som aktiv broker; Principal-checklista för fysisk städning.
+- [[Utvecklingsmiljö-fakir]] — D.3: fakir som ren dev/inferens-station utan lokal MQTT.
 
 ### Felrapporter (Bugs)
 - `bugs/` — Katalog för formella felrapporter.
@@ -92,7 +94,9 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 
 **Fas-200 (MQTT Realtidsdashboard):** Implementerad och godkänd av Kund ✅. Webbaserad dashboard med FastAPI + SSE för realtidsvisualisering av MQTT-meddelanden. Docker Compose för enkel demo. Se [[Fas-200-Web-Dashboard]].
 
-**Fas-500 (Miljöflytt sixten → falstaff):** Klart ✅. Docker, Python-miljöer, Android Studio, ADB, MCP-konfig, E2E-verifiering. Se [[Fas-500-Miljo-flytt-sixten-till-falstaff]] och [[Kanban]].
+**Fas-500 (Miljöflytt sixten → falstaff):** Klart ✅ (historik). Ersatt av Fas D — aktiv testmiljö på ishtar; falstaff avvecklad — [[Fas-D-falstaff-avveckling]].
+
+**Fas D (testmiljö host-roller):** D.0–D.2 ✅ (ishtar), D.3–D.5 ✅ (fakir renodlad, app default `.151`, falstaff dokumentärt avvecklad). Se [[Utvecklingsmiljö-fakir]], [[Testmiljo-hulda]], Kanban.
 
 **MQTT-Manual:** Praktisk bruksanvisning för hela MQTT-kedjan: broker, dashboard, kommandon, felsökning. Se [[MQTT-Manual]].
 

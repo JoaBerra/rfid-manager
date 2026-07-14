@@ -2,7 +2,7 @@
 title: Testmiljö — hulda (Proxmox)
 tags: [hulda, proxmox, testmiljo, mqtt, fas-d, infrastruktur]
 created: 2026-07-12
-updated: 2026-07-12
+updated: 2026-07-14
 ---
 
 # Testmiljö — hulda (Proxmox)
@@ -18,7 +18,7 @@ Permanent RFID/MQTT-testlabb i garaget. Del av **Fas D** ([Uppdrag 003](https://
 
 `192.168.50.100` är **inte** MQTT-värden — tjänsterna körs i en vald VM eller LXC.
 
-**Legacy broker:** falstaff `192.168.50.107` — avvecklas (D.5). App default → ishtar `.151` (Uppdrag 004 / D.4).
+**Aktiv broker:** ishtar `.151` (Uppdrag 004 / D.4). Legacy falstaff `.107` dokumentärt avvecklad — [[Fas-D-falstaff-avveckling]] (D.5).
 
 ## D.0 — Proxmox och gäst-val ✅
 
@@ -182,7 +182,7 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | Gäst startar inte | Proxmox UI → starta VM/LXC |
 | Port 1883 stängd | `docker-compose … up -d` på gästen |
 | Telefon når inte broker | Wi-Fi samma LAN; broker-IP = gäst-IP |
-| App DISCONNECTED | App pekar på falstaff — Settings eller Uppdrag 004 |
+| App DISCONNECTED | Kontrollera broker i Settings — ska vara ishtar `.151` (default sedan v1.0.1) |
 
 ## Status (2026-07-12, iter 2)
 

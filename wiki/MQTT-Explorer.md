@@ -37,7 +37,7 @@ Kräver inga bakgrundstjänster — stäng appen när du inte debuggar.
 | Auth | Ingen (dev) |
 | Topic | `rfidmanager/#` |
 
-Legacy falstaff: `192.168.50.107` (avvecklas).
+Legacy brokers (sixten `.128`, falstaff `.107`) avvecklade — se [[Fas-D-falstaff-avveckling]].
 
 ## Arbetsflöde med RFID Manager
 

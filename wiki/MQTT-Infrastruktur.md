@@ -422,7 +422,7 @@ flowchart TD
 | Transport | Cleartext TCP (`tcp://`) |
 | Autentisering | Ingen (`allow_anonymous true`) |
 | Kryptering | Ingen |
-| Nätverkssäkerhet | Cleartext tillåten för `.151` och legacy `.107` via `network_security_config.xml` |
+| Nätverkssäkerhet | Cleartext tillåten för ishtar `.151` via `network_security_config.xml` |
 
 ### Risker
 

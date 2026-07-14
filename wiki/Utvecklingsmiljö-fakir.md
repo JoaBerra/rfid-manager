@@ -4,23 +4,69 @@ tags: [fakir, arch-linux, android-sdk, omarchy, setup]
 created: 2026-07-11
 updated: 2026-07-14
 smoke_test: godkänd (Uppdrag 002)
+fas_d: D.3 renodlad (Uppdrag 005)
 ---
 
 # Utvecklingsmiljö — fakir
 
 Workstation **fakir** (Arch Linux, Hyprland, RTX 3090). Repo: `/home/joakim/Projects/rfid-manager/`.
 
-## Hosts i testmiljön
+## Hosts i testmiljön (aktiv)
 
 | Host | Roll | MQTT |
 |------|------|------|
-| **fakir** | Bygg (`gradlew`), ADB, Ollama/Qwen | **Nej** — ingen broker här |
+| **fakir** | Bygg (`gradlew`), ADB, Ollama/Qwen, Git/gh | **Nej** — ingen broker här |
 | **hulda** | Proxmox hypervisor `.100` | Nej |
-| **ishtar** | Testlab-gäst (Debian) | **Ja** — broker `:1883`, dashboard `:8000` |
-| **falstaff** | Legacy broker | `192.168.50.107:1883` (avvecklas, D.5) |
+| **ishtar** | Testlab-gäst (Debian) `.151` | **Ja** — broker `:1883`, dashboard `:8000` |
 | **Galaxy Note 10** | Primär testenhet (NFC) | Klient mot ishtar (app default) |
+| **sixten** | Legacy Android Studio-källa | Nej — synkad till fakir (Uppdrag 004) |
 
-Appens default: `tcp://192.168.50.151:1883` (`MqttConnectionManager.kt`, Uppdrag 004). Testinfra på **ishtar**: broker + dashboard; fakir använder webbläsare/Explorer mot `.151` — se [[Testmiljo-hulda]], [[UAT-fakir-smoke-test]].
+Appens default: `tcp://192.168.50.151:1883` (`MqttConnectionManager.kt`, Uppdrag 004). Testinfra på **ishtar**; fakir använder webbläsare/Explorer mot `.151` — se [[Testmiljo-hulda]], [[UAT-fakir-smoke-test]].
+
+**Avvecklad:** falstaff `.107` — se [[Fas-D-falstaff-avveckling]] (D.5 / Uppdrag 005).
+
+## Fakir renodlad (D.3)
+
+fakir är **dev + inferens** — inte testlab-värd. GPU (RTX 3090) reserveras för Ollama/Qwen; inga tunga bakgrundstjänster för MQTT.
+
+```mermaid
+flowchart LR
+  subgraph fakir [fakir]
+    GR[Gradle + ADB]
+    OL[Ollama Qwen]
+    GH[git + gh]
+  end
+  subgraph remote [ishtar .151]
+    MQ[Mosquitto :1883]
+    DB[Dashboard :8000]
+  end
+  PH[Note 10]
+  GR -->|installDebug USB| PH
+  PH -->|Wi-Fi MQTT| MQ
+  fakir -.->|MQTT Explorer / browser on-demand| MQ
+  fakir -.->|ssh hulda| remote
+```
+
+### Körs på fakir
+
+| Tjänst | Syfte |
+|--------|-------|
+| Gradle / `adb` | Bygg och deploy till Note 10 |
+| Ollama `qwen2.5-coder:32b` | Lokal kod-AI (Utvecklare-roll) |
+| `mqtt-explorer` | On-demand MQTT-inspektion mot ishtar |
+| Webbläsare | Dashboard `http://192.168.50.151:8000` |
+| pCloud Drive | KeePass, filsynk |
+
+### Installera **inte** på fakir
+
+| Tjänst | Varför |
+|--------|--------|
+| Mosquitto (lokal broker) | Testinfra ska ligga på ishtar (D.2) |
+| Docker MQTT/dashboard | Samma — undvik port/RAM-konflikt |
+| MQTT subscriber/daemon | Kör på ishtar via `docker-compose` |
+| Permanenta testcron-jobb | Stör inferens och dev-fokus |
+
+**Verifiering:** `docker ps` och `pgrep mosquitto` ska vara tomma på fakir under normal drift.
 
 ## ADB / USB (fakir)
 

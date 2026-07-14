@@ -257,7 +257,7 @@ Appen ansluter till brokern som MQTT-klient (`rfid-android-client`), publicerar 
 
 ### Nätverkssäkerhet
 
-Android 9+ kräver `network_security_config.xml` för cleartext TCP. Domäner `192.168.50.151` (ishtar) och `192.168.50.107` (legacy falstaff) är vitlistade.
+Android 9+ kräver `network_security_config.xml` för cleartext TCP. Domän `192.168.50.151` (ishtar) är vitlistad. Legacy falstaff avvecklad — [[Fas-D-falstaff-avveckling]].
 
 ### Förutsättningar
 

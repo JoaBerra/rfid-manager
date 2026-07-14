@@ -125,6 +125,9 @@ kanban-plugin: board
 - [x] **Fas 200 — MQTT Realtidsdashboard** — FastAPI/SSE, Docker Compose, live-flöde + statistik ([[Fas-200-Web-Dashboard]]) — ✅ Godkänt av Kund 2026-06-19
 - [x] **Fas-500 — Miljöflytt sixten → falstaff** — Docker, .venv, IP/sökvägsuppdateringar, Android Studio, ADB, MCP-konfig, E2E-verifiering ([[Fas-500-Miljo-flytt-sixten-till-falstaff]]) — ✅ Godkänt av Kund 2026-06-21
 - [x] **Fas-400 — Teknikmiljö validering** — Komponentkarta, bootstrap-script, verifieringsrutiner, dokumentation ([[Fas-400-Teknikmiljo-Validering]], [[Kanban]]) — ✅ 2026-06-21
+- [x] **Fas D.3 — fakir renodlad** — Ingen lokal MQTT; wiki [[Utvecklingsmiljö-fakir]] — ✅ Uppdrag 005 (2026-07-14)
+- [x] **Fas D.4 — app default broker ishtar** — Uppdrag 004 + release v1.0.1 — ✅ 2026-07-14
+- [x] **Fas D.5 — falstaff avvecklad (dokumentation)** — [[Fas-D-falstaff-avveckling]], `network_security_config.xml` — ✅ Uppdrag 005 (2026-07-14)
 
 ## 📝 Anteckningar
 

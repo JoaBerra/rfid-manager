@@ -60,7 +60,7 @@ updated: 2026-07-12
 
 | Punkt | Beskrivning |
 |-------|-------------|
-| Broker-IP | Smoke test mot **ishtar** (`.151`), inte falstaff (`.107`) — medvetet via Settings tills Uppdrag 004 |
+| Broker-IP | Default **ishtar** `.151` (Uppdrag 004 godkänd); falstaff `.107` avvecklad (Uppdrag 005) |
 | NFC | Ej testad i denna session — rekommenderas vid nästa UAT eller separat körning |
 | ADB på fakir | `adb` ej i PATH i agent-session; enhetsverifiering via Principal |
 
