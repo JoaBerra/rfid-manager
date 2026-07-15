@@ -86,6 +86,8 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 
 ## Status
 
+**Projekt pausat (2026-07-14)** — återöppningsbart. Backlog och instruktioner: [README.md](../README.md) (repo root), [Kanban](Kanban.md). AH: [projektavslut](https://github.com/JoaBerra/andra-hjarna/blob/main/Bearbetning/2026-07-14-rfid-manager-projektavslut.md).
+
 **Fas 1–6 slutförda (v1.0 releasad).** Initial struktur (Fas 1) 2026-05-26. Eskortminne-läs/skriv (Fas 2) klar 2026-06-04. UI-reallokering, navigation, ViewModels, spacing, polish och PC-stöd (Fas 3) sign-off av Kund 2026-06-10. Lokalisering, inställningar och användbarhet (Fas 4) sign-off av Kund 2026-06-11. Dokumentation, kvalitet och radar-estetik (Fas 5) + 1.0 Release (Fas 6) klara 2026-06-13.
 
 **Fas-100 (MQTT-infrastruktur):** Pågående fördjupning. Se [[MQTT-Infrastruktur]].

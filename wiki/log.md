@@ -1,5 +1,20 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-07-14] project | Projekt pausat (återöppningsbart)
+
+**Beslut:** Principalen — avsluta aktiv utvecklingsfas efter Fas D (Uppdrag 001–005).
+
+**Utfört:**
+- README.md omskriven — status, struktur, backlog, återöppningsguide
+- wiki/index.md, Kanban anteckningar — pausat
+- AH: projektavslut-dokument, projektkunskap status `paused`
+
+**Backlog:** Fas-101, Fas-100 (4–11), UAT NFC, Write-förbättringar — se README.md.
+
+**Återöppna:** README § Återöppna + AH Uppdrag 006.
+
+---
+
 ## [2026-06-13] release | Fas 5 klar — samtliga punkter godkända, v1.0 release notes skapade
 
 **Fas 5 — Dokumentation, kvalitet och radar-estetik** är nu fullständigt klar och sign-off av Kund.

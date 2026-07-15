@@ -131,6 +131,7 @@ kanban-plugin: board
 
 ## 📝 Anteckningar
 
+- **Projektstatus (2026-07-14):** **Pausat** — ingen aktiv utveckling. Korten under *Att göra* är backlog vid återöppning. Se [README.md](../README.md) och AH [projektavslut](https://github.com/JoaBerra/andra-hjarna/blob/main/Bearbetning/2026-07-14-rfid-manager-projektavslut.md).
 - **Flöde:** Roadmap ([[Produkt-Roadmap]]) → långsiktig plan. Kanban → veckovis taktik. När en fas påbörjas bryter vi ner acceptanskriterierna från roadmap till Kanban-kort.
 - **Arbetssätt:** När AI-assistenten påbörjar en punkt flyttas den från Att göra → Pågår. När Kund godkänt (sign-off i [[Kundrelationer-och-Acceptans]]) flyttas den till Klart. Aldrig klarmarkerad före Kund-godkännande.
 - **Format (buggar):** `ID | Vad | Testfall | Status`
