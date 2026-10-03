@@ -1,0 +1,7 @@
+# ACL för Mosquitto (fas 2). Gäller bara inloggade användare (allow_anonymous false).
+# Appen publicerar telemetri, panelen läser den.
+user rfid-app
+topic write rfidmanager/+/telemetry
+
+user rfid-dashboard
+topic read rfidmanager/+/telemetry
