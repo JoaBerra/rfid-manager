@@ -28,11 +28,36 @@ class AppSettings(context: Context) {
     private val _pageSize = MutableStateFlow(prefs.getInt(KEY_PAGE_SIZE, 50))
     val pageSize: StateFlow<Int> = _pageSize.asStateFlow()
 
-    private val _brokerHost = MutableStateFlow(prefs.getString(KEY_BROKER_HOST, "192.168.50.151") ?: "192.168.50.151")
+    private val _brokerHost = MutableStateFlow(prefs.getString(KEY_BROKER_HOST, BrokerDefaults.HOST) ?: BrokerDefaults.HOST)
     val brokerHost: StateFlow<String> = _brokerHost.asStateFlow()
 
-    private val _brokerPort = MutableStateFlow(prefs.getInt(KEY_BROKER_PORT, 1883))
+    private val _brokerPort = MutableStateFlow(prefs.getInt(KEY_BROKER_PORT, BrokerDefaults.PORT))
     val brokerPort: StateFlow<Int> = _brokerPort.asStateFlow()
+
+    private val _mqttUsername = MutableStateFlow(prefs.getString(KEY_MQTT_USERNAME, "") ?: "")
+    /** Tomt användarnamn = ingen MQTT-inloggning (anonymt). */
+    val mqttUsername: StateFlow<String> = _mqttUsername.asStateFlow()
+
+    private val _hasMqttPassword = MutableStateFlow(prefs.contains(KEY_MQTT_PASSWORD_ENC))
+    val hasMqttPassword: StateFlow<Boolean> = _hasMqttPassword.asStateFlow()
+
+    /** Dekrypterat lösenord, eller tom sträng om inget är sparat. Får aldrig loggas. */
+    fun getMqttPassword(): String =
+        prefs.getString(KEY_MQTT_PASSWORD_ENC, null)?.let { SecretCipher.decrypt(it) } ?: ""
+
+    /** Sparar användarnamn och krypterat lösenord. Tomt användarnamn rensar även lösenordet. */
+    fun setMqttCredentials(username: String, password: String) {
+        val user = username.trim()
+        val editor = prefs.edit().putString(KEY_MQTT_USERNAME, user)
+        if (user.isEmpty() || password.isEmpty()) {
+            editor.remove(KEY_MQTT_PASSWORD_ENC)
+        } else {
+            editor.putString(KEY_MQTT_PASSWORD_ENC, SecretCipher.encrypt(password))
+        }
+        editor.apply()
+        _mqttUsername.value = user
+        _hasMqttPassword.value = user.isNotEmpty() && password.isNotEmpty()
+    }
 
     fun setFontSizeScale(scale: Float) {
         val clamped = scale.coerceIn(1.0f, 1.8f)
@@ -79,5 +104,7 @@ class AppSettings(context: Context) {
         private const val KEY_PAGE_SIZE = "page_size"
         private const val KEY_BROKER_HOST = "broker_host"
         private const val KEY_BROKER_PORT = "broker_port"
+        private const val KEY_MQTT_USERNAME = "mqtt_username"
+        private const val KEY_MQTT_PASSWORD_ENC = "mqtt_password_enc"
     }
 }
