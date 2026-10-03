@@ -8,6 +8,8 @@ from datetime import datetime
 
 import paho.mqtt.client as mqtt
 
+from .dedup import DEFAULT_MAX_IDS, SeenIds, message_key
+
 logger = logging.getLogger("dashboard.mqtt")
 
 MAX_MESSAGES = 200
@@ -15,6 +17,8 @@ MAX_MESSAGES = 200
 messages = deque(maxlen=MAX_MESSAGES)
 _messages_lock = threading.Lock()
 total_count = 0
+duplicate_count = 0
+seen_ids = SeenIds(int(os.getenv("DEDUP_MAX_IDS", DEFAULT_MAX_IDS)))
 unique_uids = set()
 _uid_lock = threading.Lock()
 mqtt_connected = False
@@ -46,7 +50,7 @@ def on_disconnect(client, userdata, flags, reasonCode, properties=None):
 
 
 def on_message(client, userdata, msg):
-    global total_count, unique_uids, _minute_counts, _last_minute_cleanup
+    global total_count, duplicate_count, unique_uids, _minute_counts, _last_minute_cleanup
     try:
         payload = json.loads(msg.payload.decode())
         topic = msg.topic
@@ -56,8 +60,16 @@ def on_message(client, userdata, msg):
             parts = topic.split("/")
             uid = parts[1] if len(parts) > 1 else "unknown"
 
+        # Dubblettskydd: samma post kan skickas flera gånger (QoS 1 / utkorgens omförsök).
+        key = message_key(payload, uid)
+        if seen_ids.check_and_add(key):
+            duplicate_count += 1
+            logger.info("Ignorerar dubblett %s på %s", key, topic)
+            return
+
         entry = {
             "id": f"{time.time_ns()}",
+            "message_id": payload.get("messageId", ""),
             "topic": topic,
             "uid": uid,
             "type": payload.get("type", "unknown"),
@@ -107,6 +119,7 @@ def get_stats():
         "total": total_count,
         "unique_uids": uid_count,
         "connected": mqtt_connected,
+        "duplicates": duplicate_count,
         "per_minute": per_minute,
     }
 
