@@ -4,12 +4,11 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-- [ ] **Provköra utkorgen på telefonen** (`feature/outbox`): koppla från nätet, skanna 3 taggar, återanslut, kontrollera att alla 3 kommer fram en gång var på dashboarden — teststeg i [[Outbox]]. Kod, JVM-tester och bygge klara 2026-10-03; ej provkört på enhet
-- [ ] **Merga `feature/outbox` → `main`** (efter provkörning; bygger på `feature/sqlite`, som måste mergas först)
-- [ ] **FASAD: återanvänd utkorgskärnan** (`outbox/core`) — beskrivet i [[Outbox]]; FASAD-repot ägs av Kalle PL Fasad
+- [ ] **Merga `feature/outbox` → `main`** (provkörd på telefon 2026-10-03; bygger på `feature/sqlite`, som måste mergas först)
+- [ ] **FASAD: återanvänd utkorgskärnan** (`outbox/core`) — beskrivet i [[Outbox]]; FASAD-repot ägs av Kalle PL Fasad. **FASAD-172** (utvärdering av utkorgsmönstret) kan starta; Kalle PL Fasad är informerad 2026-10-03
 - [x] ~~**Rätta `markAsTransmitted`**~~ — löst på `feature/outbox` 2026-10-03: *outbox* implementerad ([[Outbox]]), en post blir `SENT` först när brokern bekräftat (QoS 1)
 - [ ] **Merga `feature/sqlite` → `main`** (Room/SQLite verifierad på telefon) och avgör ev. release v1.0.2 — kräver att `~/.android/debug.keystore` finns för `assembleRelease`
-- [ ] **Verifiera felmeddelande vid fel lösenord** visuellt på telefonen (*Misslyckades ✗*, `12012a2`)
+- [ ] **Verifiera felvägar på telefonen:** felmeddelande vid fel lösenord (*Misslyckades ✗*, `12012a2`) samt utkorgens fel lösenord → *Väntar* med felorsak, 12 försök → `FAILED` (alla tre inte provade på enhet)
 - [ ] **`assembleRelease` saknar `~/.android/debug.keystore`** på fakir — skapa/ange signeringsnyckel
 - [ ] **Beslut om `readings.json.migrated`** — raderas aldrig automatiskt; bestäm när den får tas bort manuellt
 - [ ] **Testskript och MQTT Explorer med inloggning** — anonyma idag (se Fas-100 punkt 9)
@@ -102,6 +101,7 @@ kanban-plugin: board
 
 ## ✅ Klart (Done)
 
+- [x] **Utkorg (outbox) på `feature/outbox`** — spara först/skicka sedan, WorkManager, ack (QoS 1), dubblettskydd, Room 1→2 — ✅ verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern (offline → *Väntar*, skickas när nätverk finns även med appen stängd, en gång var på dashboarden, status *Skickad*; migrering 1→2 på telefonens riktiga databas: 4 poster blev `SENT`; dashboard med dubblettskydd driftsatt på ishtar, `c16ef43`). Felvägarna fel lösenord/12 försök/`FAILED` inte provade på enhet. Merge till `main` återstår ([[Outbox]])
 - [x] **MQTT-inloggning på ishtar** — `allow_anonymous false`, ACL (`rfid-app` skriver, `rfid-dashboard` läser), `passwd`/`acl` ägda av uid 1883 mode `0600`, lösenord via `mosquitto_passwd -b` + `read -rs` — ✅ aktiv och verifierad end-to-end 2026-10-03, på `main` (`f08ff22`)
 - [x] **Bygginfo i Inställningar** — version, byggtid, git-commit från `BuildConfig` i stället för hårdkodat *Fas 5 (juni 2026)* — ✅ `48e8a89`, 2026-10-03 (på `feature/sqlite`)
 - [x] **Anslut-knappen** — bekräftelse redan vid första tryck — ✅ `12012a2`, 2026-10-03

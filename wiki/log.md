@@ -1,5 +1,21 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] verifiering | Utkorgen verifierad på telefon och mot riktiga brokern
+
+**Gren:** `feature/outbox` (ej mergad). Beskrivning: [[Outbox]].
+
+**Verifierat av Joakim 2026-10-03 (telefon + riktiga brokern på ishtar):** avläsningar blir *Väntar* offline, skickas när nätverk finns (även med appen stängd), kommer fram en gång var på dashboarden, status *Skickad*. Room-migrering 1→2 verifierad på telefonens riktiga databas: 4 poster blev `SENT`.
+
+**Dashboard:** driftsatt på ishtar med dubblettskydd (`c16ef43`); backup `~/backup-dashboard-20261003-115215.tar` på ishtar.
+
+**Ej provat på enhet (ärligt läge):** felvägarna fel lösenord, 12 misslyckade försök och status `FAILED` — endast JVM-testade. Ligger kvar i [[Kanban]].
+
+**Övrigt:** Kalle PL Fasad är informerad; FASAD-172 (utvärdering av utkorgsmönstret) kan starta. FASAD-repot är inte rört. Merge till `main` återstår (efter `feature/sqlite`). Ingen kod ändrad.
+
+**Dokumentation uppdaterad:** README, [[Outbox]], [[Kanban]] (utkorg flyttad till Klart, 'verifierad av Joakim'), [[Release-Notes]], [[Produkt-Roadmap]], [[App-Architecture]], [[Ordlista]].
+
+---
+
 ## [2026-10-03] feature | Utkorg (outbox) för MQTT-överföring på `feature/outbox`
 
 **Gren:** `feature/outbox` (utgår från `feature/sqlite` `d95e9a8`; ej mergad). Beskrivning: [[Outbox]].

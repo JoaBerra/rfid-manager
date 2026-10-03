@@ -116,7 +116,7 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 - **Produktionshärdning:**
   - Riktig kryptering (MQTT over TLS / wss). *(MQTT-inloggning med ACL är aktiv sedan 2026-10-03; TLS återstår.)*
   - Riktig Room-persistens + migreringar (se villkor ovan) — *klart på `feature/sqlite` 2026-10-03; framtida schemaändringar kräver riktig `Migration`, ingen `fallbackToDestructiveMigration`*.
-  - Bättre felhantering, retry, offline-kö — **implementerat som *outbox* på `feature/outbox`** (2026-10-03, se [[Outbox]]); rättar även att `markAsTransmitted` satte status oavsett om publiceringen lyckades. Ej provkört på telefon.
+  - Bättre felhantering, retry, offline-kö — **implementerat som *outbox* på `feature/outbox`** (2026-10-03, se [[Outbox]]); rättar även att `markAsTransmitted` satte status oavsett om publiceringen lyckades. **Verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**; felvägarna fel lösenord/12 försök/`FAILED` är inte provade på enhet. Kvar: merga.
   - Release builds, Play Store (valfritt).
 
 - **Avancerat:**
@@ -294,7 +294,7 @@ Projektet är pausat (2026-07-14), men två spår drevs 2026-10-03. Termerna är
 
 | Punkt | Beskrivning |
 |-------|-------------|
-| ~~`markAsTransmitted`~~ | ~~Status `transmitted` sattes oavsett om MQTT-publiceringen lyckades.~~ Löst på `feature/outbox` (2026-10-03) med *outbox*, se [[Outbox]]; kvar: provköra på telefon och merga. |
+| ~~`markAsTransmitted`~~ | ~~Status `transmitted` sattes oavsett om MQTT-publiceringen lyckades.~~ Löst på `feature/outbox` (2026-10-03) med *outbox*, se [[Outbox]]; verifierad på telefon och mot riktiga brokern 2026-10-03 (felvägarna fel lösenord/12 försök/`FAILED` ej provade på enhet); kvar: merga. |
 | Anonyma testverktyg | Testskript i `test/fas2-mqtt/mqtt/` och MQTT Explorer saknar användare och kan inte ansluta mot brokern. |
 | `assembleRelease` | `~/.android/debug.keystore` saknas på fakir, så release-bygget misslyckas. |
 | Fel lösenord | Felmeddelandet (*Misslyckades ✗*) är inte visuellt verifierat på telefonen. |

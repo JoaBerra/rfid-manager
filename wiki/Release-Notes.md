@@ -30,9 +30,16 @@ created: 2026-06-13
 - Enhetlig status `transmitted` vid överföring (tidigare `transmitted via Sparkplug` i JSON-läget).
 - **Bygginfo (`48e8a89`):** Inställningar → App-info visar version, byggtid och git-commit från `BuildConfig` (`BUILD_TIME`, `GIT_COMMIT`) i stället för hårdkodat *Fas 5 (juni 2026)*.
 
+### Gren `feature/outbox` (utkorg; ej mergad till `main`, bygger på `feature/sqlite`)
+
+- **Utkorg (outbox):** avläsningar sparas först som `PENDING` (*Väntar*) och skickas av WorkManager; `SENT` (*Skickad*) först när brokern bekräftat (QoS 1). Meddelandet har `id`, `deviceId`, `messageId`. Room-schema 2 (migrering 1→2). Se [[Outbox]].
+- **Verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern:** avläsningar blir *Väntar* offline, skickas när nätverk finns (även med appen stängd), kommer fram en gång var på dashboarden, status *Skickad*. Room-migrering 1→2 körd på telefonens riktiga databas: 4 poster blev `SENT`.
+- **Dashboard:** dubblettskydd driftsatt på ishtar 2026-10-03 (`c16ef43`; backup `~/backup-dashboard-20261003-115215.tar` på ishtar).
+- **Inte provat på enhet:** felvägarna fel lösenord, 12 misslyckade försök och status `FAILED` (endast JVM-testade).
+
 ### Kända begränsningar (kvarstående teknisk skuld)
 
-- `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades på `feature/sqlite`/`main`. **Rättat på `feature/outbox`** (2026-10-03, ej mergad, ej provkört på telefon) — se [[Outbox]].
+- `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades på `feature/sqlite`/`main`. **Rättat på `feature/outbox`** (2026-10-03, ej mergad; **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**) — se [[Outbox]].
 - Testskript (`test/fas2-mqtt/mqtt/`) och MQTT Explorer ansluter anonymt och behöver användare nu när brokern kräver inloggning.
 - `assembleRelease` misslyckas på fakir: `~/.android/debug.keystore` saknas. `assembleDebug` påverkas inte.
 - `readings.json.migrated` raderas aldrig automatiskt.
