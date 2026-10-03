@@ -8,7 +8,7 @@ created: 2026-10-03
 
 > **Status:** implementerad och **mergad till `main`** (grenarna `feature/sqlite`, `feature/outbox` och `feature/mqtt-auth` är mergade och borttagna). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
 
-> **Gren `feature/outbox-rounds` (utgår från `main` `2e3ee25`, pushad som egen gren, ej mergad till `main`):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger, och funktionen är verifierad av Joakim på telefon 2026-10-03** (installerad 12:50). Kontrastfixen för pausraden är gjord men **ännu inte omprovad** förrän Joakim sett den.
+> **Gren `feature/outbox-rounds` (utgår från `main` `2e3ee25`, pushad som egen gren, ej mergad till `main`):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger, och funktionen är verifierad av Joakim på telefon 2026-10-03** (installerad 12:50). Kontrastfixen är gjord (explicit `OutboxPalette` i `ui/theme/OutboxPalette.kt`, kontrast ≥ 4,5:1 i ljust och mörkt läge, enhetstestad och mätt i skärmbilder) men **ännu inte omprovad av Joakim**. Orsaken: *Väntar* ritades med `colorScheme.secondary`, nästan samma färg som kortets standardbakgrund.
 
 ## Varför
 

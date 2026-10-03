@@ -1,5 +1,17 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] fix | Kontrast i omgångskortet – orsak funnen och rättad (ljust läge)
+
+**Gren:** `feature/outbox-rounds` (ej mergad, `main` orörd).
+
+**Orsak:** Joakims test av `ac1c513` visade att det som försvann i ljust läge var statusordet *Väntar* (på samma rad som "Försök N · omgång X av Y"). Kortet ritas med Materials standardbakgrund (`surfaceContainerHighest`, som appens färgscheman inte definierar) – uppmätt **`#36343A` mörkt och `#E5E0E8` ljust**, inte `#111416`/vitt som tidigare antagits här. `outboxStatusColor` använde `colorScheme.secondary` (`#1A1D20` / `#E5E7EB`): kontrast **1,4:1 mörkt och 1,0:1 ljust** (identisk färg = osynlig). Pausraden själv (`onSurface`) hade 10,2:1 mörkt / 11,3:1 ljust, så den syntes men var inte vit; hjälptextens `onSurfaceVariant` hade 2,6:1 mörkt och felorsaken (`error`) 3,0–3,2:1. Villkoret för pausraden är samma i båda lägena (ingen skillnad i visning); ingen clipping, `maxLines` eller alpha-problem.
+
+**Fix:** ny `OutboxPalette` (`ui/theme/OutboxPalette.kt`) med explicita färger för kortets bakgrund och all utkorgstext, valda efter appens eget läge (härlett ur aktivt `colorScheme`, alltså `themeMode`, inte bara systemläget). Mörkt: pausrad och hjälptext `#FFFFFF`, Väntar `#FBBF24`. Ljust: `#111827`, Väntar `#92400E`. Kortets utseende är oförändrat. Hjälptexten i Inställningar använder samma palett.
+
+**Verifierat:** enhetstest `OutboxPaletteTest` kräver ≥ 4,5:1 för varje par i båda lägena. Mätt i skärmbilder från telefonen (testpost i paus, mörkt + ljust): pausrad 12,3:1 / 13,6:1, Väntar 7,3:1 / 5,5:1, felorsak 5,3:1 / 6,5:1, sekundärtext 8,4:1 / 7,0:1. **Ej omprovad av Joakim.**
+
+---
+
 ## [2026-10-03] verifiering | Omgångsfunktionen verifierad på telefon; kontrastfix i pausraden
 
 **Gren:** `feature/outbox-rounds` (ej mergad, `main` orörd). Beskrivning: [[Outbox]].

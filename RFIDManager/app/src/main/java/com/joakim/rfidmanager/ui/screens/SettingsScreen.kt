@@ -295,8 +295,10 @@ fun SettingsScreen(
         Spacer(Modifier.height(Dimens.sectionSpacing))
 
         // Utkorg: omförsök i omgångar
+        val outboxPalette = com.joakim.rfidmanager.ui.theme.rememberOutboxPalette()
         Card(
             modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(outboxPalette.cardBackground)),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(modifier = Modifier.padding(Dimens.cardPadding)) {
@@ -304,7 +306,7 @@ fun SettingsScreen(
                 Spacer(Modifier.height(Dimens.smallGap))
                 Text(
                     str("screen.settings.outbox_rounds_help"),
-                    fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface
+                    fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = androidx.compose.ui.graphics.Color(outboxPalette.helpText)
                 )
                 Spacer(Modifier.height(Dimens.smallGap))
                 @Composable

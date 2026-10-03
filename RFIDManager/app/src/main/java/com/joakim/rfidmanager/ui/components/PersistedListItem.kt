@@ -20,6 +20,9 @@ import com.joakim.rfidmanager.outbox.core.RetryPolicy
 import com.joakim.rfidmanager.outbox.core.RoundsConfig
 import kotlinx.coroutines.delay
 import com.joakim.rfidmanager.ui.str
+import com.joakim.rfidmanager.ui.theme.OutboxPalette
+import com.joakim.rfidmanager.ui.theme.rememberOutboxPalette
+import com.joakim.rfidmanager.ui.theme.toComposeColor
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -35,6 +38,7 @@ fun PersistedListItem(
     modifier: Modifier = Modifier
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
+    val palette = rememberOutboxPalette()
     val timeStr = dateFormat.format(Date(reading.timestamp))
     val isLargeText = fontSizeScale > LARGE_FONT_THRESHOLD
     val policy = remember(roundsConfig) { RetryPolicy(roundsConfig) }
@@ -54,6 +58,10 @@ fun PersistedListItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = palette.cardBackground.toComposeColor(),
+            contentColor = palette.text.toComposeColor()
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -74,7 +82,7 @@ fun PersistedListItem(
                     text = timeStr,
                     fontSize = (9 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = palette.secondaryText.toComposeColor()
                 )
             } else {
                 Row(
@@ -94,7 +102,7 @@ fun PersistedListItem(
                         text = timeStr,
                         fontSize = (9 * fontSizeScale).sp,
                         fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = palette.secondaryText.toComposeColor()
                     )
                 }
             }
@@ -105,7 +113,7 @@ fun PersistedListItem(
                 text = reading.source ?: str("common.unknown_source"),
                 fontSize = (11 * fontSizeScale).sp,
                 fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = palette.secondaryText.toComposeColor(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -117,7 +125,7 @@ fun PersistedListItem(
                     text = reading.dataPreview ?: "",
                     fontSize = (10 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = palette.secondaryText.toComposeColor(),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -126,7 +134,7 @@ fun PersistedListItem(
                     text = outboxStatusText(reading, policy),
                     fontSize = (9 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = outboxStatusColor(reading)
+                    color = outboxStatusColor(reading, palette)
                 )
             } else {
                 Row(
@@ -138,7 +146,7 @@ fun PersistedListItem(
                         fontSize = (10 * fontSizeScale).sp,
                         fontFamily = FontFamily.Monospace,
                         modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = palette.secondaryText.toComposeColor(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -147,7 +155,7 @@ fun PersistedListItem(
                         text = outboxStatusText(reading, policy),
                         fontSize = (9 * fontSizeScale).sp,
                         fontFamily = FontFamily.Monospace,
-                        color = outboxStatusColor(reading)
+                        color = outboxStatusColor(reading, palette)
                     )
                 }
             }
@@ -159,7 +167,7 @@ fun PersistedListItem(
                     text = pauseText(policy, reading.attempts, resumeAt, now),
                     fontSize = (9 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = palette.pauseText.toComposeColor()
                 )
             }
 
@@ -170,7 +178,7 @@ fun PersistedListItem(
                     text = "${str("outbox.last_error")}: ${reading.lastError}",
                     fontSize = (9 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.error,
+                    color = palette.errorText.toComposeColor(),
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -226,9 +234,9 @@ internal fun pauseText(policy: RetryPolicy, attempts: Int, resumeAt: Long, now: 
         .replace("{min}", minutes.toString())
 }
 
-@Composable
-internal fun outboxStatusColor(reading: PersistedReading) = when (reading.outboxStatus) {
-    OutboxStatus.SENT -> MaterialTheme.colorScheme.primary
-    OutboxStatus.FAILED -> MaterialTheme.colorScheme.error
-    OutboxStatus.PENDING -> MaterialTheme.colorScheme.secondary
-}
+/** Statusfärg ur den explicita paletten (kontrast ≥ 4,5:1 mot kortet i både ljust och mörkt läge). */
+internal fun outboxStatusColor(reading: PersistedReading, palette: OutboxPalette) = when (reading.outboxStatus) {
+    OutboxStatus.SENT -> palette.sent
+    OutboxStatus.FAILED -> palette.failed
+    OutboxStatus.PENDING -> palette.pending
+}.toComposeColor()
