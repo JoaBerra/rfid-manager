@@ -114,6 +114,9 @@ dependencies {
     // Paho MQTT
     implementation(libs.paho.mqtt.client)
 
+    // WorkManager – utkorgens utskick (OneTimeWork, nätverkskrav, backoff)
+    implementation(libs.androidx.work.runtime.ktx)
+
     testImplementation(libs.junit)
     // org.json för JVM-enhetstester (Androids stub-implementation kastar i rena JVM-tester)
     testImplementation(libs.org.json)

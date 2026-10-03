@@ -239,7 +239,8 @@ class MainActivity : ComponentActivity() {
                         onToggleScan = { scanningEnabled = !scanningEnabled },
                         detectedTags = detectedTags,
                         onWrite = onWrite,
-                        onPersist = onPersist
+                        onPersist = onPersist,
+                        onSendNow = { appContainer.outboxScheduler.sendNow() }
                     )
                 }
             }

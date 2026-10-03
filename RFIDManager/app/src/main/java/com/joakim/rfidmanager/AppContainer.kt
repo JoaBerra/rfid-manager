@@ -10,6 +10,9 @@ import com.joakim.rfidmanager.data.localization.LocalizationManager
 import com.joakim.rfidmanager.data.mqtt.MqttConnectionManager
 import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
 import com.joakim.rfidmanager.data.settings.AppSettings
+import com.joakim.rfidmanager.outbox.work.OutboxNetworkTrigger
+import com.joakim.rfidmanager.outbox.work.OutboxScheduler
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +20,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class AppContainer(context: Context) {
+
+    /** Startar utkorgens utskick (WorkManager). Fungerar även när appen är stängd. */
+    val outboxScheduler: OutboxScheduler by lazy { OutboxScheduler(context) }
 
     val settings: AppSettings by lazy { AppSettings(context) }
 
@@ -42,6 +48,8 @@ class AppContainer(context: Context) {
             val db = DatabaseProvider.getDatabase(context)
             PersistedReadingRepository(
                 dao = db.persistedReadingDao(),
+                // Spara först, skicka sedan: varje ny avläsning sparas som PENDING och triggar därefter utskick.
+                onReadingSaved = { outboxScheduler.onReadingSaved() },
                 migrator = JsonToRoomMigrator(
                     jsonFile = File(context.filesDir, "readings.json"),
                     store = RoomMigrationStore(db),
@@ -64,6 +72,24 @@ class AppContainer(context: Context) {
             } catch (e: Exception) {
                 Log.e("AppContainer", "Start av lagring/migrering misslyckades", e)
             }
+            // Utkorgen: töm väntande poster vid appstart (en gång per process, inte vid rotation) …
+            if (outboxStartedForProcess.compareAndSet(false, true)) {
+                try {
+                    if (persistedReadingRepository.pendingCount() > 0) outboxScheduler.onAppStart()
+                } catch (e: Exception) {
+                    Log.e("AppContainer", "Kunde inte starta utkorgen vid appstart", e)
+                }
+            }
         }
+        // … och när nätverk blir tillgängligt (när appen är stängd sköter WorkManagers nätverkskrav det).
+        OutboxNetworkTrigger.register(context) {
+            appScope.launch {
+                if (persistedReadingRepository.pendingCount() > 0) outboxScheduler.onNetworkAvailable()
+            }
+        }
+    }
+
+    private companion object {
+        val outboxStartedForProcess = AtomicBoolean(false)
     }
 }

@@ -105,6 +105,13 @@ class PersistedReadingRepository(
         return ok
     }
 
+    /** Antal väntande poster just nu (0 vid fel; felet loggas och syns i [storageError]). */
+    suspend fun pendingCount(): Int {
+        var n = 0
+        guarded("räkna väntande") { n = dao.countPending() }
+        return n
+    }
+
     /** Sätter en FAILED-post tillbaka till PENDING så att den kan skickas igen ('Skicka nu'). */
     suspend fun requeueIfFailed(id: Long) {
         guarded("återköa misslyckad avläsning") { dao.requeue(id) }

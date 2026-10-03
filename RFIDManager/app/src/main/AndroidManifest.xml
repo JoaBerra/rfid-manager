@@ -18,6 +18,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- INTERNET is required for raw TCP sockets (Paho MQTT). Must be at manifest level, not inside <application>. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Nätverksstatus: utkorgen startar utskick när nätverk blir tillgängligt (ConnectivityManager-callback). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
         NFC is used but not strictly required for the app to install.
