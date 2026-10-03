@@ -12,12 +12,14 @@ sealed interface DrainResult {
     /**
      * Stannade med PENDING-poster kvar: antingen misslyckades ett försök ([error] satt) eller
      * så vilar första posten ännu i backoff ([error] = senaste felet). Försök igen om
-     * [retryAfterMillis].
+     * [retryAfterMillis]. [paused] = true när väntan är en paus mellan omgångar (se [RetryPolicy]),
+     * inte vanlig backoff.
      */
     data class Blocked(
         override val sent: Int,
         val retryAfterMillis: Long,
-        val error: String?
+        val error: String?,
+        val paused: Boolean = false
     ) : DrainResult
 }
 
@@ -29,10 +31,13 @@ sealed interface DrainResult {
  *    [SendResult.Acked]; därefter hämtas nästa.
  * 2. Vid misslyckat försök stannar körningen direkt (nästa post skickas inte förbi),
  *    posten får attempts+1 och felorsaken sparas ([DrainResult.Blocked]).
- * 3. Efter [maxAttempts] misslyckade försök markeras posten FAILED (lämnar kön; körningen
- *    stannar ändå). Den skickas bara igen efter [OutboxStore.requeue] / [OutboxStore.requeueFailed].
- * 4. Exponentiell (eller annan) backoff via [BackoffPolicy]: utan [force] skickas inte en post
- *    som misslyckats förrän `lastAttemptAt + backoff` passerat. Med `force = true` ignoreras backoff.
+ * 3. Efter sista omgångens sista försök ([RetryPolicy.isGiveUp]; den äldre konstruktorn med maxAttempts = en omgång)
+ *    markeras posten FAILED (lämnar kön; körningen stannar ändå). Den skickas bara igen efter
+ *    [OutboxStore.requeue] / [OutboxStore.requeueFailed].
+ * 4. Väntetid via [RetryPolicy]: backoff mellan försök i en omgång, [RoundsConfig.pauseMillis] när en
+ *    omgång är slut. Utan [force] skickas inte en post som misslyckats förrän `lastAttemptAt + väntetid`
+ *    passerat. Med `force = true` ignoreras backoff; pausen ignoreras också om `skipPause = true`
+ *    ('Skicka nu'), men respekteras annars (t.ex. när nätverket kommer tillbaka).
  * 5. At-least-once: kraschar processen efter ack men före [OutboxStore.markSent] skickas
  *    posten igen – mottagaren måste avduplicera på id.
  * 6. [CancellationException] kastas vidare orört (posten förblir PENDING).
@@ -43,24 +48,35 @@ sealed interface DrainResult {
 class OutboxDispatcher<T>(
     private val store: OutboxStore<T>,
     private val transport: OutboxTransport<T>,
-    private val backoff: BackoffPolicy = ExponentialBackoff(),
-    private val maxAttempts: Int = DEFAULT_MAX_ATTEMPTS,
+    private val policy: RetryPolicy,
     private val clock: () -> Long = System::currentTimeMillis
 ) {
-    init {
-        require(maxAttempts >= 1) { "maxAttempts måste vara >= 1" }
-    }
+    /** Äldre form: en enda omgång om [maxAttempts] försök med [backoff] (ingen paus). */
+    constructor(
+        store: OutboxStore<T>,
+        transport: OutboxTransport<T>,
+        backoff: BackoffPolicy = ExponentialBackoff(),
+        maxAttempts: Int = DEFAULT_MAX_ATTEMPTS,
+        clock: () -> Long = System::currentTimeMillis
+    ) : this(store, transport, RetryPolicy(RoundsConfig.singleRound(maxAttempts), backoff), clock)
 
-    suspend fun drain(force: Boolean = false): DrainResult {
+    /**
+     * @param force ignorera backoff mellan försök ('Skicka nu', nätverk tillbaka).
+     * @param skipPause ignorera även pausen mellan omgångar. Standard = [force] ('Skicka nu' kringgår
+     *   pausen). Anropare som vill tvinga fram ett försök men ändå vänta ut pausen (nätverk tillbaka)
+     *   skickar `force = true, skipPause = false`.
+     */
+    suspend fun drain(force: Boolean = false, skipPause: Boolean = force): DrainResult {
         var sent = 0
         while (true) {
             val head = store.nextPending(1).firstOrNull() ?: return DrainResult.Drained(sent)
 
-            if (!force) {
+            val inPause = policy.isPause(head.attempts)
+            if (!force || (!skipPause && inPause)) {
                 val last = head.lastAttemptAt
                 if (last != null && head.attempts > 0) {
-                    val remaining = last + backoff.delayMillis(head.attempts) - clock()
-                    if (remaining > 0) return DrainResult.Blocked(sent, remaining, head.lastError)
+                    val remaining = last + policy.delayMillis(head.attempts) - clock()
+                    if (remaining > 0) return DrainResult.Blocked(sent, remaining, head.lastError, paused = inPause)
                 }
             }
 
@@ -80,18 +96,18 @@ class OutboxDispatcher<T>(
                 is SendResult.Failed -> {
                     val attempts = head.attempts + 1
                     val now = clock()
-                    if (attempts >= maxAttempts) {
+                    if (policy.isGiveUp(attempts)) {
                         store.markFailed(head.id, result.error, now)
                     } else {
                         store.markAttemptFailed(head.id, result.error, now)
                     }
-                    return DrainResult.Blocked(sent, backoff.delayMillis(attempts), result.error)
+                    return DrainResult.Blocked(sent, policy.delayMillis(attempts), result.error, paused = policy.isPause(attempts))
                 }
             }
         }
     }
 
     companion object {
-        const val DEFAULT_MAX_ATTEMPTS = 12
+        const val DEFAULT_MAX_ATTEMPTS = RetryPolicy.DEFAULT_MAX_ATTEMPTS
     }
 }
