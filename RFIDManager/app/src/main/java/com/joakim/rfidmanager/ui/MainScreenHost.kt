@@ -334,8 +334,8 @@ fun MainScreenHost(
                     settings = settings,
                     repository = persistedReadingRepository,
                     mqttStatus = mqttManager?.connectionStatus,
-                    onReconnect = { host, port ->
-                        mqttManager?.reconnect(host, port)
+                    onReconnect = { host, port, username, password ->
+                        mqttManager?.reconnect(host, port, username, password)
                     },
                     modifier = Modifier.background(MaterialTheme.colorScheme.background)
                 )

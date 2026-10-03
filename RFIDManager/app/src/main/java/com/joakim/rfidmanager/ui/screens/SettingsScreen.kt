@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -13,11 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.joakim.rfidmanager.data.export.ReadingExporter
 import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
 import com.joakim.rfidmanager.data.settings.AppSettings
+import com.joakim.rfidmanager.data.settings.BrokerDefaults
 import com.joakim.rfidmanager.ui.LocalLocalization
 import com.joakim.rfidmanager.ui.str
 import com.joakim.rfidmanager.ui.theme.Dimens
@@ -31,7 +35,7 @@ fun SettingsScreen(
     settings: AppSettings? = null,
     repository: PersistedReadingRepository? = null,
     mqttStatus: StateFlow<String>? = null,
-    onReconnect: (host: String, port: Int) -> Unit = { _, _ -> },
+    onReconnect: (host: String, port: Int, username: String, password: String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val fontSizeScale by settings?.fontSizeScale?.collectAsState() ?: remember { mutableStateOf(1.0f) }
@@ -39,10 +43,15 @@ fun SettingsScreen(
     val soundEnabled by settings?.soundEnabled?.collectAsState() ?: remember { mutableStateOf(true) }
     val themeMode by settings?.themeMode?.collectAsState() ?: remember { mutableStateOf(com.joakim.rfidmanager.data.settings.ThemeMode.DARK) }
     val pageSize by settings?.pageSize?.collectAsState() ?: remember { mutableStateOf(50) }
-    val brokerHost by settings?.brokerHost?.collectAsState() ?: remember { mutableStateOf("192.168.50.151") }
-    val brokerPort by settings?.brokerPort?.collectAsState() ?: remember { mutableStateOf(1883) }
+    val brokerHost by settings?.brokerHost?.collectAsState() ?: remember { mutableStateOf(BrokerDefaults.HOST) }
+    val brokerPort by settings?.brokerPort?.collectAsState() ?: remember { mutableStateOf(BrokerDefaults.PORT) }
     var hostInput by remember { mutableStateOf(brokerHost) }
     var portInput by remember { mutableStateOf(brokerPort.toString()) }
+    val savedUsername by settings?.mqttUsername?.collectAsState() ?: remember { mutableStateOf("") }
+    val hasSavedPassword by settings?.hasMqttPassword?.collectAsState() ?: remember { mutableStateOf(false) }
+    var usernameInput by remember { mutableStateOf(savedUsername) }
+    // Lösenordsfältet fylls aldrig i med det sparade lösenordet; tomt fält = behåll sparat.
+    var passwordInput by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val loc = LocalLocalization.current
     val currentLang by loc.currentLanguage.collectAsState()
@@ -267,12 +276,43 @@ fun SettingsScreen(
                     textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
                 )
                 Spacer(Modifier.height(Dimens.smallGap))
+                OutlinedTextField(
+                    value = usernameInput,
+                    onValueChange = { usernameInput = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(str("screen.settings.broker_username"), fontFamily = FontFamily.Monospace, fontSize = 11.sp) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
+                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                )
+                Spacer(Modifier.height(Dimens.smallGap))
+                OutlinedTextField(
+                    value = passwordInput,
+                    onValueChange = { passwordInput = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(str("screen.settings.broker_password"), fontFamily = FontFamily.Monospace, fontSize = 11.sp) },
+                    placeholder = {
+                        if (hasSavedPassword) Text(str("screen.settings.broker_password_saved"), fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
+                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                )
+                Spacer(Modifier.height(Dimens.smallGap))
                 Button(
                     onClick = {
-                        val port = portInput.toIntOrNull() ?: 1883
+                        val port = portInput.toIntOrNull() ?: BrokerDefaults.PORT
                         settings?.setBrokerHost(hostInput)
                         settings?.setBrokerPort(port)
-                        onReconnect(hostInput, port)
+                        // Tomt lösenordsfält = behåll sparat lösenord (om användarnamnet är kvar).
+                        val password = if (passwordInput.isEmpty() && usernameInput.isNotBlank()) {
+                            settings?.getMqttPassword() ?: ""
+                        } else passwordInput
+                        settings?.setMqttCredentials(usernameInput, password)
+                        val username = usernameInput.trim()
+                        passwordInput = ""
+                        onReconnect(hostInput, port, username, if (username.isEmpty()) "" else password)
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("$hostInput:$port — $connectingStr")
                             mqttStatus?.first { it == "CONNECTING..." }

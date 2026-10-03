@@ -17,7 +17,12 @@ class AppContainer(context: Context) {
     val mqttManager: MqttConnectionManager by lazy {
         val host = settings.brokerHost.value
         val port = settings.brokerPort.value
-        MqttConnectionManager(host = host, port = port).also {
+        MqttConnectionManager(
+            host = host,
+            port = port,
+            username = settings.mqttUsername.value,
+            password = settings.getMqttPassword()
+        ).also {
             MqttSender.init(it)
         }
     }

@@ -5,19 +5,24 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.joakim.rfidmanager.data.settings.BrokerDefaults
 import org.eclipse.paho.client.mqttv3.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 class MqttConnectionManager(
-    host: String = "192.168.50.151",
-    port: Int = 1883,
+    host: String = BrokerDefaults.HOST,
+    port: Int = BrokerDefaults.PORT,
+    username: String = "",
+    password: String = "",
     private val clientId: String = "rfid-android-client"
 ) : MqttCallback {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var brokerUrl = "tcp://$host:$port"
+    private var username: String = username
+    private var password: String = password
 
     private val _connectionStatus = MutableStateFlow("DISCONNECTED")
     val connectionStatus: StateFlow<String> = _connectionStatus.asStateFlow()
@@ -56,8 +61,10 @@ class MqttConnectionManager(
         }
     }
 
-    fun reconnect(host: String, port: Int) {
+    fun reconnect(host: String, port: Int, username: String = "", password: String = "") {
         brokerUrl = "tcp://$host:$port"
+        this.username = username
+        this.password = password
         keepAliveJob?.cancel()
         try {
             client?.disconnect()
@@ -78,13 +85,18 @@ class MqttConnectionManager(
                 keepAliveInterval = 30
                 connectionTimeout = 10
                 isCleanSession = true
+                // Inloggning endast om användarnamn finns; annars anonymt som förut.
+                if (username.isNotEmpty()) {
+                    userName = username
+                    password = this@MqttConnectionManager.password.toCharArray()
+                }
             }
 
             mqttClient.connect(options)
             client = mqttClient
             _connectionStatus.value = "CONNECTED"
             updateHeartbeat("Connected")
-            Log.i(tag, "Connected to $brokerUrl")
+            Log.i(tag, "Connected to $brokerUrl" + if (username.isNotEmpty()) " as $username" else "")
         } catch (e: Exception) {
             Log.e(tag, "Connection failed", e)
             _connectionStatus.value = "DISCONNECTED"
