@@ -8,3 +8,17 @@
 #   docker run --rm -it -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd /work/passwd rfid-dashboard
 #
 # Förväntade användare (se mqtt/acl): rfid-app, rfid-dashboard
+#
+# VIKTIGT – direkt efter att passwd skapats (på körkopian på ishtar):
+# mosquitto_passwd via docker run skapar filen som root:root med mode 0600. Mosquitto 2.1
+# kör som uid 1883 och kan då inte läsa den: brokern startar inte ('Unable to open pwfile').
+# Både passwd OCH acl måste ägas av uid 1883 med mode 0600. Kör från repots rot:
+#   docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 sh -c 'chown 1883:1883 /work/passwd /work/acl && chmod 0600 /work/passwd /work/acl'
+# (fungerar utan sudo för användare i docker-gruppen.)
+#
+# Observera:
+# - Efter detta blir acl ocläsbar för joakim och git på den kopian. Kör därför chown BARA på
+#   körkopian på ishtar; originalet av acl versionshanteras i repot som vanligt.
+# - En git pull/checkout kan skriva över ägaren: kör kommandot om efter varje uppdatering av acl.
+# - Provkört av Nora Nät på ishtar (Mosquitto 2.1.2, port 11883): anonym nekas, fel lösenord
+#   nekas, rfid-app kan skriva men inte läsa, rfid-dashboard kan läsa men inte skriva.

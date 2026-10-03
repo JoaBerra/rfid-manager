@@ -144,9 +144,33 @@ Steg 1 ovan är förberett i `test/fas2-mqtt/mqtt/`: `mosquitto.conf` har `allow
 Ordning vid införande:
 
 1. Skapa `test/fas2-mqtt/mqtt/passwd` enligt instruktionen i `mqtt/passwd.example` (`mosquitto_passwd`, användarna `rfid-app` och `rfid-dashboard`). Filen ignoreras av git.
-2. Ställ in lösenorden i appen och för panelen (`MQTT_USERNAME`/`MQTT_PASSWORD`) enligt punkt 2–3 ovan.
-3. Hämta ändringarna till ishtar och starta om: `docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d --force-recreate`.
-4. Testa att appen och panelen ansluter (steg 4 ovan).
+2. **Direkt efter att `passwd` skapats** (på körkopian på ishtar, från repots rot) – sätt ägare och rättigheter för både `passwd` och `acl`:
+   ```bash
+   docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 sh -c 'chown 1883:1883 /work/passwd /work/acl && chmod 0600 /work/passwd /work/acl'
+   ```
+   Se *Filägare och rättigheter* nedan. Kommandot fungerar utan `sudo` för användare i docker-gruppen (joakim).
+3. Ställ in lösenorden i appen och för panelen (`MQTT_USERNAME`/`MQTT_PASSWORD`) enligt punkt 2–3 ovan.
+4. Hämta ändringarna till ishtar och starta om: `docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d --force-recreate`. Kör om chown/chmod-kommandot i steg 2 efter varje `git pull`/`checkout` som kan ha rört `acl`.
+5. Testa att appen och panelen ansluter (steg 4 ovan).
+
+#### Filägare och rättigheter (`passwd` och `acl`)
+
+Mosquitto 2.1 kör som uid 1883 i containern och kräver att `passwd` och `acl` är läsbara för den användaren. `mosquitto_passwd` via `docker run` skapar `passwd` som `root:root` med mode `0600`; då startar brokern inte och loggar `Unable to open pwfile`. Lösning: `passwd` **och** `acl` ska ägas av uid 1883 med mode `0600` (kommandot i steg 2).
+
+- Gör detta **bara på körkopian på ishtar**. Efter `chown` blir `acl` ocläsbar för joakim och för git på den kopian, så originalet versionshanteras i repot som vanligt (ägt av joakim) och ändras aldrig med `chown` där.
+- En `git pull`/`checkout` kan skriva över ägaren på `acl`; kommandot måste därför köras om efter varje uppdatering av `acl`.
+- Felsökning: `Unable to open pwfile` (eller liknande fel för `acl`) i `docker logs rfid-mqtt-hulda` betyder nästan alltid fel ägare/mode på `passwd` respektive `acl`. Kör kommandot i steg 2 och starta om containern.
+
+#### Provkörning (Nora Nät)
+
+Nora Nät har provkört brokern på ishtar med Mosquitto 2.1.2 (syntax och ACL, på port 11883, vid sidan av den ordinarie brokern). Resultat:
+
+- Anonym anslutning nekas.
+- Fel lösenord nekas.
+- `rfid-app` kan skriva men inte läsa på `rfidmanager/+/telemetry`.
+- `rfid-dashboard` kan läsa men inte skriva.
+
+Provkörningen gav även fyndet om filägare ovan (`Unable to open pwfile` tills `passwd` och `acl` ägdes av uid 1883).
 
 Återgång till anonym drift:
 
