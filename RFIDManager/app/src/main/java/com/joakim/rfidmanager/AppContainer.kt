@@ -8,7 +8,6 @@ import com.joakim.rfidmanager.data.migration.JsonToRoomMigrator
 import com.joakim.rfidmanager.data.migration.RoomMigrationStore
 import com.joakim.rfidmanager.data.localization.LocalizationManager
 import com.joakim.rfidmanager.data.mqtt.MqttConnectionManager
-import com.joakim.rfidmanager.data.mqtt.MqttSender
 import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
 import com.joakim.rfidmanager.data.settings.AppSettings
 import kotlinx.coroutines.CoroutineScope
@@ -31,9 +30,7 @@ class AppContainer(context: Context) {
             port = port,
             username = settings.mqttUsername.value,
             password = settings.getMqttPassword()
-        ).also {
-            MqttSender.init(it)
-        }
+        )
     }
 
     /**

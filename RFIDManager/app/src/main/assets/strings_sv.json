@@ -92,5 +92,16 @@
   "persisted_item.transmit": "Skicka ↑",
   "persisted_item.transmitted_check": "Skickad ✓",
   "persisted_item.type": "Typ",
-  "persisted_item.data": "Data"
+  "persisted_item.data": "Data",
+  "outbox.status": "Status",
+  "outbox.status.pending": "Väntar",
+  "outbox.status.sent": "Skickad",
+  "outbox.status.failed": "Misslyckad",
+  "outbox.attempts": "Försök",
+  "outbox.last_error": "Senaste fel",
+  "outbox.sent_at": "Skickad (bekräftad)",
+  "persisted_item.send_now": "Skicka nu",
+  "persisted_item.sent_check": "Skickad ✓",
+  "screen.settings.outbox_pending": "Väntande i utkorgen",
+  "screen.settings.outbox_failed": "Misslyckade (tryck Skicka nu)"
 }

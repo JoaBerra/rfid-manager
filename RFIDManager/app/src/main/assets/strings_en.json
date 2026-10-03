@@ -92,5 +92,16 @@
   "persisted_item.transmit": "Transmit ↑",
   "persisted_item.transmitted_check": "Transmitted ✓",
   "persisted_item.type": "Type",
-  "persisted_item.data": "Data"
+  "persisted_item.data": "Data",
+  "outbox.status": "Status",
+  "outbox.status.pending": "Pending",
+  "outbox.status.sent": "Sent",
+  "outbox.status.failed": "Failed",
+  "outbox.attempts": "Attempts",
+  "outbox.last_error": "Last error",
+  "outbox.sent_at": "Sent (acknowledged)",
+  "persisted_item.send_now": "Send now",
+  "persisted_item.sent_check": "Sent ✓",
+  "screen.settings.outbox_pending": "Pending in outbox",
+  "screen.settings.outbox_failed": "Failed (press Send now)"
 }

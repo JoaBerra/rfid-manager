@@ -2,7 +2,6 @@ package com.joakim.rfidmanager.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.joakim.rfidmanager.data.mqtt.MqttSender
 import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
 import com.joakim.rfidmanager.data.settings.AppSettings
 import com.joakim.rfidmanager.domain.model.PersistedReading
@@ -14,7 +13,9 @@ import kotlinx.coroutines.launch
 
 class ReadingsViewModel(
     private val repository: PersistedReadingRepository,
-    private val settings: AppSettings
+    private val settings: AppSettings,
+    /** Startar ett utskick direkt (tvingar försök, ignorerar backoff). Kopplas till OutboxScheduler. */
+    private val onSendNow: () -> Unit = {}
 ) : ViewModel() {
 
     companion object {
@@ -100,10 +101,15 @@ class ReadingsViewModel(
         _displayLimit.value += currentPageSize()
     }
 
-    fun onTransmit(reading: PersistedReading) {
+    /**
+     * 'Skicka nu': skickar INTE själv och markerar inget som skickat. Är posten misslyckad (FAILED)
+     * köas den om, därefter startas ett tvingat utskick. Posten blir SENT först när brokern
+     * bekräftat leveransen (se OutboxDispatcher).
+     */
+    fun sendNow(reading: PersistedReading) {
         viewModelScope.launch {
-            MqttSender.sendReading(reading)
-            repository.markAsTransmitted(reading.id)
+            repository.requeueIfFailed(reading.id)
+            onSendNow()
         }
     }
 

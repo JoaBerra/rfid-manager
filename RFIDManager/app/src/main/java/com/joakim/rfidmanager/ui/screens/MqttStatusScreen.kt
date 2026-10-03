@@ -116,7 +116,8 @@ fun MqttStatusScreen(
                 items(allReadings.sortedByDescending { it.timestamp }) { reading ->
                     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
                     val timeStr = dateFormat.format(Date(reading.timestamp))
-                    val isPending = !reading.transmitted
+                    val isPending = reading.outboxStatus == com.joakim.rfidmanager.outbox.core.OutboxStatus.PENDING
+                    val isFailed = reading.outboxStatus == com.joakim.rfidmanager.outbox.core.OutboxStatus.FAILED
                     val isLargeText = fontSizeScale > 1.3f
                     Card(
                         modifier = Modifier.fillMaxWidth().clickable { selectedReading = reading },
@@ -141,12 +142,20 @@ fun MqttStatusScreen(
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Surface(
-                                    color = if (isPending) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
+                                    color = when {
+                                        isFailed -> MaterialTheme.colorScheme.error
+                                        isPending -> MaterialTheme.colorScheme.tertiary
+                                        else -> MaterialTheme.colorScheme.primary
+                                    },
                                     shape = MaterialTheme.shapes.extraSmall
                                 ) {
                                     Text(
-                                        if (isPending) str("screen.connectivity.pending") else str("screen.connectivity.transmitted"),
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        when {
+                                            isFailed -> str("outbox.status.failed")
+                                            isPending -> str("outbox.status.pending")
+                                            else -> str("outbox.status.sent")
+                                        },
+                                        color = if (isFailed) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary,
                                         fontSize = (9 * fontSizeScale).sp,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
@@ -193,7 +202,14 @@ fun MqttStatusScreen(
                     DetailRow("Timestamp", dateStr)
                     reading.source?.let { DetailRow("Source", it) }
                     reading.dataPreview?.let { DetailRow("Data Preview", it) }
-                    DetailRow("Transmitted", if (reading.transmitted) "Yes" else "No")
+                    DetailRow(str("outbox.status"), when (reading.outboxStatus) {
+                        com.joakim.rfidmanager.outbox.core.OutboxStatus.PENDING -> str("outbox.status.pending")
+                        com.joakim.rfidmanager.outbox.core.OutboxStatus.SENT -> str("outbox.status.sent")
+                        com.joakim.rfidmanager.outbox.core.OutboxStatus.FAILED -> str("outbox.status.failed")
+                    })
+                    DetailRow(str("outbox.attempts"), reading.attempts.toString())
+                    reading.lastError?.let { DetailRow(str("outbox.last_error"), it) }
+                    reading.sentAt?.let { DetailRow(str("outbox.sent_at"), SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(it))) }
                     reading.memoryBank?.let { DetailRow("Memory Bank", it.toString()) }
                     reading.address?.let { DetailRow("Address", it.toString()) }
                     reading.length?.let { DetailRow("Length", it.toString()) }

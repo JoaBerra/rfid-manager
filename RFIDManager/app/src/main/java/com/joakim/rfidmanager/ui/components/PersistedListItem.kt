@@ -11,6 +11,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.joakim.rfidmanager.domain.model.PersistedReading
+import com.joakim.rfidmanager.outbox.core.OutboxStatus
 import com.joakim.rfidmanager.ui.str
 import java.text.SimpleDateFormat
 import java.util.*
@@ -102,10 +103,10 @@ fun PersistedListItem(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = if (reading.transmitted) str("persisted_item.transmitted") else str("persisted_item.persisted"),
+                    text = outboxStatusText(reading),
                     fontSize = (9 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = if (reading.transmitted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                    color = outboxStatusColor(reading)
                 )
             } else {
                 Row(
@@ -123,27 +124,60 @@ fun PersistedListItem(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = if (reading.transmitted) str("persisted_item.transmitted") else str("persisted_item.persisted"),
+                        text = outboxStatusText(reading),
                         fontSize = (9 * fontSizeScale).sp,
                         fontFamily = FontFamily.Monospace,
-                        color = if (reading.transmitted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                        color = outboxStatusColor(reading)
                     )
                 }
+            }
+
+            // Felorsak för misslyckade/väntande poster som redan försökts
+            if (reading.outboxStatus != OutboxStatus.SENT && !reading.lastError.isNullOrBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "${str("outbox.last_error")}: ${reading.lastError}",
+                    fontSize = (9 * fontSizeScale).sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.error,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Spacer(Modifier.height((12 * fontSizeScale).dp))
 
             Button(
                 onClick = onTransmit,
-                enabled = !reading.transmitted,
+                enabled = reading.outboxStatus != OutboxStatus.SENT,
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text(
-                    if (reading.transmitted) str("persisted_item.transmitted_check") else str("persisted_item.transmit"),
+                    if (reading.outboxStatus == OutboxStatus.SENT) str("persisted_item.sent_check") else str("persisted_item.send_now"),
                     fontSize = (11 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace
                 )
             }
         }
     }
+}
+
+/** Väntar / Skickad / Misslyckad (+ antal försök när det finns). */
+@Composable
+internal fun outboxStatusText(reading: PersistedReading): String {
+    val base = when (reading.outboxStatus) {
+        OutboxStatus.PENDING -> str("outbox.status.pending")
+        OutboxStatus.SENT -> str("outbox.status.sent")
+        OutboxStatus.FAILED -> str("outbox.status.failed")
+    }
+    return if (reading.attempts > 0 && reading.outboxStatus != OutboxStatus.SENT) {
+        "$base · ${str("outbox.attempts")} ${reading.attempts}"
+    } else base
+}
+
+@Composable
+internal fun outboxStatusColor(reading: PersistedReading) = when (reading.outboxStatus) {
+    OutboxStatus.SENT -> MaterialTheme.colorScheme.primary
+    OutboxStatus.FAILED -> MaterialTheme.colorScheme.error
+    OutboxStatus.PENDING -> MaterialTheme.colorScheme.secondary
 }

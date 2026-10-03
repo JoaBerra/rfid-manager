@@ -47,7 +47,9 @@ fun MainScreenHost(
     onToggleScan: () -> Unit = {},
     detectedTags: List<com.joakim.rfidmanager.ui.model.RFIDTag> = emptyList(),
     onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
-    onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {}
+    onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
+    // Utkorg: 'Skicka nu' (tvingat utskick via WorkManager)
+    onSendNow: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -116,7 +118,7 @@ fun MainScreenHost(
                 // Dedicated Readings view – full screen, no internal tabs.
                 if (persistedReadingRepository != null) {
                     val viewModel = remember(persistedReadingRepository, settings) {
-                        ReadingsViewModel(persistedReadingRepository, settings!!)
+                        ReadingsViewModel(persistedReadingRepository, settings!!, onSendNow)
                     }
                     val readings by viewModel.readings.collectAsState()
                     val filter by viewModel.filterType.collectAsState()
@@ -277,7 +279,7 @@ fun MainScreenHost(
                                 items(readings, key = { it.id }) { reading ->
                                     PersistedListItem(
                                         reading = reading,
-                                        onTransmit = { viewModel.onTransmit(reading) },
+                                        onTransmit = { viewModel.sendNow(reading) },
                                         fontSizeScale = fontSizeScale
                                     )
                                 }

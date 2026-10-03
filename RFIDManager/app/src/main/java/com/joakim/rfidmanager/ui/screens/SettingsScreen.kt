@@ -136,6 +136,20 @@ fun SettingsScreen(
                         fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.error
                     )
                 }
+                // Utkorgen: antal poster som väntar på att skickas (och ev. misslyckade)
+                val pendingCount by (repository?.observePendingCount() ?: kotlinx.coroutines.flow.flowOf(0)).collectAsState(0)
+                val failedCount by (repository?.observeFailedCount() ?: kotlinx.coroutines.flow.flowOf(0)).collectAsState(0)
+                Spacer(Modifier.height(Dimens.smallGap))
+                Text(
+                    str("screen.settings.outbox_pending") + ": " + pendingCount,
+                    fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground
+                )
+                if (failedCount > 0) {
+                    Text(
+                        str("screen.settings.outbox_failed") + ": " + failedCount,
+                        fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
 
