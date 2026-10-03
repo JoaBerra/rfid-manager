@@ -78,6 +78,8 @@ dependencies {
     implementation(libs.paho.mqtt.client)
 
     testImplementation(libs.junit)
+    // org.json för JVM-enhetstester (Androids stub-implementation kastar i rena JVM-tester)
+    testImplementation(libs.org.json)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
