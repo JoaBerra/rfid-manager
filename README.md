@@ -135,6 +135,28 @@ Beslut 2026-10-03 (Joakim, tillsammans med Nora Nät som sköter hemmanätet): M
 
 Ändra aldrig bara en av delarna: bara lösenord i brokern gör att både appen och panelen tappar anslutningen.
 
+### Brokerfilerna för inloggning (förberedda, ännu inte tillämpade)
+
+Steg 1 ovan är förberett i `test/fas2-mqtt/mqtt/`: `mosquitto.conf` har `allow_anonymous false`, `password_file` och `acl_file`; `acl` ger `rfid-app` skrivrätt och `rfid-dashboard` läsrätt på `rfidmanager/+/telemetry`; `mosquitto.conf.anon` är den tidigare anonyma konfigurationen (återgångsfil). `docker-compose.hulda.yml` monterar `passwd` och `acl` skrivskyddat. Raden om `allow_anonymous true` ovan beskriver alltså det som körs på ishtar nu, tills nedanstående är genomfört.
+
+**Brokern startar inte utan `mqtt/passwd`** (och Docker skapar en tom katalog med det namnet om filen saknas). Tillämpa därför inte ändringen på ishtar förrän lösenordsfilen finns.
+
+Ordning vid införande:
+
+1. Skapa `test/fas2-mqtt/mqtt/passwd` enligt instruktionen i `mqtt/passwd.example` (`mosquitto_passwd`, användarna `rfid-app` och `rfid-dashboard`). Filen ignoreras av git.
+2. Ställ in lösenorden i appen och för panelen (`MQTT_USERNAME`/`MQTT_PASSWORD`) enligt punkt 2–3 ovan.
+3. Hämta ändringarna till ishtar och starta om: `docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d --force-recreate`.
+4. Testa att appen och panelen ansluter (steg 4 ovan).
+
+Återgång till anonym drift:
+
+```bash
+cp test/fas2-mqtt/mqtt/mosquitto.conf.anon test/fas2-mqtt/mqtt/mosquitto.conf
+docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d --force-recreate
+```
+
+Anonym konfig fungerar även med `passwd`/`acl` monterade, men filerna måste fortfarande finnas för att compose ska starta.
+
 ---
 
 ## Återöppna projektet
