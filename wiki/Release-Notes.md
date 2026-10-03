@@ -35,7 +35,7 @@ created: 2026-06-13
 - **Utkorg (outbox):** avläsningar sparas först som `PENDING` (*Väntar*) och skickas av WorkManager; `SENT` (*Skickad*) först när brokern bekräftat (QoS 1). Meddelandet har `id`, `deviceId`, `messageId`. Room-schema 2 (migrering 1→2). Se [[Outbox]].
 - **Verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern:** avläsningar blir *Väntar* offline, skickas när nätverk finns (även med appen stängd), kommer fram en gång var på dashboarden, status *Skickad*. Room-migrering 1→2 körd på telefonens riktiga databas: 4 poster blev `SENT`.
 - **Dashboard:** dubblettskydd driftsatt på ishtar 2026-10-03 (`c16ef43`; backup `~/backup-dashboard-20261003-115215.tar` på ishtar).
-- **Inte provat på enhet:** felvägarna fel lösenord, 12 misslyckade försök och status `FAILED` (endast JVM-testade).
+- **Felvägarna provade och verifierade av Joakim på telefon 2026-10-03:** fel lösenord → *Väntar* med röd felorsak och växande *Försök*; efter 12 misslyckade försök `FAILED` (nästa post går igenom samma process; *Skicka nu* köar om Misslyckade); telefon omstartad med väntande poster → skickas av sig själva inom ett par minuter när nätet slås på, utan att appen öppnas.
 
 ### Kända begränsningar (kvarstående teknisk skuld)
 

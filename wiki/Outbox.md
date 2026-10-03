@@ -6,7 +6,7 @@ created: 2026-10-03
 
 # Utkorg (outbox)
 
-> **Status:** implementerad på grenen `feature/outbox` (utgår från `feature/sqlite`, ej mergad till `main`). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). Felvägarna fel lösenord, 12 försök och `FAILED` är **inte provade på enhet**. Termer: [[Ordlista]].
+> **Status:** implementerad på grenen `feature/outbox` (utgår från `feature/sqlite`, ej mergad till `main`). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
 
 ## Varför
 
@@ -128,12 +128,13 @@ Begränsningar att känna till: id är `Long`; en post i taget (ingen batch); `d
 | Alla avläsningar kommer fram **en gång var** på dashboarden, status *Skickad* | Manuellt, Joakim 2026-10-03 | ✅ verifierad på enhet |
 | Room-migrering 1→2 på telefonens riktiga databas | Körd på telefonen, Joakim 2026-10-03: 4 poster blev `SENT` | ✅ verifierad på enhet (fortfarande ingen `MigrationTestHelper`) |
 | Dashboard med dubblettskydd driftsatt på ishtar | `c16ef43`; backup `~/backup-dashboard-20261003-115215.tar` på ishtar | ✅ driftsatt 2026-10-03 |
-| Fel lösenord → posten förblir *Väntar* med felorsak och växande *Försök* | — | ⚠️ **inte provat på enhet** (JVM-testat) |
-| 12 misslyckade försök → status `FAILED`, *Skicka nu* köar om | — | ⚠️ **inte provat på enhet** (JVM-testat) |
+| Fel lösenord → posten förblir *Väntar* med felorsak och växande *Försök* | Manuellt på telefonen mot riktiga brokern, Joakim 2026-10-03 (röd felorsak "Not Authorised to connect") | ✅ verifierad på enhet |
+| 12 misslyckade försök → status `FAILED`, *Skicka nu* köar om | Manuellt, Joakim 2026-10-03: posten blev *Misslyckad* (röd), nästa post gick igenom samma process; efter rätt lösenord och *Skicka nu* blev båda Misslyckade posterna *Skickade* | ✅ verifierad på enhet |
+| Telefon omstartad (flygplansläge på) medan poster väntade → skickas när nätet slås på, utan att appen öppnas | Manuellt, Joakim 2026-10-03: alla väntande poster skickades av sig själva inom ett par minuter | ✅ verifierad på enhet |
 
 ## Manuell test på telefonen
 
-*Steg 1–5 är genomförda av Joakim 2026-10-03 med lyckat resultat (se Verifiering). Steg 6 (felvägar) är **inte provat på enhet**.*
+*Steg 1–5 är genomförda av Joakim 2026-10-03 med lyckat resultat (se Verifiering). Steg 6 (felvägar) är också provat och verifierat av Joakim på telefon 2026-10-03 (inkl. omstart med väntande poster).*
 
 1. Installera bygget (Joakim). Starta appen, öppna Inställningar → anteckna *Väntande i utkorgen* (äldre poster med `transmitted=0` skickas nu automatiskt).
 2. Stäng av wifi/mobildata. Skanna tre taggar och spara dem. De visas som **Väntar**; *Väntande i utkorgen* ökar med 3.

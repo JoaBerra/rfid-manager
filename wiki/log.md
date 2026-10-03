@@ -1,5 +1,15 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] verifiering | Felvägarna i utkorgen verifierade på telefon
+
+**Gren:** `feature/outbox`. Beskrivning: [[Outbox]].
+
+**Provade av Joakim 2026-10-03 på telefon mot riktiga brokern, alla lyckade:** (1) fel lösenord → posten står kvar som *Väntar* med röd felorsak ("Not Authorised to connect") och växande *Försök*; (2) efter 12 misslyckade försök blir posten *Misslyckad* (`FAILED`, röd) och nästa post går igenom samma process; efter rätt lösenord och *Skicka nu* blev båda Misslyckade posterna *Skickade* (Misslyckade köas om); (3) telefonen omstartad (flygplansläge på) medan poster väntade: när nätet slogs på skickades alla väntande poster av sig själva inom ett par minuter utan att appen öppnades.
+
+**Dokumentation uppdaterad:** README, [[Outbox]], [[Kanban]] (nytt backlog-kort om omförsöksmönster i omgångar), [[Release-Notes]], [[Produkt-Roadmap]], [[App-Architecture]], [[Ordlista]]. Ingen kod ändrad.
+
+---
+
 ## [2026-10-03] verifiering | Utkorgen verifierad på telefon och mot riktiga brokern
 
 **Gren:** `feature/outbox` (ej mergad). Beskrivning: [[Outbox]].
@@ -8,7 +18,7 @@
 
 **Dashboard:** driftsatt på ishtar med dubblettskydd (`c16ef43`); backup `~/backup-dashboard-20261003-115215.tar` på ishtar.
 
-**Ej provat på enhet (ärligt läge):** felvägarna fel lösenord, 12 misslyckade försök och status `FAILED` — endast JVM-testade. Ligger kvar i [[Kanban]].
+**Felvägarna:** provade och verifierade av Joakim på telefon samma dag 2026-10-03 (se posten *Felvägarna i utkorgen verifierade på telefon* ovan).
 
 **Övrigt:** Kalle PL Fasad är informerad; FASAD-172 (utvärdering av utkorgsmönstret) kan starta. FASAD-repot är inte rört. Merge till `main` återstår (efter `feature/sqlite`). Ingen kod ändrad.
 
