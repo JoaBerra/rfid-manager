@@ -50,20 +50,6 @@ class MainActivity : ComponentActivity() {
 
         nfcManager = AndroidNfcManager(this, appContainer.settings)
 
-        // === Diagnostic: raw socket test (per Gemini analysis) ===
-        // This runs on app start to immediately tell if even a basic TCP socket works from this process.
-        // Look for "MQTT_TEST" in Logcat. If this also throws EPERM, the problem is manifest/permissions/network security config.
-        // If this succeeds but Paho still fails, the issue is inside Paho's socket handling on high targetSdk.
-        Thread {
-            try {
-                val socket = java.net.Socket("192.168.50.151", 1883)
-                android.util.Log.d("MQTT_TEST", "RAW SOCKET SUCCESS: connected=${socket.isConnected}")
-                socket.close()
-            } catch (e: Exception) {
-                android.util.Log.e("MQTT_TEST", "RAW SOCKET FAILED", e)
-            }
-        }.start()
-
         setContent {
             val themeMode by appContainer.settings.themeMode.collectAsState()
             RFIDManagerTheme(themeMode = themeMode) {
