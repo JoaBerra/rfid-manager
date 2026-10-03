@@ -159,7 +159,7 @@ fun PersistedListItem(
                     text = pauseText(policy, reading.attempts, resumeAt, now),
                     fontSize = (9 * fontSizeScale).sp,
                     fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 

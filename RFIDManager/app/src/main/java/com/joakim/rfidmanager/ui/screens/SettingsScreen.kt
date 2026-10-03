@@ -304,7 +304,7 @@ fun SettingsScreen(
                 Spacer(Modifier.height(Dimens.smallGap))
                 Text(
                     str("screen.settings.outbox_rounds_help"),
-                    fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(Dimens.smallGap))
                 @Composable
