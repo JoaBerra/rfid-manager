@@ -11,6 +11,17 @@ created: 2026-06-13
 
 ---
 
+## Ej släppt — gren `feature/sqlite` (Room/SQLite)
+
+**Status:** under arbete på grenen `feature/sqlite`, ej mergad till `main`, ej provad på telefon.
+
+- **Room/SQLite är aktivt** (Room 2.8.5 + KSP 2.3.12 med AGP 9.2.1 / Kotlin 2.2.10) — ersätter JSON-fallback och in-memory-läge. "KSP blockerad" nedan gäller v1.0/v1.0.1.
+- **Engångsmigrering** av `readings.json` till Room i en transaktion; filen döps om till `readings.json.migrated` (raderas aldrig). Vid fel behålls JSON-filen, felet loggas och visas i Inställningar, nytt försök vid nästa start.
+- Enhetlig status `transmitted` vid överföring (tidigare `transmitted via Sparkplug` i JSON-läget).
+- **Känt fel (oförändrat, separat):** `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades.
+
+---
+
 ## v1.0.1 — Fas D testmiljö (ishtar default broker)
 
 **Tag:** `v1.0.1`  
@@ -76,7 +87,7 @@ created: 2026-06-13
 
 ### Kända begränsningar
 
-- **Room-databas:** KSP är inte kompatibelt med AGP 9.2.1 + Kotlin 2.2.10. In-memory persistens + JSON-fallback aktiv — data överlever app-omstart. Riktig Room kräver KSP-version som stödjer AGP 9 built-in Kotlin.
+- **Room-databas (v1.0/v1.0.1; löst på grenen `feature/sqlite`, se ovan):** KSP är inte kompatibelt med AGP 9.2.1 + Kotlin 2.2.10. In-memory persistens + JSON-fallback aktiv — data överlever app-omstart. Riktig Room kräver KSP-version som stödjer AGP 9 built-in Kotlin.
 - **UHF RFID:** Stöds inte via inbyggt NFC. Kräver extern Bluetooth/USB-läsare.
 - **Kryptering:** MQTT utan TLS (dev-läge). Produktion bör använda TLS.
 - **Barcode/EAN:** Inte implementerat — planerat i senare version.

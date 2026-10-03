@@ -105,8 +105,7 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 | ID | Beskrivning |
 |----|-------------|
 | **MCP-server** | Parkerad idé i AH — `mcp-server/`, dashboard + Explorer räcker idag |
-| **Room/KSP** | Riktig Room-databas blockerad av KSP/AGP — in-memory + JSON idag |
-| **SQLite** | SQLite istället för `readings.json` (Room/KSP saknas i bygget) — se *Teknisk skuld* |
+| **Room/SQLite** | **Aktivt på grenen `feature/sqlite`** (Room 2.8.5 + KSP 2.3.12, bygger med AGP 9.2.1). Ej mergat till `main` och ej provat på telefon — se *Room/SQLite (feature/sqlite)* nedan |
 | **hemmanatverk** | Uppdatera nätverksdiagram (falstaff avvecklad) |
 
 ### Teknisk skuld
@@ -116,7 +115,21 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 - ~~MQTT utan autentisering på ishtar~~ — löst: inloggning aktiv sedan 2026-10-03 (se avsnittet *Nätverk och säkerhet (MQTT)*)
 - Appen visar inget tydligt fel vid felaktigt lösenord – verifiera att meddelandet *Misslyckades ✗* (commit `12012a2`) faktiskt visas
 - Testskripten i `test/fas2-mqtt/mqtt/` och MQTT Explorer ansluter anonymt och behöver användare (`rfid-app`/`rfid-dashboard`) nu när brokern kräver inloggning
-- SQLite istället för `readings.json` (Room/KSP saknas i bygget)
+- ~~SQLite istället för `readings.json` (Room/KSP saknas i bygget)~~ — löst på grenen `feature/sqlite` (väntar på test på telefon och merge)
+- **Bugg:** `ReadingsViewModel.onTransmit` anropar `repository.markAsTransmitted(id)` oavsett om MQTT-publiceringen lyckades (`MqttSender.sendReading` returnerar inget resultat som kontrolleras). En avläsning kan alltså stå som *skickad* trots att inget nått brokern. Beteendet är medvetet oförändrat i `feature/sqlite` och ska rättas separat (backlog)
+- Backlog: efter lyckad migrering finns `readings.json.migrated` kvar för alltid (raderas aldrig automatiskt) — bestäm när den kan tas bort manuellt
+
+---
+
+## Room/SQLite (feature/sqlite)
+
+Grenen `feature/sqlite` ersätter JSON-/minneslagringen med Room (SQLite): `AppDatabase` version 1, tabell `persisted_readings` med index på `timestamp` och `transmitted`, schema exporterat i `RFIDManager/app/schemas/`. Bygget använder KSP (`ksp = 2.3.12`) och Room 2.8.5; AGP 9.2.1, Kotlin 2.2.10 och Gradle 9.4.1 är oförändrade. Ingen `fallbackToDestructiveMigration`.
+
+**Migrering vid första start efter uppdatering:** `filesDir/readings.json` läses in i Room i en enda transaktion (id bevaras; id-krockar och dubbletter hanteras utan att data tappas), därefter döps filen om till `readings.json.migrated` (raderas aldrig). Misslyckas migreringen ligger JSON-filen kvar orörd, felet loggas (taggen `JsonToRoomMigration`) och visas i Inställningar → Lagring, och migreringen provas igen vid nästa start. Under tiden sparas nya avläsningar i Room men JSON-innehållet visas inte förrän migreringen lyckats.
+
+Status vid överföring är nu alltid `transmitted` (tidigare `transmitted via Sparkplug` i JSON-läget; äldre värden normaliseras vid migreringen).
+
+Bygga och testa: `cd RFIDManager && ANDROID_HOME=~/Android/Sdk ./gradlew assembleDebug testDebugUnitTest`.
 
 ---
 
