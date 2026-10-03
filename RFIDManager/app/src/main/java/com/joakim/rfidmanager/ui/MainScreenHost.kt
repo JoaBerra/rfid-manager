@@ -334,6 +334,7 @@ fun MainScreenHost(
                     settings = settings,
                     repository = persistedReadingRepository,
                     mqttStatus = mqttManager?.connectionStatus,
+                    mqttError = mqttManager?.lastError,
                     onReconnect = { host, port, username, password ->
                         mqttManager?.reconnect(host, port, username, password)
                     },

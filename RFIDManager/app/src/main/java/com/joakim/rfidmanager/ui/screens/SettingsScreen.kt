@@ -35,6 +35,7 @@ fun SettingsScreen(
     settings: AppSettings? = null,
     repository: PersistedReadingRepository? = null,
     mqttStatus: StateFlow<String>? = null,
+    mqttError: StateFlow<String>? = null,
     onReconnect: (host: String, port: Int, username: String, password: String) -> Unit = { _, _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
@@ -58,6 +59,7 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val connectingStr = str("screen.settings.broker_connecting")
+    val connectionState by mqttStatus?.collectAsState() ?: remember { mutableStateOf("") }
 
     Box(
         modifier = modifier
@@ -314,16 +316,30 @@ fun SettingsScreen(
                         passwordInput = ""
                         onReconnect(hostInput, port, username, if (username.isEmpty()) "" else password)
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("$hostInput:$port — $connectingStr")
-                            mqttStatus?.first { it == "CONNECTING..." }
-                            mqttStatus?.first { it != "CONNECTING..." }?.let { status ->
-                                when (status) {
-                                    "CONNECTED" -> snackbarHostState.showSnackbar("$hostInput:$port — Ansluten ✓")
-                                    else -> snackbarHostState.showSnackbar("$hostInput:$port — Misslyckades ✗")
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            // "Ansluter…" visas tills resultatet finns (blockerar inte väntan på status).
+                            val connectingJob = launch {
+                                snackbarHostState.showSnackbar("$hostInput:$port — $connectingStr", duration = SnackbarDuration.Indefinite)
+                            }
+                            // reconnect() sätter CONNECTING... synkront, så första icke-CONNECTING-värdet är resultatet.
+                            val status = mqttStatus?.let { flow ->
+                                kotlinx.coroutines.withTimeoutOrNull(15_000L) { flow.first { it != "CONNECTING..." } }
+                            }
+                            connectingJob.cancel()
+                            if (mqttStatus != null) {
+                                val error = mqttError?.value.orEmpty()
+                                val message = when {
+                                    status == "CONNECTED" -> "$hostInput:$port — Ansluten ✓"
+                                    status == null -> "$hostInput:$port — Misslyckades ✗ (tidsgräns)"
+                                    error.isNotEmpty() -> "$hostInput:$port — Misslyckades ✗: $error"
+                                    else -> "$hostInput:$port — Misslyckades ✗"
                                 }
+                                snackbarHostState.showSnackbar(message)
                             }
                         }
                     },
+                    // Förhindra dubbla anslutningsförsök medan en anslutning pågår.
+                    enabled = connectionState != "CONNECTING...",
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(str("screen.settings.broker_connect"), fontFamily = FontFamily.Monospace, fontSize = 11.sp)

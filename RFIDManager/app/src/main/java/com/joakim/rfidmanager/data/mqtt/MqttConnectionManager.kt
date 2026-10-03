@@ -27,6 +27,10 @@ class MqttConnectionManager(
     private val _connectionStatus = MutableStateFlow("DISCONNECTED")
     val connectionStatus: StateFlow<String> = _connectionStatus.asStateFlow()
 
+    private val _lastError = MutableStateFlow("")
+    /** Felorsak från senaste misslyckade anslutningsförsöket; tom sträng vid lyckad anslutning. */
+    val lastError: StateFlow<String> = _lastError.asStateFlow()
+
     private val _lastHeartbeat = MutableStateFlow("")
     val lastHeartbeat: StateFlow<String> = _lastHeartbeat.asStateFlow()
 
@@ -41,9 +45,14 @@ class MqttConnectionManager(
         connect()
     }
 
-    fun connect() {
+    fun connect(previous: MqttClient? = null) {
         keepAliveJob?.cancel()
         scope.launch {
+            // Gammal klient stängs på IO-tråden (inte huvudtråden) innan ny anslutning byggs.
+            previous?.let {
+                try { it.disconnect() } catch (_: Exception) {}
+                try { it.close() } catch (_: Exception) {}
+            }
             connectInternal()
         }
         keepAliveJob = scope.launch {
@@ -66,13 +75,12 @@ class MqttConnectionManager(
         this.username = username
         this.password = password
         keepAliveJob?.cancel()
-        try {
-            client?.disconnect()
-            client?.close()
-            client = null
-        } catch (_: Exception) {}
-        _connectionStatus.value = "DISCONNECTED"
-        connect()
+        val previous = client
+        client = null
+        // Sätts direkt (synkront) så att UI:t aldrig missar övergången till CONNECTING.
+        _lastError.value = ""
+        _connectionStatus.value = "CONNECTING..."
+        connect(previous)
     }
 
     private suspend fun connectInternal() = withContext(Dispatchers.IO) {
@@ -94,13 +102,27 @@ class MqttConnectionManager(
 
             mqttClient.connect(options)
             client = mqttClient
+            _lastError.value = ""
             _connectionStatus.value = "CONNECTED"
             updateHeartbeat("Connected")
             Log.i(tag, "Connected to $brokerUrl" + if (username.isNotEmpty()) " as $username" else "")
         } catch (e: Exception) {
             Log.e(tag, "Connection failed", e)
+            _lastError.value = describeError(e)
             _connectionStatus.value = "DISCONNECTED"
         }
+    }
+
+    private fun describeError(e: Exception): String {
+        val reason = if (e is MqttException) when (e.reasonCode) {
+            4 -> "Fel användarnamn eller lösenord"
+            5 -> "Ej behörig"
+            32103 -> "Kan inte nå brokern"
+            32110 -> "Anslutning pågår redan"
+            else -> null
+        } else null
+        val detail = e.cause?.message ?: e.message ?: e.javaClass.simpleName
+        return if (reason != null) "$reason ($detail)" else detail
     }
 
     fun disconnect() {
