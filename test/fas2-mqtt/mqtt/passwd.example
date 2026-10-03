@@ -1,0 +1,10 @@
+# EXEMPEL – detta är inte en riktig lösenordsfil och innehåller inga hashar.
+# Den riktiga filen heter mqtt/passwd, skapas lokalt och ligger i .gitignore.
+# Brokern startar inte utan mqtt/passwd (se mosquitto.conf: password_file).
+#
+# Skapa den från repots rot (ingen broker behöver köra; lösenordet frågas interaktivt):
+#   docker run --rm -it -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd -c /work/passwd rfid-app
+# Lägg sedan till nästa användare UTAN -c (med -c skrivs filen över):
+#   docker run --rm -it -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd /work/passwd rfid-dashboard
+#
+# Förväntade användare (se mqtt/acl): rfid-app, rfid-dashboard
