@@ -50,7 +50,7 @@ All dokumentation är **append-only** eller versionshanterad via log.md för max
 **Testmiljö:**
 - Enhet: Samsung Galaxy Note 10 (SM-N970F/DS, internationell Exynos)
 - App: RFID Manager (debug build byggd i Android Studio, targetSdk 36)
-- Nätverk: Lokal Wi-Fi, broker på 192.168.50.107:1883 (Docker eclipse-mosquitto)
+- Nätverk: Lokal Wi-Fi, broker på 192.168.50.107:1883 (Docker eclipse-mosquitto) *(historiskt: falstaff avvecklad; broker nu ishtar 192.168.50.151 med inloggning sedan 2026-10-03)*
 - Valideringssida: Python subscriber (`test_subscriber_persist.py`) som lyssnar på `rfidmanager/+/telemetry` och persisterar till SQLite
 
 **Omfattning – Vad testades i UAT (Kund-perspektiv):**
@@ -81,7 +81,7 @@ Se full historik, alla tidigare försök, Samsung-inställningar och Logcat i:
 **Öppna punkter / Kvar i Fas 2 vid godkännande:**
 - EAN-streckkodsläsning via kamera (enligt ursprunglig Fas 2-mål)
 - ViewModel-refaktor för bättre state-hantering (istället för direkt i Screen)
-- Reaktivera riktig Room-databas (KSP) istället för in-memory fallback
+- Reaktivera riktig Room-databas (KSP) istället för in-memory fallback *(löst 2026-10-03 på `feature/sqlite`; se [[Release-Notes]])*
 - Ytterligare polish, felhantering och UX-förbättringar
 - Kryptering: **Arkitekturbeslut** – Produktion skall använda krypterad kommunikation (MQTT over TLS). Under utveckling är okrypterad (tcp://) godkänd.
 
@@ -192,7 +192,7 @@ Se detaljerat utkast nedan (baserat på specifikationerna). Kriterierna är mät
 **Status:** Uppdaterade. Kund granskar och godkänner.
 
 ### 6. Risker & öppen punkter
-- KSP/Room-processor: Dual-mode behålls som fallback under utveckling.
+- KSP/Room-processor: Dual-mode behålls som fallback under utveckling. *(Historiskt/löst 2026-10-03: dual-mode borttaget på `feature/sqlite`.)*
 - Scope creep: Lead flaggar omedelbart vid förslag utanför UI-reallokering + polish.
 - PC-stöd: Hålls lättviktigt (logg + MQTT Explorer-dokumentation).
 
@@ -340,7 +340,7 @@ Nedanstående punkter är godkända av Kund (Joa) att införas innan Fas 3 sign-
 | Navigation (4 vyer, bottom nav) | ✅ |
 | ViewModels per vy | ✅ |
 | Spacing / breathing room (Dimens) | ✅ |
-| Room/JSON-fallback persistens | ✅ |
+| Room/JSON-fallback persistens | ✅ *(godkänt 2026-06-10 som JSON-fallback; riktig Room löst 2026-10-03 på `feature/sqlite`, ej formellt UAT-signerat här)* |
 | Polish (empty states, loading, error) | ✅ |
 | PC-stöd (subscriber + MQTT Explorer-dok) | ✅ |
 | Alla 10 UAT-punkter införda | ✅ |
@@ -581,7 +581,7 @@ Punkt 4.5 (Haptic + ljud vid scan) godkänd av Kund för Fas 4.
 **Testmiljö:**
 - Enhet: Samsung Galaxy Note 10 (SM-N970F/DS)
 - App: RFID Manager (debug build via `adb install`)
-- Broker: 192.168.50.107:1883 (Docker eclipse-mosquitto)
+- Broker: 192.168.50.107:1883 (Docker eclipse-mosquitto) *(historiskt: se ovan, nu ishtar med inloggning)*
 - MQTT-klient: Paho 1.2.5
 
 **Omfattning:**

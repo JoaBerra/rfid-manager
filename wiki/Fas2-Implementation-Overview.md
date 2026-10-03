@@ -92,6 +92,6 @@ All kod följer Fas 1:s stil: rich comments, exakta namn från nomenclature, ind
 - Full end-to-end validerad: NFC write → persist → Transmit → MQTT (Sparkplug-stil) → subscriber + SQLite på testdator.
 - EPERM-problem på Samsung debug build löst (manifest + network_security_config + Samsung-inställningar).
 - **UAT godkänd av Kund för Fas 2** (se [[Kundrelationer-och-Acceptans]] för formell tidsstämplad sign-off 2026-06-07).
-- Öppna punkter vid godkännande: EAN, ViewModel, riktig Room (KSP), polish + kryptering i prod (dev okrypterat godkänt).
+- Öppna punkter vid godkännande: EAN, ViewModel, riktig Room (KSP) *(löst 2026-10-03 på `feature/sqlite`)*, polish + kryptering i prod (dev okrypterat godkänt).
 - Se även den formella buggrapporten [[bugs/2026-06-07-mqtt-socket-epem-samsung-note10]] (Resolved).
 

@@ -8,6 +8,8 @@ toc-depth: 2
 numbersections: true
 ---
 
+> **Uppdaterad 2026-10-03 (text):** Avsnitt om lagring (Room/SQLite), MQTT-inloggning, Anslut-knappen och App-info beskriver grenen `feature/sqlite` och brokern på ishtar. Skärmbilderna och `manual.pdf` är från v1.0 och är **inte** omgenererade; för v1.0.1 (JSON-fil som lagring) gäller de äldre uppgifterna märkta *(v1.0.1)*.
+
 # Introduktion
 
 **RFID Manager** är en Android-applikation för att läsa och skriva RFID- och NFC-taggar.
@@ -16,8 +18,8 @@ Appen är utvecklad för Samsung Galaxy Note 10 (Android 12) och liknande enhete
 ## Huvudfunktioner
 
 - **NFC-läsning och skrivning** av RFID-taggar (NFC Type 5)
-- **Persisterad historik** — alla avläsningar sparas lokalt och finns kvar efter omstart
-- **MQTT-publicering** — skicka avläsningar till en MQTT-broker för vidare bearbetning
+- **Persisterad historik** — alla avläsningar sparas lokalt (Room/SQLite på `feature/sqlite`; JSON-fil i v1.0.1) och finns kvar efter omstart
+- **MQTT-publicering** — skicka avläsningar till en MQTT-broker för vidare bearbetning (brokern på ishtar kräver användarnamn och lösenord sedan 2026-10-03)
 - **Radarvy** — visuell representation av detekterade taggar med svepande radar
 - **Export** — exportera avläsningar som CSV eller JSON
 - **Anpassning** — språk, textstorlek, mörkt läge, haptik och ljud
@@ -30,7 +32,8 @@ Appen är utvecklad för Samsung Galaxy Note 10 (Android 12) och liknande enhete
 | Targetsdk | 36 |
 | NFC-standard | ISO/IEC 15693 (NFC Type 5) |
 | MQTT-klient | Paho 1.2.5 |
-| Persistens | JSON-fallback i fil (Room redo när KSP stödjer AGP 9) |
+| Persistens | Room/SQLite (enda lagring, `feature/sqlite`). *(v1.0.1: JSON-fallback i fil — Room var blockerad av KSP/AGP 9; historiskt/löst)* |
+| MQTT-inloggning | Krävs mot ishtar sedan 2026-10-03 (användarnamn + lösenord i Settings) |
 
 # Navigering
 
@@ -127,7 +130,7 @@ Varje avläsningskort visar:
 | **Source** | Källa (t.ex. "NFC Manual Read") |
 | **Typ** | RFID / EAN |
 | **Data Preview** | Förhandsvisning av läst data |
-| **Status** | Transmit-status (Pending / Transmitted) |
+| **Status** | Transmit-status (Pending / Transmitted). *Transmitted betyder att appen försökt skicka; det är ännu ingen kvittens från brokern (känd teknisk skuld).* |
 
 # Connectivity — MQTT-status
 
@@ -140,7 +143,7 @@ Connectivity-vyn visar anslutningsstatus till MQTT-brokern samt historik över s
 Överst visas en statusindikator:
 
 - **Grön** — ansluten till broker
-- **Röd** — frånkopplad (appen försöker återansluta automatiskt var 35:e sekund)
+- **Röd** — frånkopplad (appen försöker återansluta automatiskt var 35:e sekund). Visas även om brokern nekar inloggningen (saknat eller fel användarnamn/lösenord)
 
 Ikonen visar texten "CONNECTED" eller "DISCONNECTED".
 
@@ -217,6 +220,27 @@ Två knappar för att exportera alla avläsningar:
 Vid tryck öppnas Android Share Sheet där du kan spara filen, mejla den, etc.
 Knapparna är inaktiva (grå) om inga avläsningar finns.
 
+## MQTT-anslutning
+
+Fälten för att nå brokern:
+
+| Fält | Beskrivning |
+|---|---|
+| **Värd (IP eller hostname)** | Brokerns adress (standard: ishtar `192.168.50.151`) |
+| **Port** | Standard `1883` |
+| **Användarnamn (valfritt)** | Appen använder `rfid-app`. Tomt = anonym anslutning, som brokern på ishtar **nekar** |
+| **Lösenord** | Lagras krypterat. Redan sparat lösenord visas som *(sparat – lämna tomt för att behålla)* |
+
+Tryck **Anslut**. Knappen ger bekräftelse redan vid första tryck: *Ansluter...* och därefter *Ansluten* eller *Misslyckades* med felorsak. Knappen är inaktiv medan anslutningen pågår. Skriv aldrig lösenordet någon annanstans än i appens fält.
+
+## Lagring
+
+Under **Lagring** visas att avläsningarna sparas i *Room (SQLite)*. Första gången appen startas efter uppdatering flyttas gamla avläsningar från `readings.json` till databasen (migrering). Lyckas det visas hur många poster som flyttades; misslyckas det visas felet, de gamla avläsningarna ligger kvar i filen och migreringen provas igen vid nästa start.
+
+## App-info
+
+Visar **Version**, **Bygg** (byggtid och git-commit, t.ex. `2026-10-03 11:03 · 48e8a89`; `-dirty` efter commit betyder ej incheckade ändringar), ramverk och MQTT-klient. Värdena kommer från bygget och uppdateras vid varje bygge.
+
 ## Sidstorlek (Page Size)
 
 Skjutreglage för hur många avläsningar som visas per "Ladda fler" i Readings-vyn.
@@ -279,8 +303,9 @@ Skjutreglage för hur många avläsningar som visas per "Ladda fler" i Readings-
 
 | Orsak | Lösning |
 |---|---|
-| Broker ej igång | Starta Docker-behållaren: `docker start mosquitto` |
-| Fel IP/port | Kontrollera broker-URL i koden (för närvarande hårdkodad) |
+| Broker ej igång | Starta brokern på ishtar enligt `wiki/Testmiljo-hulda.md` (container `rfid-mqtt-hulda`) |
+| Fel IP/port | Kontrollera värd och port under Settings → MQTT-anslutning (inte längre hårdkodat sedan v1.0) |
+| Saknat/fel användarnamn eller lösenord | Brokern på ishtar nekar anonym anslutning. Fyll i användarnamn och lösenord och tryck Anslut; *Misslyckades* visas med felorsak |
 | Nätverksproblem | Kontrollera att telefonen och brokern är på samma nätverk |
 
 ## Taggen detekteras inte
@@ -320,8 +345,16 @@ Meddelanden publiceras på topic `rfidmanager/<UID>/telemetry` i JSON-format:
 
 ## Filstruktur för sparade data
 
-Avläsningar sparas i appens interna lagring: `context.filesDir/readings.json`.
+Avläsningar sparas i en Room/SQLite-databas (`rfid_manager_database`, tabell `persisted_readings`) i appens privata lagring. Vid omstart finns alla avläsningar kvar.
 
-Formatet är en JSON-array av samma struktur som ovan (utan sparkplug-fältet).
+**Äldre format (v1.0.1, historiskt):** avläsningar låg i `context.filesDir/readings.json`, en JSON-array av samma struktur som ovan (utan sparkplug-fältet). Efter lyckad migrering döps filen om till `readings.json.migrated` och raderas aldrig.
 
-Vid omstart läses filen in och alla avläsningar återställs.
+## Begrepp
+
+| Term | Konnotation | Denotation |
+|---|---|---|
+| **Migrering** | Engångsflytt av gamla avläsningar från `readings.json` till databasen vid första start efter uppdatering | Inte en flytt mellan telefoner och inte en uppdatering av appen |
+| **MQTT-inloggning** | Brokern kräver användarnamn och lösenord innan appen får skicka | Inte kryptering — trafiken är fortfarande klartext |
+| **Transmitted** | Avläsningen är markerad som skickad | Inte en bekräftelse från brokern |
+
+Fler termer: `wiki/Ordlista.md`.

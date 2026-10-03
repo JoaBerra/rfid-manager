@@ -4,7 +4,8 @@
 
 | Fält | Värde |
 |------|-------|
-| **Projektstatus** | **Pausat** (återöppningsbart) — avslutat 2026-07-14 |
+| **Projektstatus** | **Pausat** (återöppningsbart) — avslutat 2026-07-14. Underhåll 2026-10-03: MQTT-inloggning (på `main`) och Room/SQLite (på `feature/sqlite`) |
+| **Pågående gren** | `feature/sqlite` — Room/SQLite som enda lagring, verifierad på telefonen 2026-10-03, **ännu inte mergad till `main`** (se *Room/SQLite (feature/sqlite)* nedan) |
 | **Senaste release** | [v1.0.1](https://github.com/JoaBerra/rfid-manager/releases/tag/v1.0.1) |
 | **Dev-host** | fakir (Arch/Omarchy) |
 | **Testmiljö** | ishtar `192.168.50.151` (MQTT + dashboard på hulda/Proxmox) |
@@ -16,8 +17,10 @@ Projektet är **avslutat i nuvarande fas**: appen fungerar mot testlabbet, Fas D
 
 ## Vad som levererats
 
-- Android-app (Kotlin, Jetpack Compose) — NFC läs/skriv, persistens, MQTT
+- Android-app (Kotlin, Jetpack Compose) — NFC läs/skriv, persistens (v1.0.1: JSON-fil; `feature/sqlite`: Room/SQLite), MQTT
 - Default broker → **ishtar** `192.168.50.151:1883` (Uppdrag 004, v1.0.1)
+- **MQTT-inloggning** på ishtar sedan 2026-10-03 (`rfid-app` skriver, `rfid-dashboard` läser, ACL) — på `main` (`f08ff22`)
+- **Room/SQLite** som enda lagring på grenen `feature/sqlite` (migrering från `readings.json` verifierad på telefonen 2026-10-03), dynamisk version/byggtid/commit i Inställningar
 - Testmiljö Fas D: Proxmox hulda + gäst ishtar, dashboard `:8000`
 - Dev-baseline på **fakir**: Android SDK 36, git/gh, MQTT Explorer, wiki
 - Uppdrag 001–005 godkända (onboarding → falstaff-avveckling)
@@ -62,7 +65,7 @@ ssh ishtar
 # Se wiki/Testmiljo-hulda.md och setup/ishtar-start-mqtt.sh
 ```
 
-- MQTT: `192.168.50.151:1883`
+- MQTT: `192.168.50.151:1883` — **kräver inloggning** (anonym anslutning nekas); se *Nätverk och säkerhet (MQTT)* nedan
 - Dashboard: `http://192.168.50.151:8000`
 - MQTT Explorer på fakir: `mqtt-explorer`
 
@@ -74,6 +77,7 @@ ssh ishtar
 | Testlabb | `wiki/Testmiljo-hulda.md` |
 | Kanban / backlog | `wiki/Kanban.md` |
 | Release notes | `wiki/Release-Notes.md` |
+| Ordlista (Konnotation \| Denotation) | `wiki/Ordlista.md` |
 | UAT | `wiki/UAT-fakir-smoke-test.md` |
 
 Diagnostik GitHub: `bash setup/github-fakir.sh`
@@ -88,9 +92,11 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 
 | ID | Beskrivning | Referens |
 |----|-------------|----------|
-| **Fas-101** | Full MQTT-konfig i appen (TLS, auth, Sparkplug, topics, QoS, testknapp) | `wiki/Fas-101-MQTT-Configuration.md` |
+| **Fas-101** | Full MQTT-konfig i appen. *Autentisering (användarnamn/lösenord, Anslut-knapp med bekräftelse) är klar 2026-10-03*; kvar: TLS, Sparkplug-id, topics, QoS, testknapp | `wiki/Fas-101-MQTT-Configuration.md` |
+| **markAsTransmitted** | Rätta att status `transmitted` sätts oavsett om MQTT-publiceringen lyckades (se *Teknisk skuld*; möjlig lösning: *outbox*, se `wiki/Ordlista.md`) | `ReadingsViewModel.onTransmit` |
+| **Merge** | Besluta om och merga `feature/sqlite` till `main` (verifierad på telefon, `48e8a89`) | *Room/SQLite (feature/sqlite)* |
 | **UAT NFC** | NFC-scan/write inte körd i senaste smoke — verifiera på Note 10 | `wiki/UAT-fakir-smoke-test.md` |
-| **Release v1.0.2** | Ev. ny APK efter `network_security_config` (endast `.151`) | `wiki/Release-Notes.md` |
+| **Release v1.0.2** | Ev. ny APK efter `network_security_config` (endast `.151`), MQTT-inloggning och Room. `assembleRelease` kräver `~/.android/debug.keystore`, som saknas på fakir | `wiki/Release-Notes.md` |
 
 ### Medel prioritet
 
@@ -105,29 +111,34 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 | ID | Beskrivning |
 |----|-------------|
 | **MCP-server** | Parkerad idé i AH — `mcp-server/`, dashboard + Explorer räcker idag |
-| **Room/SQLite** | **Aktivt på grenen `feature/sqlite`** (Room 2.8.5 + KSP 2.3.12, bygger med AGP 9.2.1). Ej mergat till `main` och ej provat på telefon — se *Room/SQLite (feature/sqlite)* nedan |
+| **Room/SQLite** | **Klar på grenen `feature/sqlite`** (Room 2.8.5 + KSP 2.3.12, AGP 9.2.1) och verifierad på telefonen 2026-10-03. Väntar på merge till `main` — se *Merge* ovan och *Room/SQLite (feature/sqlite)* nedan |
 | **hemmanatverk** | Uppdatera nätverksdiagram (falstaff avvecklad) |
 
 ### Teknisk skuld
 
-- `README` var inaktuell före 2026-07-14 (rättad i samband med avslut)
-- README i root pekade på icke-existerande `rfid-manager-android`-repo
+- `README` var inaktuell före 2026-07-14 (rättad i samband med avslut) *(historiskt/löst)*
+- README i root pekade på icke-existerande `rfid-manager-android`-repo *(historiskt/löst)*
 - ~~MQTT utan autentisering på ishtar~~ — löst: inloggning aktiv sedan 2026-10-03 (se avsnittet *Nätverk och säkerhet (MQTT)*)
-- Appen visar inget tydligt fel vid felaktigt lösenord – verifiera att meddelandet *Misslyckades ✗* (commit `12012a2`) faktiskt visas
-- Testskripten i `test/fas2-mqtt/mqtt/` och MQTT Explorer ansluter anonymt och behöver användare (`rfid-app`/`rfid-dashboard`) nu när brokern kräver inloggning
-- ~~SQLite istället för `readings.json` (Room/KSP saknas i bygget)~~ — löst på grenen `feature/sqlite` (väntar på test på telefon och merge)
-- **Bugg:** `ReadingsViewModel.onTransmit` anropar `repository.markAsTransmitted(id)` oavsett om MQTT-publiceringen lyckades (`MqttSender.sendReading` returnerar inget resultat som kontrolleras). En avläsning kan alltså stå som *skickad* trots att inget nått brokern. Beteendet är medvetet oförändrat i `feature/sqlite` och ska rättas separat (backlog)
+- Felmeddelandet vid fel lösenord (*Misslyckades ✗* med felorsak, commit `12012a2`) är **inte visuellt verifierat** på telefonen — provas separat. Att Anslut-knappen ger bekräftelse redan vid första tryck är däremot verifierat (`12012a2`)
+- Testskripten i `test/fas2-mqtt/mqtt/` och MQTT Explorer ansluter anonymt och fungerar inte mot brokern förrän de får användare (`rfid-app`/`rfid-dashboard`) — **kvarstående teknisk skuld**
+- ~~SQLite istället för `readings.json` (Room/KSP saknas i bygget)~~ — löst på grenen `feature/sqlite` (commits `eab6b6a..48e8a89`), verifierad på telefonen 2026-10-03: 3 poster migrerade, databasen kontrollerad. Väntar på merge till `main`
+- `assembleRelease` misslyckas på fakir eftersom `~/.android/debug.keystore` saknas (`signingConfigs.release` pekar dit); `assembleDebug` påverkas inte
+- **Bugg (kvarstående teknisk skuld):** `ReadingsViewModel.onTransmit` anropar `repository.markAsTransmitted(id)` oavsett om MQTT-publiceringen lyckades (`MqttSender.sendReading` returnerar inget resultat som kontrolleras). En avläsning kan alltså stå som *skickad* trots att inget nått brokern. Beteendet är medvetet oförändrat i `feature/sqlite` och ska rättas separat (backlog; möjlig lösning: *outbox*, se `wiki/Ordlista.md`)
 - Backlog: efter lyckad migrering finns `readings.json.migrated` kvar för alltid (raderas aldrig automatiskt) — bestäm när den kan tas bort manuellt
 
 ---
 
 ## Room/SQLite (feature/sqlite)
 
+**Status 2026-10-03:** Room/SQLite är **enda lagringen** på `feature/sqlite` (commits `eab6b6a..48e8a89`) och är verifierad på telefonen: 3 poster migrerades från `readings.json` och databasen kontrollerades. Grenen är **ännu inte mergad till `main`**; `main` och GitHub Release v1.0.1 använder fortfarande JSON-filen. Termer (Room, KSP, migrering, outbox m.fl.) är definierade i `wiki/Ordlista.md`.
+
 Grenen `feature/sqlite` ersätter JSON-/minneslagringen med Room (SQLite): `AppDatabase` version 1, tabell `persisted_readings` med index på `timestamp` och `transmitted`, schema exporterat i `RFIDManager/app/schemas/`. Bygget använder KSP (`ksp = 2.3.12`) och Room 2.8.5; AGP 9.2.1, Kotlin 2.2.10 och Gradle 9.4.1 är oförändrade. Ingen `fallbackToDestructiveMigration`.
 
 **Migrering vid första start efter uppdatering:** `filesDir/readings.json` läses in i Room i en enda transaktion (id bevaras; id-krockar och dubbletter hanteras utan att data tappas), därefter döps filen om till `readings.json.migrated` (raderas aldrig). Misslyckas migreringen ligger JSON-filen kvar orörd, felet loggas (taggen `JsonToRoomMigration`) och visas i Inställningar → Lagring, och migreringen provas igen vid nästa start. Under tiden sparas nya avläsningar i Room men JSON-innehållet visas inte förrän migreringen lyckats.
 
-Status vid överföring är nu alltid `transmitted` (tidigare `transmitted via Sparkplug` i JSON-läget; äldre värden normaliseras vid migreringen).
+Status vid överföring är nu alltid `transmitted` (tidigare `transmitted via Sparkplug` i JSON-läget; äldre värden normaliseras vid migreringen). Det är en markering, inte ett kvitto från brokern — se *Teknisk skuld* (`markAsTransmitted`).
+
+**Bygginfo i Inställningar (`48e8a89`):** App-info visar nu riktig version (`VERSION_NAME`), byggtid och git-commit (`BuildConfig.BUILD_TIME` / `GIT_COMMIT`, suffix `-dirty` vid ej incheckade ändringar) i stället för den hårdkodade texten *Fas 5 (juni 2026)* *(historiskt/löst)*. Värdena beräknas vid varje Gradle-körning; aktiveras konfigurationscache måste logiken flyttas (kommentar i `app/build.gradle.kts`).
 
 Bygga och testa: `cd RFIDManager && ANDROID_HOME=~/Android/Sdk ./gradlew assembleDebug testDebugUnitTest`.
 

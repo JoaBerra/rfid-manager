@@ -7,18 +7,35 @@ created: 2026-06-13
 # Release Notes — RFID Manager
 
 > **Dokument:** 5.3  
-> **Senast uppdaterad:** 2026-07-14
+> **Senast uppdaterad:** 2026-10-03
 
 ---
 
-## Ej släppt — gren `feature/sqlite` (Room/SQLite)
+## Ej släppt — MQTT-inloggning och gren `feature/sqlite` (Room/SQLite)
 
-**Status:** under arbete på grenen `feature/sqlite`, ej mergad till `main`, ej provad på telefon.
+**Status (2026-10-03):** Inget av detta är taggat eller släppt som APK. Senaste release är fortfarande v1.0.1.
 
-- **Room/SQLite är aktivt** (Room 2.8.5 + KSP 2.3.12 med AGP 9.2.1 / Kotlin 2.2.10) — ersätter JSON-fallback och in-memory-läge. "KSP blockerad" nedan gäller v1.0/v1.0.1.
-- **Engångsmigrering** av `readings.json` till Room i en transaktion; filen döps om till `readings.json.migrated` (raderas aldrig). Vid fel behålls JSON-filen, felet loggas och visas i Inställningar, nytt försök vid nästa start.
+### MQTT-inloggning (på `main`, commit `f08ff22`)
+
+- Brokern på ishtar kräver inloggning sedan 2026-10-03 (`allow_anonymous false`, `password_file`, `acl_file`). `rfid-app` får skriva och `rfid-dashboard` får läsa `rfidmanager/+/telemetry` (ACL). Se README, avsnittet *Nätverk och säkerhet (MQTT)*.
+- `passwd` och `acl` ägs av uid 1883 med mode `0600`; lösenord skapas med `mosquitto_passwd -b` via `read -rs`.
+- Appen: Inställningar → MQTT-anslutning med *Användarnamn* och *Lösenord* (lagras krypterat). Anslut-knappen ger bekräftelse (*Ansluten* / *Misslyckades* med felorsak) redan vid första tryck (`12012a2`).
+- Verifierat end-to-end 2026-10-03: telefonen som `rfid-app`, dashboarden som `rfid-dashboard`, en NFC-avläsning nådde dashboarden. **Inte visuellt verifierat:** felmeddelandet vid fel lösenord.
+
+### Gren `feature/sqlite` (Room/SQLite; commits `eab6b6a..48e8a89`, ej mergad till `main`)
+
+- **Room/SQLite är enda lagringen** (Room 2.8.5 + KSP 2.3.12 med AGP 9.2.1 / Kotlin 2.2.10) — ersätter JSON-fallback och minnesläge. "KSP blockerad" längre ned gäller bara v1.0/v1.0.1 *(historiskt/löst)*.
+- **Engångsmigrering** av `readings.json` till Room i en transaktion; filen döps om till `readings.json.migrated` (raderas aldrig). Vid fel behålls JSON-filen, felet loggas (`JsonToRoomMigration`) och visas i Inställningar → Lagring, nytt försök vid nästa start.
+- **Verifierad på telefonen 2026-10-03:** 3 poster migrerade, databasen kontrollerad.
 - Enhetlig status `transmitted` vid överföring (tidigare `transmitted via Sparkplug` i JSON-läget).
-- **Känt fel (oförändrat, separat):** `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades.
+- **Bygginfo (`48e8a89`):** Inställningar → App-info visar version, byggtid och git-commit från `BuildConfig` (`BUILD_TIME`, `GIT_COMMIT`) i stället för hårdkodat *Fas 5 (juni 2026)*.
+
+### Kända begränsningar (kvarstående teknisk skuld)
+
+- `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades (oförändrat, rättas separat; möjlig lösning *outbox*, se [[Ordlista]]).
+- Testskript (`test/fas2-mqtt/mqtt/`) och MQTT Explorer ansluter anonymt och behöver användare nu när brokern kräver inloggning.
+- `assembleRelease` misslyckas på fakir: `~/.android/debug.keystore` saknas. `assembleDebug` påverkas inte.
+- `readings.json.migrated` raderas aldrig automatiskt.
 
 ---
 
@@ -43,7 +60,7 @@ created: 2026-06-13
 
 ### Kända begränsningar
 
-- Oförändrat från v1.0 — se avsnittet nedan (Room/KSP, MQTT utan TLS, m.m.).
+- Oförändrat från v1.0 — se avsnittet nedan (Room/KSP *(löst på `feature/sqlite`)*, MQTT utan TLS, m.m.).
 - Debug-signerad APK — inte för produktionsdistribution.
 
 ---
@@ -87,9 +104,9 @@ created: 2026-06-13
 
 ### Kända begränsningar
 
-- **Room-databas (v1.0/v1.0.1; löst på grenen `feature/sqlite`, se ovan):** KSP är inte kompatibelt med AGP 9.2.1 + Kotlin 2.2.10. In-memory persistens + JSON-fallback aktiv — data överlever app-omstart. Riktig Room kräver KSP-version som stödjer AGP 9 built-in Kotlin.
+- **Room-databas (historiskt: gällde v1.0/v1.0.1; löst på grenen `feature/sqlite` 2026-10-03, se ovan):** KSP är inte kompatibelt med AGP 9.2.1 + Kotlin 2.2.10. In-memory persistens + JSON-fallback aktiv — data överlever app-omstart. Riktig Room kräver KSP-version som stödjer AGP 9 built-in Kotlin.
 - **UHF RFID:** Stöds inte via inbyggt NFC. Kräver extern Bluetooth/USB-läsare.
-- **Kryptering:** MQTT utan TLS (dev-läge). Produktion bör använda TLS.
+- **Kryptering:** MQTT utan TLS (dev-läge). Produktion bör använda TLS. *(Tillägg 2026-10-03: inloggning är nu aktiv på brokern, men trafiken är fortfarande klartext.)*
 - **Barcode/EAN:** Inte implementerat — planerat i senare version.
 - **Write block:** Skrivning till låsta block blockeras i UI; vissa taggar kan ha ytterligare begränsningar på hårdvarunivå.
 
@@ -169,11 +186,11 @@ created: 2026-06-13
 
 ```bash
 # Bygg och installera debug-APK
-cd ~/projects/rfid/rfid-manager-android
-./gradlew assembleDebug
+cd RFIDManager   # i monorepot (äldre sökväg ~/projects/rfid/rfid-manager-android är historisk)
+ANDROID_HOME=~/Android/Sdk ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 
-# Bygg signerad release-APK (för distribution)
+# Bygg release-APK (kräver ~/.android/debug.keystore — saknas på fakir 2026-10-03)
 ./gradlew assembleRelease
 # APK: app/build/outputs/apk/release/app-release.apk
 ```

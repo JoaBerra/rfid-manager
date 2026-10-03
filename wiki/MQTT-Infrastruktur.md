@@ -6,6 +6,8 @@ created: 2026-06-14
 
 # MQTT-infrastruktur och nätverkslandskap
 
+> **Uppdaterad 2026-10-03:** Brokern på ishtar kör `eclipse-mosquitto:2` med inloggning och ACL (`allow_anonymous false`). Avsnitt som beskriver den anonyma `:latest`-brokern från juni 2026 är markerade *historiskt* och behålls som historik. Gällande drift och termer: README (*Nätverk och säkerhet (MQTT)*) och [[Ordlista]].
+
 > **Fas-100** — Fördjupning i MQTT-protokollet och den infrastruktur som RFIDManager agerar i.
 > Målet är att förstå hela kedjan från app → broker → subscriber, och vilka verktyg som finns för att övervaka och felsöka.
 
@@ -60,12 +62,28 @@ created: 2026-06-14
 ### Version och källa
 
 - **Programvara:** [Eclipse Mosquitto](https://mosquitto.org/) — open source MQTT broker
-- **Distribution:** Docker Hub (`eclipse-mosquitto:latest`)
+- **Distribution:** Docker Hub. Produktion på ishtar kör `eclipse-mosquitto:2` (senaste 2.x; `docker-compose.hulda.yml`). *(Historiskt: texten i juni 2026 angav `:latest`.)*
 - **Protokoll:** MQTT 3.1.1 (även stöd för 5.0)
 
 ### Konfiguration
 
-**Fil:** `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf`
+**Fil:** `test/fas2-mqtt/mqtt/mosquitto.conf` (i repot; ordlista: [[Ordlista]])
+
+**Gällande konfiguration (ishtar, inloggning aktiv sedan 2026-10-03):**
+
+```ini
+listener 1883
+allow_anonymous false
+persistence true
+persistence_location /mosquitto/data/
+log_dest stdout
+password_file /mosquitto/config/passwd
+acl_file /mosquitto/config/acl
+```
+
+`passwd` (skapas med `mosquitto_passwd -b`, ignoreras av git) och `acl` (`rfid-app` skriver, `rfid-dashboard` läser `rfidmanager/+/telemetry`) monteras skrivskyddat och ska ägas av uid 1883 med mode `0600`. Skapande, ordning och felsökning (`Unable to open pwfile`): se README, avsnittet *Nätverk och säkerhet (MQTT)*.
+
+**Historisk konfiguration (juni 2026, anonym)** — finns kvar som `mosquitto.conf.anon` (återgångsfil och för lokala test utan inloggning):
 
 ```ini
 listener 1883
@@ -80,7 +98,9 @@ log_dest stdout
 | Direktiv | Värde | Betydelse | Not |
 |----------|-------|-----------|-----|
 | `listener` | 1883 | Port för MQTT (cleartext TCP) | MQTT-standard. Kan ha flera listeners, t.ex. `listener 8883` för TLS |
-| `allow_anonymous` | true | Vem som helst får ansluta utan lösenord | **Säkerhetsrisk** i öppen miljö. Sätt `false` + `password_file` för produktion |
+| `allow_anonymous` | false (historiskt: true) | Anslutning utan inloggning nekas | Anonymt var en **säkerhetsrisk** i öppen miljö; löst 2026-10-03 med `false` + `password_file` + `acl_file` |
+| `password_file` | /mosquitto/config/passwd | Användare och hashade lösenord | Ägs av uid 1883, mode `0600` |
+| `acl_file` | /mosquitto/config/acl | Vilka topics varje användare får läsa/skriva | Ägs av uid 1883, mode `0600` |
 | `persistence` | true | Meddelanden/sessioner sparas till disk | Data finns kvar efter omstart (i Docker-volym) |
 | `persistence_location` | /mosquitto/data/ | Sökväg inuti containern | Mappad Docker-volym enligt `docker inspect` |
 | `log_dest` | stdout | Loggar till konsolen | Samlas av Docker (`docker logs`). Alternativ: `log_dest file /mosquitto/log/mosquitto.log` |
@@ -92,11 +112,13 @@ log_dest stdout
 
 ### Starta brokern
 
+> **Obs (2026-10-03):** Gällande drift på ishtar startas med `docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d` (kräver `mqtt/passwd` och `mqtt/acl`). Exemplen nedan är den lokala, **anonyma** varianten (`mosquitto.conf.anon`) för test på en egen dator och går inte mot ishtar.
+
 ```bash
 docker run -d --rm --name rfid-mqtt-test \
   -p 1883:1883 \
-  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
-  eclipse-mosquitto \
+  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf.anon:/mosquitto/config/mosquitto.conf \
+  eclipse-mosquitto:2 \
   mosquitto -c /mosquitto/config/mosquitto.conf
 ```
 
@@ -141,8 +163,8 @@ docker start rfid-mqtt-test
 # Om containern är borttagen, återskapa den:
 docker run -d --rm --name rfid-mqtt-test \
   -p 1883:1883 \
-  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
-  eclipse-mosquitto \
+  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf.anon:/mosquitto/config/mosquitto.conf \
+  eclipse-mosquitto:2 \
   mosquitto -c /mosquitto/config/mosquitto.conf
 
 # Se broker-loggar
@@ -162,15 +184,15 @@ mosquitto_sub -h localhost -p 1883 -t "test" &
 mosquitto_pub -h localhost -p 1883 -t "test" -m "hello"
 ```
 
-### Ingen docker-compose
+### docker-compose
 
-Det finns ingen `docker-compose.yml`. Brokern startas direkt med `docker run`. Detta är fullt tillräckligt för utvecklingsmiljön men kan vara värt att dokumentera om man vill återskapa miljön på en annan maskin.
+*(Historiskt/löst: i juni 2026 fanns ingen compose-fil och brokern startades med `docker run`.)* Sedan Fas D finns `test/fas2-mqtt/docker-compose.hulda.yml` (container `rfid-mqtt-hulda`, `eclipse-mosquitto:2`, `restart: unless-stopped`, volym för persistens) och `dashboard/docker-compose.ishtar.yml` för dashboarden. Se [[Testmiljo-hulda]].
 
 ### Broker Quick Reference
 
 | Vad                                | Kommando                                                                                                                                                                                                      |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Starta broker**                  | `docker run -d --rm --name rfid-mqtt-test -p 1883:1883 -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto mosquitto -c /mosquitto/config/mosquitto.conf` |
+| **Starta broker**                  | `docker run -d --rm --name rfid-mqtt-test -p 1883:1883 -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf.anon:/mosquitto/config/mosquitto.conf eclipse-mosquitto:2 mosquitto -c /mosquitto/config/mosquitto.conf` |
 | **Starta (om stoppad, utan --rm)** | `docker start rfid-mqtt-test`                                                                                                                                                                                 |
 | **Stoppa**                         | `docker stop rfid-mqtt-test`                                                                                                                                                                                  |
 | **Omstart**                        | `docker restart rfid-mqtt-test`                                                                                                                                                                               |
@@ -183,7 +205,7 @@ Det finns ingen `docker-compose.yml`. Brokern startas direkt med `docker run`. D
 | **Inuti containern**               | `docker exec -it rfid-mqtt-test sh`                                                                                                                                                                           |
 |                                    |                                                                                                                                                                                                               |
 
-**Version:** `eclipse-mosquitto:latest` — Mosquitto 2.1.2 (MQTT 3.1.1 / 5.0)
+**Version:** `eclipse-mosquitto:2` i produktion — Mosquitto 2.1.2 vid provkörningen 2026-10-03 (MQTT 3.1.1 / 5.0). *(Historiskt: `:latest` i juni 2026.)*
 
 ---
 
@@ -226,7 +248,8 @@ flowchart LR
 |-------------------|---------------------------------------------|
 | Broker IP         | `192.168.50.151` (ishtar)                   |
 | Broker port       | `1883`                                      |
-| Protokoll         | `tcp://` (cleartext)                        |
+| Protokoll         | `tcp://` (cleartext, ingen TLS)             |
+| Inloggning        | Krävs sedan 2026-10-03: `rfid-app` (appen, skriv), `rfid-dashboard` (dashboard, läs) |
 | Android client ID | `rfid-android-client`                       |
 | Broker-URL i app  | `tcp://192.168.50.151:1883` (default i `MqttConnectionManager.kt`) |
 | WiFi-nätverk      | Lokalt LAN, troligen via router med DHCP    |
@@ -234,7 +257,7 @@ flowchart LR
 ### Nätverkssäkerhet
 
 - **Cleartext TCP:** All MQTT-trafik skickas okrypterad över WiFi. Innehållet (RFID-data) kan avlyssnas av andra enheter i nätverket.
-- **Godkänt för utveckling:** Detta är medvetet valt för enkelhet i utvecklingsmiljön.
+- **Godkänt för utveckling:** Detta är medvetet valt för enkelhet i utvecklingsmiljön. Inloggning och ACL skyddar mot obehörig anslutning men krypterar inte trafiken.
 - **Produktion:** Kräver TLS (port 8883) eller WebSocket Secure (wss://).
 
 ---
@@ -420,22 +443,23 @@ flowchart TD
 | Aspekt | Status |
 |--------|--------|
 | Transport | Cleartext TCP (`tcp://`) |
-| Autentisering | Ingen (`allow_anonymous true`) |
+| Autentisering | Användarnamn/lösenord (`allow_anonymous false`, `password_file`) sedan 2026-10-03 *(historiskt: ingen, `allow_anonymous true`)* |
+| Auktorisering | ACL: `rfid-app` skriver, `rfid-dashboard` läser `rfidmanager/+/telemetry` |
 | Kryptering | Ingen |
 | Nätverkssäkerhet | Cleartext tillåten för ishtar `.151` via `network_security_config.xml` |
 
 ### Risker
 
 - **Avlyssning:** Alla på samma WiFi kan sniffa MQTT-trafik med t.ex. Wireshark
-- **Obehörig publicering:** Vem som helst på nätverket kan publicera till brokern
-- **Obehörig prenumeration:** Vem som helst på nätverket kan prenumerera på topics
+- **Obehörig publicering:** *(löst 2026-10-03 av inloggning + ACL; gällde tidigare anonym broker)* Utan giltiga inloggningsuppgifter kan ingen publicera. Inloggningsuppgifterna skickas dock i klartext utan TLS.
+- **Obehörig prenumeration:** *(löst 2026-10-03, som ovan)*
 
 ### Produktionsrekommendationer
 
 | Åtgärd | Implementation |
 |--------|---------------|
 | TLS-kryptering | Ändra till `tls://` eller `wss://`, port 8883, certifikat |
-| Autentisering | Användarnamn/lösenord i Mosquitto (`password_file`) |
+| Autentisering | ✅ Klart 2026-10-03: användarnamn/lösenord i Mosquitto (`password_file`) + ACL |
 | Certifikat | Självsignerat eller Let's Encrypt för testmiljö |
 
 ---
@@ -450,8 +474,8 @@ flowchart TD
 | **Python subscriber** | Logga meddelanden till SQLite | `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/test_subscriber_persist.py` |
 | **Python simulator** | Simulera app-publicering | `~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/simulate_mobile_publish.py` |
 | **MQTT Explorer** | GUI-utforskare | [Ladda ner](https://github.com/thomasnordquist/MQTT-Explorer/releases) |
-| **mosquitto_sub** | CLI-prenumerant | `mosquitto_sub -h 192.168.50.151 -p 1883 -t "rfidmanager/#"` |
-| **mosquitto_pub** | CLI-publicerare | `mosquitto_pub -h 192.168.50.151 -p 1883 -t "test" -m "hello"` |
+| **mosquitto_sub** | CLI-prenumerant | `mosquitto_sub -h 192.168.50.151 -p 1883 -u rfid-dashboard -P "$PW" -t "rfidmanager/+/telemetry"` (`PW` inläst med `read -rs`; obs: `-P` syns i processlistan) |
+| **mosquitto_pub** | CLI-publicerare | `mosquitto_pub -h 192.168.50.151 -p 1883 -u rfid-app -P "$PW" -t "rfidmanager/test/telemetry" -m "hello"` (anonymt nekas) |
 | **docker logs** | Broker-loggar | `docker logs rfid-mqtt-test` |
 | **Wireshark** | Paketanalys (nätverkssniffning) | `sudo wireshark` (filter: `mqtt`) |
 | **netcat** | Rå TCP-test | `echo "" | nc -v 192.168.50.151 1883` |
@@ -483,9 +507,9 @@ Ladda ner från [GitHub Releases](https://github.com/thomasnordquist/MQTT-Explor
 | Host | `192.168.50.151` (ishtar) |
 | Port | `1883` |
 | SSL/TLS | Av |
-| Auth | Ingen |
+| Auth | Användarnamn/lösenord krävs sedan 2026-10-03 (`rfid-dashboard` har läsrätt; lösenord anges i verktyget, aldrig i dokumentationen) |
 
-Prenumerera på `rfidmanager/#` för att se alla meddelanden i realtid.
+Prenumerera på `rfidmanager/+/telemetry` för att se meddelanden i realtid — ACL ger bara läsrätt på den topicen, så `rfidmanager/#` visar inget mer. *(Att MQTT Explorer ännu inte är uppsatt med användare är kvarstående teknisk skuld.)*
 
 ### MQTT Explorer
 
@@ -494,7 +518,7 @@ Prenumerera på `rfidmanager/#` för att se alla meddelanden i realtid.
 | Host | `192.168.50.151` (ishtar; körs på fakir) |
 | Port | `1883` |
 | SSL/TLS | Av |
-| Auth | Ingen |
+| Auth | Användarnamn/lösenord krävs (se ovan) |
 
 Användbart för att visuellt inspektera topics i realtid. Se [[MQTT-Explorer]] för detaljer.
 
@@ -511,7 +535,7 @@ Användbart för att visuellt inspektera topics i realtid. Se [[MQTT-Explorer]] 
 ```
 
 Skriptet:
-- Ansluter till `localhost:1883`
+- Ansluter till `localhost:1883` anonymt — fungerar bara mot en anonym broker (`mosquitto.conf.anon`); mot ishtar krävs användare, vilket skriptet ännu inte stödjer (teknisk skuld)
 - Prenumererar på `rfidmanager/+/telemetry`
 - Tolkad JSON och extraherar fält
 - Sparar till `~/projects/rfid/rfid-manager/data/rfid_readings.db` (SQLite)
@@ -530,7 +554,7 @@ Användaren håller RFID-tagg mot telefonen.
 
 Steg 2: Sparning
 ─────────────────
-→ PersistedReadingRepository lagrar läsningen (SharedPreferences/JSON)
+→ PersistedReadingRepository lagrar läsningen (Room/SQLite på `feature/sqlite`; JSON-fil i v1.0.1)
 → readings-flödet uppdateras → UI visar nya readingen
 
 Steg 3: Publicering (via Transmit)
@@ -577,7 +601,7 @@ Steg 7: Verifiering
 | Begränsning | Påverkan | Lösning |
 |-------------|----------|---------|
 | Ingen TLS | Data i klartext över WiFi | Inför TLS med självsignerat cert |
-| Ingen autentisering | Alla på nätverket kan publicera/lyssna | Användarnamn/lösenord i Mosquitto |
+| ~~Ingen autentisering~~ *(löst 2026-10-03)* | Tidigare: alla på nätverket kunde publicera/lyssna. Nu: inloggning + ACL. Kvar: klartext, ingen TLS | Användarnamn/lösenord i Mosquitto (gjort) |
 | cleanSession = true | Inga köade meddelanden vid frånkoppling | Sätt till false för att få meddelanden efter återanslutning |
 | Custom reconnect-loop | Enkel polling var 35:e sekund | Använd Paho inbyggd auto-reconnect |
 | Ingen `command` topic | Kan inte styra appen från PC | Implementera lyssnare på rfidmanager/<uid>/command |
@@ -588,11 +612,11 @@ Steg 7: Verifiering
 
 ### Framtida förbättringar (prioriterade)
 
-1. **TLS + auth** — Säkra upp kommunikationen
+1. **TLS** — Kryptera kommunikationen (auth är klart sedan 2026-10-03)
 2. **Sparkplug B compliance** — Fullt industristandard-format
 3. **Command topic** — Styrning från PC
 4. **Auto-transmit** — Publicera automatiskt vid scan (istället för manuell Transmit-knapp)
-5. **docker-compose.yml** — Dokumenterad och återanvändbar infrastruktur
+5. ~~**docker-compose.yml**~~ — *(klart: `docker-compose.hulda.yml`, Fas D)*
 6. **Retained status** — Spara senaste status för varje enhet
 
 ---

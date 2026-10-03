@@ -47,7 +47,9 @@ Parametrar för att verifiera klientens identitet mot brokern.
 | **Username** | (tom) | Användarnamn för MQTT-autentisering |
 | **Password** | (tom) | Lösenord för MQTT-autentisering |
 
-> **Utökas:** När vi börjar arbeta med denna punkt lägger vi till förklaringar om hur MQTT-autentisering fungerar, skillnad mot TLS, rekommendationer för lösenordshantering.
+> ✅ **Status 2026-10-03: implementerad** (fälten *Användarnamn (valfritt)* och *Lösenord* i Inställningar → MQTT-anslutning, knappen *Anslut* med bekräftelse vid första tryck, `12012a2`). Lösenordet lagras krypterat (Android Keystore, AES-GCM). Brokern kräver inloggning sedan samma dag (`rfid-app` skriver, `rfid-dashboard` läser; ACL). Autentisering är **inte** kryptering — trafiken är klartext utan TLS (punkt 3). Termer: [[Ordlista]]. Visuell verifiering av felmeddelandet vid fel lösenord saknas ännu.
+
+> **Utökas:** förklaringar om skillnaden mot TLS och rekommendationer för lösenordshantering kan läggas till.
 
 ---
 
@@ -152,5 +154,5 @@ Tillsammans ger de en komplett bild — Fas-100 förklarar *varför*, Fas-101 by
 ## Status
 
 **Skapad:** 2026-06-14  
-**Fas:** Planerad (förslag till Kund)  
-**Nästa steg:** Godkänn fasomfattning + börja implementera parametrar i Settings-skärmen
+**Fas:** Planerad (förslag till Kund); punkt 2 (Autentisering) implementerad 2026-10-03, punkt 1 (host/port) sedan Fas 6.1. Återstår: TLS, Sparkplug, topics, beteende, verifiering (testknapp).  
+**Nästa steg:** Godkänn fasomfattning + fortsätt med resterande parametrar i Settings-skärmen

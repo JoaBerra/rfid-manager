@@ -57,7 +57,7 @@ Göra appen redo för kundanpassning: språkbyte, textstorlek, sök, export, dar
 | `screen.connectivity.no_readings` | Inga avläsningar än | No readings yet |
 | `screen.settings.title` | INSTÄLLNINGAR | SETTINGS |
 | `screen.settings.storage_mode` | Lagringsläge | Storage Mode |
-| `screen.settings.storage_json` | JSON-fil – avläsningar överlever omstart | JSON file – readings survive restart |
+| `screen.settings.storage_json` | JSON-fil – avläsningar överlever omstart *(historiskt: nyckeln ersatt av `screen.settings.storage_room` = "Room (SQLite)" på `feature/sqlite`)* | JSON file – readings survive restart |
 | `screen.settings.language` | Språk | Language |
 | `screen.settings.font_size` | Textstorlek – data | Font size – data |
 | `screen.settings.dark_mode` | Mörkt läge | Dark Mode |
@@ -81,7 +81,7 @@ Ovanstående tabell fylls på efter hand. Varje ny sträng läggs till i lexikon
 ## Risker (post-factum — alla hanterade)
 
 - Localization krävde migrering av alla hårdkodade strängar → **genomfört**, alla skärmar migrerade till `str(key)`-mönster.
-- MQTT-anslutning startas nu via MqttConnectionManager vid app-start → **ingen nätverksändring krävdes** (fortsatt okrypterat för dev).
+- MQTT-anslutning startas nu via MqttConnectionManager vid app-start → **ingen nätverksändring krävdes** (fortsatt okrypterat för dev; sedan 2026-10-03 kräver brokern inloggning).
 - Haptic + ljud: inga runtime permissions krävdes på Android 12 (Samsung Note 10). Fungerar med SoundPool + VibratorService.
 
 ## Avvikelser från plan

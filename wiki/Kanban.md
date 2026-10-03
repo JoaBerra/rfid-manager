@@ -4,12 +4,17 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-
+- [ ] **Rätta `markAsTransmitted`** — status `transmitted` sätts oavsett om MQTT-publiceringen lyckades (`ReadingsViewModel.onTransmit`); möjlig lösning *outbox* ([[Ordlista]]) — teknisk skuld, backlog 2026-10-03
+- [ ] **Merga `feature/sqlite` → `main`** (Room/SQLite verifierad på telefon) och avgör ev. release v1.0.2 — kräver att `~/.android/debug.keystore` finns för `assembleRelease`
+- [ ] **Verifiera felmeddelande vid fel lösenord** visuellt på telefonen (*Misslyckades ✗*, `12012a2`)
+- [ ] **`assembleRelease` saknar `~/.android/debug.keystore`** på fakir — skapa/ange signeringsnyckel
+- [ ] **Beslut om `readings.json.migrated`** — raderas aldrig automatiskt; bestäm när den får tas bort manuellt
+- [ ] **Testskript och MQTT Explorer med inloggning** — anonyma idag (se Fas-100 punkt 9)
 
 - [ ] **Fas-101 — MQTT-klientkonfiguration i appen** (settings för host, port, TLS, auth, Sparkplug)
 	- [x] Wiki-sida skapad: [[Fas-101-MQTT-Configuration]]
 	- [ ] **1. Anslutning** — host, port, client ID
-	- [ ] **2. Autentisering** — username, password
+	- [x] **2. Autentisering** — username, password ✅ 2026-10-03 (fält + Anslut-knapp med bekräftelse, `12012a2`; felmeddelande vid fel lösenord ej visuellt verifierat)
 	- [ ] **3. TLS/SSL** — certifikat, kryptering
 	- [ ] **4. Sparkplug** — Group ID, Node ID, Device ID
 	- [ ] **5. Topics** — base, telemetry, command
@@ -55,12 +60,14 @@ kanban-plugin: board
 		- [ ] Test: Stäng av broker, mät återanslutningstid
 	- [ ] **8. Säkerhet**
 		- [ ] Utbildning: Förstå risker med cleartext, anonym auth, TLS
+		- [x] Anonym auth stängd 2026-10-03 (`allow_anonymous false`, `password_file`, ACL) — TLS återstår
 		- [ ] Konfiguration: Utvärdera om TLS ska läggas till
 		- [ ] Dokumentation: Dokumentera säkerhetsläge och rekommendationer
 		- [ ] Test: Säkerhetsgenomgång av nuvarande setup
 	- [ ] **9. Verktyg**
 		- [x] Utbildning: MQTT Explorer installerad på fakir (2026-07-12)
 		- [ ] Konfiguration: Notera anslutningsinställningar per verktyg
+		- [ ] Lägg in användare i MQTT Explorer och testskripten (`test/fas2-mqtt/mqtt/`) — de är anonyma och nekas av brokern sedan 2026-10-03
 		- [ ] Dokumentation: Skapa "lathund" för varje verktyg
 		- [ ] Test: Använd varje verktyg för att publicera/lyssna
 	- [ ] **10. Flöde: från scan till mottaget meddelande**
@@ -81,6 +88,8 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
+- [ ] **Room/SQLite på `feature/sqlite`** — klar och verifierad på telefon 2026-10-03 (3 poster migrerade, databasen kontrollerad); väntar på merge till `main` ([[Release-Notes]], [[Ordlista]])
+
 
 
 
@@ -89,6 +98,11 @@ kanban-plugin: board
 
 
 ## ✅ Klart (Done)
+
+- [x] **MQTT-inloggning på ishtar** — `allow_anonymous false`, ACL (`rfid-app` skriver, `rfid-dashboard` läser), `passwd`/`acl` ägda av uid 1883 mode `0600`, lösenord via `mosquitto_passwd -b` + `read -rs` — ✅ aktiv och verifierad end-to-end 2026-10-03, på `main` (`f08ff22`)
+- [x] **Bygginfo i Inställningar** — version, byggtid, git-commit från `BuildConfig` i stället för hårdkodat *Fas 5 (juni 2026)* — ✅ `48e8a89`, 2026-10-03 (på `feature/sqlite`)
+- [x] **Anslut-knappen** — bekräftelse redan vid första tryck — ✅ `12012a2`, 2026-10-03
+- [x] **Room/KSP-blockering (historiskt, löst)** — Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1; JSON → Room-migrering, status `transmitted` — ✅ 2026-10-03 på `feature/sqlite` (merge återstår, se Pågår)
 
 - [x] **BUG-002** | Write-funktion borta | TC-SCAN-006, TC-E2E-003 | ✅ Godkänt 2026-06-13
 - [x] **BUG-003** | Background NDEF | TC-SCAN-004 | ✅ Godkänt 2026-06-13
@@ -131,7 +145,7 @@ kanban-plugin: board
 
 ## 📝 Anteckningar
 
-- **Projektstatus (2026-07-14):** **Pausat** — ingen aktiv utveckling. Korten under *Att göra* är backlog vid återöppning. Se [README.md](../README.md) och AH [projektavslut](https://github.com/JoaBerra/andra-hjarna/blob/main/Bearbetning/2026-07-14-rfid-manager-projektavslut.md).
+- **Projektstatus (2026-07-14):** **Pausat** — ingen aktiv utveckling. *Underhåll 2026-10-03: MQTT-inloggning och Room/SQLite (se Klart/Pågår).* Korten under *Att göra* är backlog vid återöppning. Se [README.md](../README.md) och AH [projektavslut](https://github.com/JoaBerra/andra-hjarna/blob/main/Bearbetning/2026-07-14-rfid-manager-projektavslut.md).
 - **Flöde:** Roadmap ([[Produkt-Roadmap]]) → långsiktig plan. Kanban → veckovis taktik. När en fas påbörjas bryter vi ner acceptanskriterierna från roadmap till Kanban-kort.
 - **Arbetssätt:** När AI-assistenten påbörjar en punkt flyttas den från Att göra → Pågår. När Kund godkänt (sign-off i [[Kundrelationer-och-Acceptans]]) flyttas den till Klart. Aldrig klarmarkerad före Kund-godkännande.
 - **Format (buggar):** `ID | Vad | Testfall | Status`

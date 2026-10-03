@@ -1,5 +1,19 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] underhåll | MQTT-inloggning aktiv, Room/SQLite som enda lagring, bygginfo i appen
+
+**MQTT-inloggning (på `main`, `f08ff22`):** Brokern på ishtar kräver inloggning sedan 2026-10-03 (`allow_anonymous false`, `password_file`, `acl_file`). `rfid-app` skriver och `rfid-dashboard` läser `rfidmanager/+/telemetry` (ACL). `passwd` och `acl` ägs av uid 1883 med mode `0600`; lösenord skapas med `mosquitto_passwd -b` via `read -rs`. Verifierat end-to-end. Anslut-knappen ger bekräftelse vid första tryck (`12012a2`).
+
+**Room/SQLite (gren `feature/sqlite`, `eab6b6a..48e8a89`, ej mergad):** Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1 — "KSP blockerad" är löst *(historiskt)*. Room är enda lagring; `readings.json` migreras i en transaktion och döps om till `readings.json.migrated`; tydlig felhantering; status `transmitted`. Verifierad på telefonen: 3 poster migrerade, databasen kontrollerad.
+
+**Bygginfo (`48e8a89`):** Inställningar → App-info visar version, byggtid och git-commit från `BuildConfig` (`BUILD_TIME`, `GIT_COMMIT`) i stället för hårdkodat *Fas 5 (juni 2026)*.
+
+**Kvarstående teknisk skuld:** `markAsTransmitted` sätts oavsett om publiceringen lyckades; testskript och MQTT Explorer är anonyma; `assembleRelease` saknar `~/.android/debug.keystore`; felmeddelandet vid fel lösenord är inte visuellt verifierat.
+
+**Dokumentation uppdaterad:** README, Release-Notes, App-Architecture, Fas3-Implementation-Plan, Produkt-Roadmap, Kanban, MQTT-Infrastruktur (`:latest` → `:2`, anonym → inloggning), Testmiljo-hulda, MQTT-Manual, MQTT-Explorer, Startup-Procedure, Fas-101, Fas-200, Fas-400, Kundrelationer-och-Acceptans (noter), manual/manual.md. Ny sida [[Ordlista]] (Konnotation | Denotation: Room, KSP, migrering, ACL, outbox m.fl.). Historik behålls och är märkt *historiskt/löst*.
+
+---
+
 ## [2026-07-14] project | Projekt pausat (återöppningsbart)
 
 **Beslut:** Principalen — avsluta aktiv utvecklingsfas efter Fas D (Uppdrag 001–005).

@@ -125,7 +125,7 @@ updated: 2026-06-10
 - Uppdatera `PUSH-TO-GITHUB.md` och `README.md` i release-mappen vid behov.
 
 ## Risker & Mitigering (uppdaterad efter kick-off)
-- KSP-problem: Dual-mode behålls som fallback.
+- KSP-problem: Dual-mode behålls som fallback. *(Historiskt/löst 2026-10-03: KSP 2.3.12 stödjer AGP 9.2.1; dual-mode är borttaget på `feature/sqlite`.)*
 - Scope creep: Lead flaggar omedelbart.
 - UAT på enhet: Använd samma testmiljö + MQTT Explorer.
 
@@ -156,7 +156,7 @@ updated: 2026-06-10
 - Applicera de konkreta spacing-reglerna från design-noten i de nya vyerna och komponenter (16dp, 12dp, etc.).
 - Validera mot "breathing room check".
 
-**Fas 3.4 – Room Enablement (vertikal slice, kan göras när 3.1 är stabil)**
+**Fas 3.4 – Room Enablement (vertikal slice, kan göras när 3.1 är stabil)** *(plan; utfall och senare lösning: se Aktuell status nedan)*
 - Slå på riktig DAO i AppContainer.
 - Testa persistens över app-omstart.
 
@@ -181,12 +181,13 @@ Denna sekvens är nu låst i planen. Vi följer den om du inte säger annat.
   - `Dimens.kt` skapad med `cardPadding`, `sectionSpacing`, `smallGap`, `listItemSpacing`, `screenHorizontalPadding`.
   - Alla skärmar och komponenter använder Dimens-konstanter för konsekvent spacing.
   - Minst 16 dp padding i cards, 12 dp mellan listrader, touch targets ≥48 dp.
-- **Fas 3.4 – Room Enablement: ✅ KLAR (JSON-fallback)**
+- **Fas 3.4 – Room Enablement: ✅ KLAR (JSON-fallback) — *historiskt, löst 2026-10-03 på `feature/sqlite`*** (se uppdatering nedan)
   - KSP (2.2.10-2.0.2) inkompatibelt med AGP 9.x built-in Kotlin. Även KSP 2.2.21-2.0.5 saknar stöd.
   - kapt borttaget i Kotlin 2.2.x.
   - Opt-out (builtInKotlin=false) orsakar "already on classpath"-konflikter.
-  - **Slutsats:** Riktig Room-databas blockerad tills KSP får AGP 9-stöd. JSON-fallback aktiv.
+  - **Slutsats (då, 2026-06-10):** Riktig Room-databas blockerad tills KSP får AGP 9-stöd. JSON-fallback aktiv.
   - Se [[Produkt-Roadmap#villkor-för-riktig-room-databas]] för återaktiveringsplan.
+  - **Uppdatering 2026-10-03 (löst):** Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1 / Kotlin 2.2.10 på grenen `feature/sqlite` (commits `eab6b6a..48e8a89`). Room är enda lagring, `readings.json` migreras i en transaktion och döps om till `readings.json.migrated`. Verifierad på telefonen (3 poster migrerade). Ännu inte mergad till `main`. Se [[Release-Notes]] och [[Ordlista]].
 - **Fas 3.5 – Polish + PC-stöd: ✅ KLAR**
   - Empty states + loading + error i ScanScreen, PersistedReadings, MqttStatusScreen, SettingsScreen.
   - Python subscriber: färgkodad, filtrerbar, statistik vid Ctrl+C.

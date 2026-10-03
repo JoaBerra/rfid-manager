@@ -141,7 +141,8 @@ MQTT_BROKER=localhost .venv/bin/python -m app.main
 Dashboard körs på **ishtar** mot befintlig broker — se `dashboard/docker-compose.ishtar.yml` och [[Testmiljo-hulda]].
 
 | URL | `http://192.168.50.151:8000` |
-| Broker | `192.168.50.151:1883` (ingen extra Mosquitto) |
+| Broker | `192.168.50.151:1883` (ingen extra Mosquitto; kräver inloggning sedan 2026-10-03) |
+| Inloggning | `rfid-dashboard` (läsrätt) via `MQTT_USERNAME`/`MQTT_PASSWORD` i `dashboard/.env` (git-ignorerad) |
 
 Från **fakir:** öppna URL i webbläsare. För topic-debug: [[MQTT-Explorer]] (`mqtt-explorer`).
 

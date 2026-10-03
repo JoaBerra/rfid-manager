@@ -27,6 +27,8 @@ För att göra dokumentationen oberoende av specifika AI-produkter eller leveran
 | **AI-assistenten** | Specifika produktnamn från olika leverantörer | Den tekniska assistentrollen i teamet |
 | **AI-verktyg / AI-system** | Specifika AI-plattformar | Det underliggande verktyget |
 
+Tekniska termer och deras avgränsning (Konnotation | Denotation) finns i [[Ordlista]].
+
 Arbetssätt: När du som Projektledare eller jag som AI-assistent stöter på ett produktnamn under redigering, ersätter vi det med rätt funktionell term. Inget aktivt sök-och-ersätt över hela wikin.
 
 ## Roller (uppdaterad och kompletterad)

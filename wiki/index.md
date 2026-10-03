@@ -37,8 +37,9 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 
 ### Implementation och Kod
 - [[Hardware-Testenheter]] — Detaljer om fysiska testtelefoner (t.ex. Galaxy Note 10 SM-N970F/DS).
-- [[App-Architecture]] — Övergripande arkitektur för RFID Manager. Uppgraderad med Fas 2 (MQTT, persistens) + Fas 3 (navigation, ViewModels, spacing).
+- [[App-Architecture]] — Övergripande arkitektur för RFID Manager. Uppgraderad med Fas 2 (MQTT, persistens) + Fas 3 (navigation, ViewModels, spacing); persistensen uppdaterad 2026-10-03 (Room/SQLite, migrering).
 - [[Figma-to-Compose]] — Hur Figma-designen översatts till Jetpack Compose (design tokens, tema, manuell implementation).
+- [[Ordlista]] — Termer (Room, KSP, migrering, ACL, outbox m.fl.) som tabell Konnotation | Denotation. Varje term som används i wikin ska vara definierad här eller i Nomenclature.
 - [[Nomenclature-Figma-Android]] — Namnsättning / nomenclature för Figma-komponenter, variabler och Android/Kotlin (återanvänds 1:1 av AI-assistenten i design + kod).
 - [[Fas2-Implementation-Overview]] — Översikt över filer, struktur och steg för Fas 2.
 - [[Fas3-Implementation-Plan]] — Fullständig plan för Fas 3: navigation, ViewModels, spacing, Room-enablement, polish och PC-stöd. Alla steg slutförda och sign-offade.
@@ -86,7 +87,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 
 ## Status
 
-**Projekt pausat (2026-07-14)** — återöppningsbart. Backlog och instruktioner: [README.md](../README.md) (repo root), [Kanban](Kanban.md). AH: [projektavslut](https://github.com/JoaBerra/andra-hjarna/blob/main/Bearbetning/2026-07-14-rfid-manager-projektavslut.md).
+**Projekt pausat (2026-07-14)** — återöppningsbart. *Underhåll 2026-10-03:* MQTT-inloggning aktiv på ishtar (på `main`) och Room/SQLite som enda lagring på grenen `feature/sqlite` (verifierad på telefon, ännu inte mergad) — se [[log]], [[Release-Notes]] och README. Backlog och instruktioner: [README.md](../README.md) (repo root), [Kanban](Kanban.md). AH: [projektavslut](https://github.com/JoaBerra/andra-hjarna/blob/main/Bearbetning/2026-07-14-rfid-manager-projektavslut.md).
 
 **Fas 1–6 slutförda (v1.0 releasad).** Initial struktur (Fas 1) 2026-05-26. Eskortminne-läs/skriv (Fas 2) klar 2026-06-04. UI-reallokering, navigation, ViewModels, spacing, polish och PC-stöd (Fas 3) sign-off av Kund 2026-06-10. Lokalisering, inställningar och användbarhet (Fas 4) sign-off av Kund 2026-06-11. Dokumentation, kvalitet och radar-estetik (Fas 5) + 1.0 Release (Fas 6) klara 2026-06-13.
 

@@ -51,7 +51,7 @@ dashboard/.venv/bin/pip install -r mcp-server/requirements.txt
 
 | Komponent | Image | Portar | Volym-mount |
 |---|---|---|---|
-| MQTT Broker | `eclipse-mosquitto:2` | 1883 (MQTT), 9001 (WS) | `mosquitto.conf` |
+| MQTT Broker | `eclipse-mosquitto:2` | 1883 (MQTT), 9001 (WS) | `mosquitto.conf` *(historiskt, falstaff juni 2026: anonym. På ishtar kräver brokern inloggning sedan 2026-10-03; verifieringsrutinerna nedan förutsätter anonym broker)* |
 
 **Starta broker:**
 ```bash

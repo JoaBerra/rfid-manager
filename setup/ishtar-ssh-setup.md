@@ -146,6 +146,8 @@ Test från fakir:
 docker run --rm eclipse-mosquitto:2 mosquitto_pub -h 192.168.50.151 -p 1883 -t test/uppdrag003 -m ok
 ```
 
+> **Obs (2026-10-03):** Detta test (Uppdrag 003, anonym broker) är *historiskt*; brokern kräver nu inloggning och nekar anonym publicering. Portkontroll fungerar fortfarande. Se README, *Nätverk och säkerhet (MQTT)*.
+
 ---
 
 ## Felsökning

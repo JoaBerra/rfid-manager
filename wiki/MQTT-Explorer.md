@@ -34,8 +34,8 @@ Kräver inga bakgrundstjänster — stäng appen när du inte debuggar.
 |------|-------|
 | Host | `192.168.50.151` (ishtar) |
 | Port | `1883` |
-| Auth | Ingen (dev) |
-| Topic | `rfidmanager/#` |
+| Auth | Användarnamn/lösenord krävs sedan 2026-10-03 (`rfid-dashboard`, läsrätt) *(historiskt: ingen, anonym dev-broker)* — ännu inte uppsatt i Explorer (teknisk skuld) |
+| Topic | `rfidmanager/+/telemetry` (ACL ger läsrätt bara där; `rfidmanager/#` visar inget mer) |
 
 Legacy brokers (sixten `.128`, falstaff `.107`) avvecklade — se [[Fas-D-falstaff-avveckling]].
 
@@ -50,6 +50,7 @@ Legacy brokers (sixten `.128`, falstaff `.107`) avvecklade — se [[Fas-D-falsta
 Alternativ CLI-test:
 
 ```bash
+# Historiskt (anonym broker) — nekas sedan 2026-10-03; kräver -u/-P med skrivrätt (rfid-app):
 docker run --rm eclipse-mosquitto:2 mosquitto_pub \
   -h 192.168.50.151 -p 1883 -t rfidmanager/test/telemetry -m '{"type":"test"}'
 ```

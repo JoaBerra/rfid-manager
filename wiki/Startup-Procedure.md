@@ -6,6 +6,8 @@ created: 2026-06-23
 
 # Startup Procedure — Kallstart till alla tjänster uppe
 
+> **Historiskt dokument (falstaff, juni 2026):** Beskriver kallstart på den tidigare falstaff-miljön med en **anonym** broker (`docker run … eclipse-mosquitto:2`). Falstaff är avvecklad ([[Fas-D-falstaff-avveckling]]). Gällande drift: broker och dashboard på ishtar enligt [[Testmiljo-hulda]], **med inloggning och ACL sedan 2026-10-03** (README, *Nätverk och säkerhet (MQTT)*). `mosquitto_pub`/`-sub` utan användare nekas där.
+
 > **Syfte:** Steg-för-steg för att få upp hela utvecklingsmiljön från kallstart (datorn avstängd → alla tjänster igång).
 >
 > Varje objekt verifieras innan nästa påbörjas. Dokumentation uppdateras om fel upptäcks.
@@ -240,10 +242,10 @@ Android-appen publicerar NFC-avläsningar till MQTT-brokern via Eclipse Paho 1.2
 ### Arkitektur
 
 ```
-NFC-avläsning → Room DB (persist) → MqttSender → publish rfidmanager/<uid>/telemetry → MQTT Broker
+NFC-avläsning → Room DB (persist; Room är enda lagring på `feature/sqlite`, JSON-fil i v1.0.1) → MqttSender → publish rfidmanager/<uid>/telemetry → MQTT Broker
 ```
 
-Appen ansluter till brokern som MQTT-klient (`rfid-android-client`), publicerar med QoS 1. Den prenumererar inte på några topics (endast publikation).
+Appen ansluter till brokern som MQTT-klient (`rfid-android-client`; sedan 2026-10-03 inloggad som `rfid-app`), publicerar med QoS 1. Den prenumererar inte på några topics (endast publikation).
 
 ### Konfiguration
 

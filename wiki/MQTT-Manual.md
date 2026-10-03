@@ -7,6 +7,8 @@ created: 2026-06-19
 # MQTT-manual — Praktisk bruksanvisning
 
 > **Syfte:** Steg-för-steg för att starta MQTT-infrastrukturen, överföra data från telefonen och visualisera i realtidsdashboarden.
+>
+> **Obs 2026-10-03:** Kommandona nedan startar en lokal, **anonym** testbroker (juni 2026, *historiskt* för drift). Den gällande brokern på ishtar kräver inloggning och ACL — se README (*Nätverk och säkerhet (MQTT)*) och [[Testmiljo-hulda]]. En anonym broker startar du lokalt med `mosquitto.conf.anon`; `mosquitto.conf` kräver `passwd` och `acl`.
 
 ## Innehåll
 
@@ -46,7 +48,7 @@ docker start rfid-mqtt
 docker run -d --name rfid-mqtt \
   -p 1883:1883 \
   -p 9001:9001 \
-  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf \
+  -v ~/projects/rfid/rfid-manager/test/fas2-mqtt/mqtt/mosquitto.conf.anon:/mosquitto/config/mosquitto.conf \
   eclipse-mosquitto:2 \
   mosquitto -c /mosquitto/config/mosquitto.conf
 ```
@@ -136,6 +138,7 @@ docker exec rfid-mqtt mosquitto_pub -h localhost -p 1883 \
 | Port 8000 upptagen | Annan process | Använd port 8001: `--port 8001` |
 | Dashboarden svarar inte | Processen har dött | `ps aux \| grep uvicorn` och starta om |
 | Broker-loggar visar "permission denied" | Fel i mosquitto.conf | Kontrollera sökvägar i config-filen |
+| `Unable to open pwfile` / klienten nekas | `passwd`/`acl` har fel ägare (ska vara uid 1883, mode `0600`), eller klienten saknar användare | Se README, *Filägare och rättigheter*; fyll i användarnamn/lösenord i klienten |
 
 ### Verktyg för felsökning
 
@@ -192,7 +195,9 @@ curl -s http://localhost:8000/api/stats
 | `test/fas2-mqtt/.venv/` | Python-venv med paho-mqtt |
 | `test/fas2-mqtt/mqtt/test_subscriber_persist.py` | Python-subscriber med SQLite-persistens |
 | `test/fas2-mqtt/mqtt/simulate_mobile_publish.py` | Simulera app-publicering |
-| `test/fas2-mqtt/mqtt/mosquitto.conf` | Broker-konfiguration |
+| `test/fas2-mqtt/mqtt/mosquitto.conf` | Broker-konfiguration (inloggning + ACL sedan 2026-10-03) |
+| `test/fas2-mqtt/mqtt/mosquitto.conf.anon` | Tidigare anonym konfiguration (återgångsfil, lokala test) |
+| `test/fas2-mqtt/mqtt/acl`, `passwd.example` | ACL respektive mall för lösenordsfilen (`passwd` är ignorerad av git) |
 | `dashboard/` | Webbdashboard (FastAPI + SSE) |
 | `data/rfid_readings.db` | SQLite-databas (skapas av subscribern) |
 

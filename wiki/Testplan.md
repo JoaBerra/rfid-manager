@@ -21,7 +21,7 @@ Samtliga testfall körs manuellt på fysisk enhet med riktig NFC-tagg.
 | Telefon | Samsung Galaxy Note 10 (SM-N970F/DS) |
 | Android | 12 (One UI 4.1) |
 | NFC | Aktiverat, enhetens egna kontroller (S.LSI 4.5.11) |
-| MQTT-broker | `192.168.50.151:1883` (ishtar, Docker eclipse-mosquitto) |
+| MQTT-broker | `192.168.50.151:1883` (ishtar, Docker `eclipse-mosquitto:2`; **kräver inloggning sedan 2026-10-03** — användarnamn/lösenord måste vara ifyllda i Inställningar) |
 | Testtaggar | Minst 1 Mifare Ultralight / NTAG, minst 1 Mifare Classic 1K |
 | Appversion | Senaste debug-build från Android Studio |
 | Anslutning | USB ADB + MTP (filöverföring) |
@@ -538,7 +538,7 @@ Resultat:
 | **Beskrivning** | Datapersistens mellan omstarter |
 | **Förutsättningar** | Minst 1 reading sparad |
 | **Steg** | 1. Stäng appen helt (swipe away)<br>2. Öppna appen igen |
-| **Förväntat resultat** | Sparade readings finns kvar (JSON-fallback). |
+| **Förväntat resultat** | Sparade readings finns kvar (JSON-fallback i v1.0.1; i Room/SQLite på `feature/sqlite`). *(Testfallet godkändes 2026-06 mot JSON-fallback; Room/SQLite verifierades på telefon 2026-10-03 (migrering, databas kontrollerad, se [[Release-Notes]]), men en formell omkörning av just detta testfall är inte dokumenterad.)* |
 
 - [x] `Godkänt`
 - [ ] `Ej godkänt`

@@ -2,7 +2,7 @@
 title: Testmiljö — hulda (Proxmox)
 tags: [hulda, proxmox, testmiljo, mqtt, fas-d, infrastruktur]
 created: 2026-07-12
-updated: 2026-07-14
+updated: 2026-10-03
 ---
 
 # Testmiljö — hulda (Proxmox)
@@ -17,6 +17,8 @@ Permanent RFID/MQTT-testlabb i garaget. Del av **Fas D** ([Uppdrag 003](https://
 | **Testlab-gäst** | **ishtar** — `192.168.50.151/24` | MQTT, subscriber, Docker |
 
 `192.168.50.100` är **inte** MQTT-värden — tjänsterna körs i en vald VM eller LXC.
+
+**Inloggning (sedan 2026-10-03):** brokern på ishtar nekar anonym anslutning (`allow_anonymous false`, `password_file`, `acl_file`); `rfid-app` skriver och `rfid-dashboard` läser `rfidmanager/+/telemetry`. Skapande av lösenord, filägare (uid 1883, mode `0600`), ordning vid byte och återgång: README, avsnittet *Nätverk och säkerhet (MQTT)*. Termer: [[Ordlista]]. Backup av gamla konfigurationen: `~/backup-mqtt-2026-10-03` på ishtar.
 
 **Aktiv broker:** ishtar `.151` (Uppdrag 004 / D.4). Legacy falstaff `.107` dokumentärt avvecklad — [[Fas-D-falstaff-avveckling]] (D.5).
 
@@ -106,11 +108,13 @@ ssh hulda 'docker logs rfid-mqtt-hulda --tail 50'
 
 ### Verifiering från fakir
 
+> **Obs (2026-10-03):** Portkontrollen fungerar som förut, men `mosquitto_pub` utan användare **nekas** nu av brokern (förväntat). Publicera med `-u rfid-app -P …` eller kontrollera med portkontrollen/`docker logs`. Skriv aldrig lösenord i klartext i dokument eller skalhistorik.
+
 Broker-IP = **ishtar** `192.168.50.151`:
 
 ```bash
 python3 -c "import socket; s=socket.socket(); s.settimeout(3); print(s.connect_ex(('192.168.50.151',1883)))"
-docker run --rm eclipse-mosquitto:2 mosquitto_pub -h 192.168.50.151 -p 1883 -t test/uppdrag003 -m ok
+docker run --rm eclipse-mosquitto:2 mosquitto_pub -h 192.168.50.151 -p 1883 -t test/uppdrag003 -m ok   # historiskt (anonym broker): nekas sedan 2026-10-03
 ssh hulda "ss -tlnp | grep 1883"
 ```
 
@@ -123,7 +127,7 @@ ssh hulda 'sudo cp /tmp/rfid-mqtt.service /etc/systemd/system/ && sudo systemctl
 
 ## MQTT Dashboard (på ishtar, ingen egen broker)
 
-Webb-UI för realtidsflöde. Ansluter till **befintlig** broker `192.168.50.151:1883` — startar **inte** extra Mosquitto.
+Webb-UI för realtidsflöde. Ansluter till **befintlig** broker `192.168.50.151:1883` — startar **inte** extra Mosquitto. Loggar in som `rfid-dashboard` via `MQTT_USERNAME`/`MQTT_PASSWORD` (i `dashboard/.env`, ignoreras av git — aldrig i compose-filen eller i git); utan `MQTT_USERNAME` loggar den inte in och nekas av brokern.
 
 | Fält | Värde |
 |------|-------|
@@ -160,6 +164,8 @@ Loggar ska visa: `Connected to MQTT broker, subscribing to rfidmanager/+/telemet
 mqtt-explorer   # ~/.local/bin, v0.3.5 — host 192.168.50.151:1883
 ```
 
+Kräver användare (`rfid-dashboard`, läsrätt) sedan 2026-10-03 — ännu inte uppsatt i Explorer (teknisk skuld).
+
 Se [[MQTT-Explorer]].
 
 ## Python-subscriber (på gäst)
@@ -172,7 +178,7 @@ pip install paho-mqtt
 python test_subscriber_persist.py
 ```
 
-Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen.
+Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen. **Obs (2026-10-03):** skriptet ansluter anonymt och stödjer ännu inte inloggning, så det nekas av brokern (teknisk skuld; behöver en användare med läsrätt).
 
 ## Felsökning
 
@@ -183,6 +189,9 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | Port 1883 stängd | `docker-compose … up -d` på gästen |
 | Telefon når inte broker | Wi-Fi samma LAN; broker-IP = gäst-IP |
 | App DISCONNECTED | Kontrollera broker i Settings — ska vara ishtar `.151` (default sedan v1.0.1) |
+| App *Misslyckades* / ansluter inte efter 2026-10-03 | Fyll i Användarnamn (`rfid-app`) och Lösenord i Inställningar → MQTT-anslutning och tryck Anslut. Tomt användarnamn = anonym anslutning, som nekas |
+| Broker startar inte, `Unable to open pwfile` i `docker logs rfid-mqtt-hulda` | `passwd`/`acl` har fel ägare eller mode — kör chown/chmod-steget i README (uid 1883, `0600`) |
+| Dashboard `Ej ansluten` | `MQTT_USERNAME`/`MQTT_PASSWORD` saknas eller är fel i `dashboard/.env` |
 
 ## Status (2026-07-12, iter 2)
 
@@ -198,6 +207,7 @@ Kör i `tmux`/`screen` eller systemd. Ansluter till `localhost:1883` på gästen
 | E2E app → broker → dashboard | ✅ Principal 2026-07-12 |
 | E2E app → broker → MQTT Explorer (fakir) | ✅ Principal 2026-07-12 |
 | Verifierat från fakir | ✅ MQTT + dashboard API |
+| MQTT-inloggning + ACL | ✅ Aktiv 2026-10-03, verifierad end-to-end (telefon som `rfid-app`, dashboard som `rfid-dashboard`) |
 
 ## Relaterat
 

@@ -23,6 +23,7 @@ All namnsättning följer **verb + substantiv** för action-orienterade begrepp 
 - **Figma → Code mapping**: Varje Figma Component / Variant / Variable får exakt motsvarande namn i Compose (t.ex. `RfidReadingCard` @Composable).
 - Återanvänd Fas 1: `Primary` (#00FF88), `Accent`, `RadarView`, `StatCard`, `onStartScan`, `selectedId`, `armedWrite` / `pendingWrite`.
 - Alla nya begrepp dokumenteras här + i rich comments i koden + i wiki-arkitektur.
+- Tekniska termer (lagring, bygge, MQTT-säkerhet: Room, KSP, migrering, ACL, outbox m.fl.) definieras i [[Ordlista]] som tabell **Konnotation | Denotation**.
 
 ## 2. Figma-namnsättning (Grok driver dessa)
 

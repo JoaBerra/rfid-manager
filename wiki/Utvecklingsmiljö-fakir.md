@@ -152,7 +152,7 @@ KeePass-masterlösenord: bara i huvudet. AI-agenter läser inte KeePass — du m
 | KeePass DB | — | pCloud Drive (krypterad fil) | Nej |
 | Android `sdk.dir` | — | `RFIDManager/local.properties` | Nej |
 | MQTT ishtar `.151` | — | Publik IP i kod/wiki | Inte hemlig |
-| Framtida MQTT-auth | KeePass-entry | Ev. `*.local` gitignored + setup-skript | Process, inte profil |
+| MQTT-inloggning (`rfid-app`, `rfid-dashboard`; aktiv sedan 2026-10-03) | KeePass-entry (rekommenderat) | App: Inställningar (krypterat). Dashboard: `dashboard/.env` (git-ignorerad). Broker: `test/fas2-mqtt/mqtt/passwd` (git-ignorerad, skapas med `read -rs`) | Bara `MQTT_USERNAME`/`MQTT_PASSWORD` i dashboardens miljö; aldrig i repo/wiki |
 
 ### Aldrig i repo eller wiki
 

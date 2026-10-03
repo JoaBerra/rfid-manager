@@ -13,7 +13,7 @@ created: 2026-06-07
 ## Fas 2 – Slutfört (UAT godkänd 2026-06-07)
 
 **Mål som uppnåtts:**
-- Lokal persistens av läsningar (in-memory fallback + Room-entiteter/DAO/Repository redo).
+- Lokal persistens av läsningar (in-memory fallback + Room-entiteter/DAO/Repository redo). *(Historiskt: Room är sedan 2026-10-03 enda lagring på `feature/sqlite`.)*
 - MQTT-kommunikation (Sparkplug-liknande JSON på `rfidmanager/<uid>/telemetry`).
 - UI för persisterade läsningar + Transmit ↑ + grundläggande MQTT-status.
 - End-to-end validering på fysisk Samsung Galaxy Note 10 (read/write → persist → transmit → subscriber + SQLite).
@@ -27,7 +27,7 @@ created: 2026-06-07
 
 **Öppna punkter från Fas 2-godkännande (prioriteras i Fas 3):**
 - ViewModel-refaktor (bättre state-hantering).
-- Reaktivera riktig Room (KSP istället för in-memory).
+- Reaktivera riktig Room (KSP istället för in-memory). *(Löst 2026-10-03 på `feature/sqlite`, se nedan.)*
 - UI-polish och andrum (se nedan).
 - Kryptering: Produktion skall vara krypterad (dev okrypterat godkänt under utveckling).
 
@@ -75,9 +75,11 @@ Se full design note: [[Fas3-Navigation-Spacing-Design]] (innehåller låsta besl
 
 ## Senare faser (Fas 4+)
 
-### Villkor för riktig Room-databas
+### Villkor för riktig Room-databas *(historiskt/löst 2026-10-03)*
 
-**Status:** Room-källkod (entiteter, DAO, databas, repository) finns i trädet och kompilerar. JSON-fallback aktiv i produktion — data överlever app-omstart. Riktig Room kräver en annotationsprocessor som idag inte är kompatibel med AGP 9.2.1 + Kotlin 2.2.10.
+> ✅ **Löst på grenen `feature/sqlite` 2026-10-03:** Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1 / Kotlin 2.2.10 / Gradle 9.4.1. Room är enda lagring, `readings.json` migreras i en transaktion (filen döps om till `readings.json.migrated`), verifierat på telefonen (3 poster migrerade). Kvar: merge till `main` och ev. release. Tabellen och instruktionen nedan beskriver läget **före** lösningen och behålls som historik. Termer: [[Ordlista]].
+
+**Status (historiskt, v1.0/v1.0.1):** Room-källkod (entiteter, DAO, databas, repository) fanns i trädet och kompilerade. JSON-fallback aktiv i produktion — data överlever app-omstart. Riktig Room krävde en annotationsprocessor som då inte var kompatibel med AGP 9.2.1 + Kotlin 2.2.10.
 
 | Barriär | Förklaring | Lösning när |
 |---|---|---|
@@ -85,7 +87,7 @@ Se full design note: [[Fas3-Navigation-Spacing-Design]] (innehåller låsta besl
 | kapt borttaget i Kotlin 2.2.x | Kapt-pluginet är inkompatibelt med built-in Kotlin, och Kotlin 2.2 har tagit bort kapt-konfigurationen | Använd KSP istället (nedan) |
 | Opt-out (builtInKotlin=false) krockar med AGP | AGP läser ändå in KGP på classpath → "already on classpath" vid plugin-applicering | Kräver AGP-fix eller annan plugin-hantering |
 
-**Så här återaktiverar du Room när KSP är kompatibelt:**
+**Så här återaktiverar du Room när KSP är kompatibelt:** *(historiskt — gjort med `ksp = 2.3.12` på `feature/sqlite`; `AppContainer` har ingen try/catch-reserv längre)*
 
 ```kotlin
 // app/build.gradle.kts
@@ -112,9 +114,9 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
   Python-subscribern har färgkodad utdata och UID-filtrering. MQTT Explorer dokumenterat som gratis GUI-alternativ — se [[MQTT-Explorer]].
 
 - **Produktionshärdning:**
-  - Riktig kryptering (MQTT over TLS / wss).
-  - Riktig Room-persistens + migreringar (se villkor ovan).
-  - Bättre felhantering, retry, offline-kö.
+  - Riktig kryptering (MQTT over TLS / wss). *(MQTT-inloggning med ACL är aktiv sedan 2026-10-03; TLS återstår.)*
+  - Riktig Room-persistens + migreringar (se villkor ovan) — *klart på `feature/sqlite` 2026-10-03; framtida schemaändringar kräver riktig `Migration`, ingen `fallbackToDestructiveMigration`*.
+  - Bättre felhantering, retry, offline-kö (*outbox*, se [[Ordlista]] — rättar även att `markAsTransmitted` sätts oavsett om publiceringen lyckades).
   - Release builds, Play Store (valfritt).
 
 - **Avancerat:**
@@ -277,6 +279,28 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 - GitHub Release skapad med tag `v1.0`.
 > ✅ **Status:** Skapad: https://github.com/JoaBerra/rfid-manager-android/releases/tag/v1.0
 
+## Efter v1.0.1 — underhåll och backlog (2026-10-03)
+
+Projektet är pausat (2026-07-14), men två spår drevs 2026-10-03. Termerna är definierade i [[Ordlista]].
+
+| Spår | Status | Referens |
+|------|--------|----------|
+| MQTT-inloggning (brokern + ACL, `rfid-app` skriver, `rfid-dashboard` läser) | ✅ Aktiv på ishtar 2026-10-03, på `main` (`f08ff22`), verifierad end-to-end | README *Nätverk och säkerhet (MQTT)* |
+| Room/SQLite som enda lagring + migrering från `readings.json` | ✅ Klar och verifierad på telefon på `feature/sqlite` (`eab6b6a..48e8a89`); ⏳ ej mergad till `main` | [[Release-Notes]] |
+| Bygginfo i Inställningar (version, byggtid, commit) | ✅ `48e8a89` | [[Release-Notes]] |
+| Anslut-knappen ger bekräftelse vid första tryck | ✅ `12012a2` | [[Release-Notes]] |
+
+**Kvarstående teknisk skuld / backlog**
+
+| Punkt | Beskrivning |
+|-------|-------------|
+| `markAsTransmitted` | Status `transmitted` sätts oavsett om MQTT-publiceringen lyckades. Rättas separat, ev. med *outbox*. |
+| Anonyma testverktyg | Testskript i `test/fas2-mqtt/mqtt/` och MQTT Explorer saknar användare och kan inte ansluta mot brokern. |
+| `assembleRelease` | `~/.android/debug.keystore` saknas på fakir, så release-bygget misslyckas. |
+| Fel lösenord | Felmeddelandet (*Misslyckades ✗*) är inte visuellt verifierat på telefonen. |
+| `readings.json.migrated` | Raderas aldrig automatiskt; bestäm när den får tas bort manuellt. |
+| Merge `feature/sqlite` → `main` | Beslut och ev. release v1.0.2. |
+
 ## Hur vi håller roadmapen levande
 
 - Uppdateras efter varje UAT/sign-off i [[Kundrelationer-och-Acceptans]].
@@ -289,7 +313,7 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 
 ---
 
-**Senast uppdaterad:** 2026-06-13 (Fas 5 + Fas 6 samtliga punkter godkända; v1.0 releasad).
+**Senast uppdaterad:** 2026-10-03 (avsnittet *Efter v1.0.1*, Room-villkoret markerat löst). Tidigare: 2026-06-13 (Fas 5 + Fas 6 samtliga punkter godkända; v1.0 releasad).
 
 **Fas 3 UAT-test:** Genomförd 2026-06-10. 10 ändringskrav införda och installerade. **Sign-off av Kund 2026-06-10.**
 Se [[Kundrelationer-och-Acceptans#fas-3-uat-test-2026-06-10]] och [[Kundrelationer-och-Acceptans#fas-3-sign-off-2026-06-10]] för detaljer.
