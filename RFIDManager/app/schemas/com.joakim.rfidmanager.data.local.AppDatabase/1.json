@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3b55466271727fc746f6ce53346763d0",
+    "identityHash": "74b461b5099ffb880ad72b494ef92e05",
     "entities": [
       {
         "tableName": "persisted_readings",
@@ -90,12 +90,32 @@
           "columnNames": [
             "id"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "index_persisted_readings_timestamp",
+            "unique": false,
+            "columnNames": [
+              "timestamp"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_persisted_readings_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+          },
+          {
+            "name": "index_persisted_readings_transmitted",
+            "unique": false,
+            "columnNames": [
+              "transmitted"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_persisted_readings_transmitted` ON `${TABLE_NAME}` (`transmitted`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3b55466271727fc746f6ce53346763d0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '74b461b5099ffb880ad72b494ef92e05')"
     ]
   }
 }

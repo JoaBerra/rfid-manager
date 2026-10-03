@@ -1,6 +1,7 @@
 package com.joakim.rfidmanager.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
@@ -12,12 +13,16 @@ import androidx.room.PrimaryKey
  * - source / location / context (e.g. "Gate 3 - Warehouse A", "Pallet 47-B")
  * - data preview + full Sparkplug data (memoryBank, address, length, payload)
  * - type (RFID / EAN)
- * - status (persisted, transmitted via Sparkplug)
+ * - status ("persisted" eller "transmitted")
  *
  * This maps directly to the fields visible in the reference images and the
  * Figma Design Specification (Figma-Design-Spec-Fas2).
  */
-@Entity(tableName = "persisted_readings")
+@Entity(
+    tableName = "persisted_readings",
+    // timestamp: sortering/housekeeping, transmitted: lista över väntande sändningar
+    indices = [Index(value = ["timestamp"]), Index(value = ["transmitted"])]
+)
 data class PersistedReadingEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

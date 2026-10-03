@@ -16,6 +16,17 @@ interface PersistedReadingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(readings: List<PersistedReadingEntity>)
 
+    /**
+     * Strikt insert för JSON-migreringen: kastar vid id-krock istället för att tyst
+     * skriva över (migreringen har redan löst krockar innan den anropar denna).
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAllStrict(readings: List<PersistedReadingEntity>)
+
+    /** Engångsläsning (används av migreringen för att upptäcka id-krockar). */
+    @Query("SELECT * FROM persisted_readings")
+    suspend fun getAllOnce(): List<PersistedReadingEntity>
+
     @Query("SELECT * FROM persisted_readings ORDER BY timestamp DESC")
     fun getAll(): Flow<List<PersistedReadingEntity>>
 

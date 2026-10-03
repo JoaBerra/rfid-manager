@@ -6,24 +6,24 @@ import androidx.room.Room
 /**
  * Enkel provider för AppDatabase.
  * Används för att undvika Hilt i det befintliga projektet.
- * Initieras tidigt i MainActivity.
+ *
+ * Ingen fallbackToDestructiveMigration: vid schemaändring ska en riktig Migration
+ * skrivas (se app/schemas/), annars ska appen hellre misslyckas högljutt än radera data.
  */
 object DatabaseProvider {
+
+    const val DATABASE_NAME = "rfid_manager_database"
 
     @Volatile
     private var INSTANCE: AppDatabase? = null
 
     fun getDatabase(context: Context): AppDatabase {
         return INSTANCE ?: synchronized(this) {
-            val instance = Room.databaseBuilder(
+            INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
-                "rfid_manager_database"
-            )
-                .fallbackToDestructiveMigration() // Room inaktivt (KSP inte tillgängligt i AGP 9); JSON-fallback används
-                .build()
-            INSTANCE = instance
-            instance
+                DATABASE_NAME
+            ).build().also { INSTANCE = it }
         }
     }
 }
