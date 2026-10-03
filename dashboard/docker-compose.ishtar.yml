@@ -12,3 +12,7 @@ services:
       - MQTT_BROKER=192.168.50.151
       - MQTT_PORT=1883
       - MQTT_TOPIC=rfidmanager/+/telemetry
+      # Valfri MQTT-inloggning (tomt = anonymt). Sätt värdena i en .env-fil
+      # bredvid compose-filen eller i miljön – skriv aldrig lösenord i den här filen.
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}

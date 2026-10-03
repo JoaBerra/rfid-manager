@@ -39,3 +39,6 @@ Thumbs.db
 # Staging copy from sixten (sync source, not committed)
 RFIDManager-sixten/
 RFIDManager/.kotlin/
+
+# Dashboard: lokala hemligheter (MQTT_PASSWORD m.m.)
+dashboard/.env

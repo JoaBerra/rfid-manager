@@ -111,6 +111,20 @@ def get_stats():
     }
 
 
+def configure_auth(client):
+    """Sätt MQTT-inloggning om MQTT_USERNAME är satt (annars anonymt, som förut).
+
+    Lösenordet läses från MQTT_PASSWORD och loggas aldrig.
+    """
+    username = os.getenv("MQTT_USERNAME", "")
+    if not username:
+        return False
+    password = os.getenv("MQTT_PASSWORD", "")
+    client.username_pw_set(username, password or None)
+    logger.info("MQTT authentication enabled for user %s", username)
+    return True
+
+
 def start_client():
     broker = os.getenv("MQTT_BROKER", "localhost")
     port = int(os.getenv("MQTT_PORT", "1883"))
@@ -120,6 +134,8 @@ def start_client():
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.on_message = on_message
+
+    configure_auth(client)
 
     try:
         client.connect_async(broker, port, 60)
