@@ -102,6 +102,10 @@ Webbläsare (HTML/CSS/JS)
 └── .venv/                   # Virtuell miljö (för lokal utveckling)
 ```
 
+## Dubblettskydd (feature/outbox, 2026-10-03)
+
+Appens utkorg levererar *minst en gång* (omsändning om ack uteblev). Meddelanden innehåller därför `id`, `deviceId` och `messageId`; `app/dedup.py` låter `on_message` ignorera nycklar som redan setts (LRU 5000, `DEDUP_MAX_IDS`, bara i minnet). Meddelanden utan id räknas som förut. `/api/stats` har fältet `duplicates`. Se [[Outbox]].
+
 ## Startinstruktioner
 
 ### Med Docker Compose (rekommenderat för demo)

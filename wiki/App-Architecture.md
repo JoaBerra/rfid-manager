@@ -26,7 +26,7 @@ graph TD
     subgraph Data["Data Layer"]
         Repo["PersistedReadingRepository"]
         MqttMgr["MqttConnectionManager"]
-        MqttSend["MqttSender"]
+        Outbox["Utkorg: OutboxWorker (WorkManager)<br/>outbox/core + room + mqtt + work"]
         Settings["AppSettings<br/>6 StateFlows"]
         Export["ReadingExporter<br/>CSV/JSON"]
     end
@@ -57,7 +57,7 @@ graph TD
     MainHost --> Theme
     RdgVM --> Repo --> Storage
     ConnVM --> MqttMgr
-    MqttSend --> MqttMgr
+    Outbox --> Repo
     MqttMgr --> Mqtt
     AndroidNfc --> Tag
     AndroidNfc --> Settings
@@ -119,7 +119,7 @@ Detta är en viktig del av hur vi lagrar data i appen (t.ex. sparade RFID-läsni
 - Som att skriva in saker i en riktig anteckningsbok eller databas på telefonen.
 - Data sparas permanent på telefonen (i SQLite). Den överlever app-omstart, telefon-omstart och force-stop.
 - Detta är vad vi vill ha i den färdiga appen.
-- DAO är "kontaktpersonen" som pratar med databasen åt oss. Den har metoder som `getAll()`, `insert()`, `markAsTransmitted()` etc.
+- DAO är "kontaktpersonen" som pratar med databasen åt oss. Den har metoder som `getAll()`, `insert()`, `nextPending()`, `markSent()` etc. (`markAsTransmitted()` är ersatt av utkorgens statusmetoder på `feature/outbox`).
 - Room är biblioteket från Google som gör det lätt att använda SQLite i Android på ett modernt sätt.
 
 **Varför hade vi båda samtidigt? (dual-mode — historiskt, borttaget på `feature/sqlite`)**
@@ -204,7 +204,8 @@ com.joakim.rfidmanager
 │       └── PersistedReading.kt  # Domänmodell för sparade läsningar
 ├── data/
 │   ├── local/
-│   │   ├── AppDatabase.kt       # Room-databas (version 1, tabell persisted_readings, schema exporterat)
+│   │   ├── AppDatabase.kt       # Room-databas (version 2, tabell persisted_readings, schema exporterat)
+│   │   ├── Migrations.kt        # Migration 1→2 (utkorgskolumner), SQL som lista
 │   │   ├── DatabaseProvider.kt  # Skapar Room-databasen; ingen fallbackToDestructiveMigration, ingen reserv
 │   │   ├── dao/PersistedReadingDao.kt
 │   │   └── entities/PersistedReadingEntity.kt
@@ -213,7 +214,6 @@ com.joakim.rfidmanager
 │   │   └── PersistedReadingRepository.kt  # CRUD + getAllReadings Flow
 │   ├── mqtt/
 │   │   ├── MqttConnectionManager.kt  # Persistent MQTT-anslutning + StateFlows
-│   │   └── MqttSender.kt             # Delad anslutning från MqttConnectionManager
 │   ├── settings/
 │   │   └── AppSettings.kt       # SharedPreferences + StateFlows (6 st: font, haptik, ljud, theme, pageSize)
 │   ├── localization/
@@ -221,6 +221,11 @@ com.joakim.rfidmanager
 │   ├── export/
 │   │   └── ReadingExporter.kt   # CSV/JSON + FileProvider + Share Sheet
 │   └── (AppContainer.kt ligger i paketroten: initierar settings, repo, mqtt, localization och startar ev. migrering)
+├── outbox/                      # Utkorg, se [[Outbox]]
+│   ├── core/                    # Ren Kotlin: OutboxStore/Transport/Dispatcher/BackoffPolicy (återanvändbar, t.ex. FASAD)
+│   ├── room/ReadingOutboxStore.kt    # Room-adapter
+│   ├── mqtt/                    # MqttOutboxTransport, PahoMqttLink (QoS 1, ack), ReadingMqttEncoder
+│   └── work/                    # OutboxWorker, OutboxScheduler (WorkManager), OutboxNetworkTrigger
 ├── nfc/
 │   ├── NfcManager.kt            # Interface
 │   └── AndroidNfcManager.kt     # Riktig implementation (reader mode, handleTag, write); StubNfcManager borttagen i Fas 6.4
@@ -261,11 +266,11 @@ Språk hanteras av `LocalizationManager` (separat från AppSettings).
 - `MqttConnectionManager` — klass (inte object), persistent TCP-anslutning som startas vid app-start.
 - StateFlows: `connectionStatus` ("CONNECTED"/"DISCONNECTED"), `lastHeartbeat` (String).
 - Automatisk återanslutning var 35:e sekund. Keep-alive var 30:e sekund.
-- `MqttSender` använder delad anslutning från MqttConnectionManager (ingen egen connect).
+- `MqttSender` är **borttagen på `feature/outbox`**; utskick sker via utkorgen (egen MQTT-anslutning i `OutboxWorker`). `MqttConnectionManager` används nu bara för anslutningsstatus/Anslut-knappen i UI.
 - `ConnectivityViewModel` läser från MqttConnectionManager — ingen demo-data.
 - Broker: `192.168.50.151:1883` (ishtar, Docker `eclipse-mosquitto:2`, okrypterat för dev).
 - **Inloggning (sedan 2026-10-03):** brokern nekar anonym anslutning. Appen ansluter som `rfid-app` (användarnamn/lösenord från Inställningar, lösenordet lagras krypterat); ACL ger `rfid-app` skrivrätt och `rfid-dashboard` läsrätt på `rfidmanager/+/telemetry`. `MqttConnectionManager.reconnect(host, port, username, password)` sätter status `CONNECTING...` synkront; UI väntar på slutstatus (med tidsgräns) och visar *Ansluten* eller *Misslyckades* med felorsak (`lastError`, `12012a2`). Se README, *Nätverk och säkerhet (MQTT)*.
-- **Känd teknisk skuld:** status `transmitted` sätts oavsett om publiceringen lyckades (`markAsTransmitted`); möjlig lösning *outbox* — se [[Ordlista]].
+- **Utkorg (feature/outbox):** ~~status `transmitted` sattes oavsett om publiceringen lyckades (`markAsTransmitted`)~~ — löst. Avläsningar sparas som `PENDING` och skickas av WorkManager (`OutboxWorker`) i tidsordning; `SENT` först efter brokerns ack (QoS 1). Paket: `outbox/core` (ren Kotlin, återanvändbar), `outbox/room`, `outbox/mqtt`, `outbox/work`. Se [[Outbox]] och [[Ordlista]].
 
 ## Temahantering (Fas 4)
 

@@ -4,7 +4,10 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-- [ ] **Rätta `markAsTransmitted`** — status `transmitted` sätts oavsett om MQTT-publiceringen lyckades (`ReadingsViewModel.onTransmit`); möjlig lösning *outbox* ([[Ordlista]]) — teknisk skuld, backlog 2026-10-03
+- [ ] **Provköra utkorgen på telefonen** (`feature/outbox`): koppla från nätet, skanna 3 taggar, återanslut, kontrollera att alla 3 kommer fram en gång var på dashboarden — teststeg i [[Outbox]]. Kod, JVM-tester och bygge klara 2026-10-03; ej provkört på enhet
+- [ ] **Merga `feature/outbox` → `main`** (efter provkörning; bygger på `feature/sqlite`, som måste mergas först)
+- [ ] **FASAD: återanvänd utkorgskärnan** (`outbox/core`) — beskrivet i [[Outbox]]; FASAD-repot ägs av Kalle PL Fasad
+- [x] ~~**Rätta `markAsTransmitted`**~~ — löst på `feature/outbox` 2026-10-03: *outbox* implementerad ([[Outbox]]), en post blir `SENT` först när brokern bekräftat (QoS 1)
 - [ ] **Merga `feature/sqlite` → `main`** (Room/SQLite verifierad på telefon) och avgör ev. release v1.0.2 — kräver att `~/.android/debug.keystore` finns för `assembleRelease`
 - [ ] **Verifiera felmeddelande vid fel lösenord** visuellt på telefonen (*Misslyckades ✗*, `12012a2`)
 - [ ] **`assembleRelease` saknar `~/.android/debug.keystore`** på fakir — skapa/ange signeringsnyckel

@@ -93,7 +93,7 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 | ID | Beskrivning | Referens |
 |----|-------------|----------|
 | **Fas-101** | Full MQTT-konfig i appen. *Autentisering (användarnamn/lösenord, Anslut-knapp med bekräftelse) är klar 2026-10-03*; kvar: TLS, Sparkplug-id, topics, QoS, testknapp | `wiki/Fas-101-MQTT-Configuration.md` |
-| **markAsTransmitted** | Rätta att status `transmitted` sätts oavsett om MQTT-publiceringen lyckades (se *Teknisk skuld*; möjlig lösning: *outbox*, se `wiki/Ordlista.md`) | `ReadingsViewModel.onTransmit` |
+| **Utkorg (outbox)** | ✅ Implementerad på `feature/outbox` (2026-10-03; ersätter `markAsTransmitted`). Kvar: provköra på telefon och merga (efter `feature/sqlite`) | `wiki/Outbox.md` |
 | **Merge** | Besluta om och merga `feature/sqlite` till `main` (verifierad på telefon, `48e8a89`) | *Room/SQLite (feature/sqlite)* |
 | **UAT NFC** | NFC-scan/write inte körd i senaste smoke — verifiera på Note 10 | `wiki/UAT-fakir-smoke-test.md` |
 | **Release v1.0.2** | Ev. ny APK efter `network_security_config` (endast `.151`), MQTT-inloggning och Room. `assembleRelease` kräver `~/.android/debug.keystore`, som saknas på fakir | `wiki/Release-Notes.md` |
@@ -123,7 +123,7 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 - Testskripten i `test/fas2-mqtt/mqtt/` och MQTT Explorer ansluter anonymt och fungerar inte mot brokern förrän de får användare (`rfid-app`/`rfid-dashboard`) — **kvarstående teknisk skuld**
 - ~~SQLite istället för `readings.json` (Room/KSP saknas i bygget)~~ — löst på grenen `feature/sqlite` (commits `eab6b6a..48e8a89`), verifierad på telefonen 2026-10-03: 3 poster migrerade, databasen kontrollerad. Väntar på merge till `main`
 - `assembleRelease` misslyckas på fakir eftersom `~/.android/debug.keystore` saknas (`signingConfigs.release` pekar dit); `assembleDebug` påverkas inte
-- **Bugg (kvarstående teknisk skuld):** `ReadingsViewModel.onTransmit` anropar `repository.markAsTransmitted(id)` oavsett om MQTT-publiceringen lyckades (`MqttSender.sendReading` returnerar inget resultat som kontrolleras). En avläsning kan alltså stå som *skickad* trots att inget nått brokern. Beteendet är medvetet oförändrat i `feature/sqlite` och ska rättas separat (backlog; möjlig lösning: *outbox*, se `wiki/Ordlista.md`)
+- ~~**Bugg:** `ReadingsViewModel.onTransmit` anropade `repository.markAsTransmitted(id)` oavsett om MQTT-publiceringen lyckades~~ — **löst på `feature/outbox`** (2026-10-03): en post blir `SENT` först när brokern bekräftat (QoS 1), se avsnittet *Utkorg (feature/outbox)* och `wiki/Outbox.md`. Kvar i `feature/sqlite` och `main` tills `feature/outbox` mergats
 - Backlog: efter lyckad migrering finns `readings.json.migrated` kvar för alltid (raderas aldrig automatiskt) — bestäm när den kan tas bort manuellt
 
 ---
@@ -136,11 +136,23 @@ Grenen `feature/sqlite` ersätter JSON-/minneslagringen med Room (SQLite): `AppD
 
 **Migrering vid första start efter uppdatering:** `filesDir/readings.json` läses in i Room i en enda transaktion (id bevaras; id-krockar och dubbletter hanteras utan att data tappas), därefter döps filen om till `readings.json.migrated` (raderas aldrig). Misslyckas migreringen ligger JSON-filen kvar orörd, felet loggas (taggen `JsonToRoomMigration`) och visas i Inställningar → Lagring, och migreringen provas igen vid nästa start. Under tiden sparas nya avläsningar i Room men JSON-innehållet visas inte förrän migreringen lyckats.
 
-Status vid överföring är nu alltid `transmitted` (tidigare `transmitted via Sparkplug` i JSON-läget; äldre värden normaliseras vid migreringen). Det är en markering, inte ett kvitto från brokern — se *Teknisk skuld* (`markAsTransmitted`).
+Status vid överföring är på `feature/sqlite` alltid `transmitted` (tidigare `transmitted via Sparkplug` i JSON-läget; äldre värden normaliseras vid migreringen). Det är där en markering, inte ett kvitto från brokern — rättat av utkorgen på `feature/outbox` (se nedan).
 
 **Bygginfo i Inställningar (`48e8a89`):** App-info visar nu riktig version (`VERSION_NAME`), byggtid och git-commit (`BuildConfig.BUILD_TIME` / `GIT_COMMIT`, suffix `-dirty` vid ej incheckade ändringar) i stället för den hårdkodade texten *Fas 5 (juni 2026)* *(historiskt/löst)*. Värdena beräknas vid varje Gradle-körning; aktiveras konfigurationscache måste logiken flyttas (kommentar i `app/build.gradle.kts`).
 
 Bygga och testa: `cd RFIDManager && ANDROID_HOME=~/Android/Sdk ./gradlew assembleDebug testDebugUnitTest`.
+
+---
+
+## Utkorg (feature/outbox)
+
+**Status 2026-10-03:** implementerad på grenen `feature/outbox` (utgår från `feature/sqlite`; ej mergad; **ej provkörd på telefon**). Full beskrivning: `wiki/Outbox.md`.
+
+- **Spara först, skicka sedan:** varje avläsning skrivs som `PENDING` i Room direkt. Status `PENDING` (Väntar) / `SENT` (Skickad, brokern har bekräftat med QoS 1) / `FAILED` (Misslyckad) + `attempts`, `lastError`, `lastAttemptAt`, `sentAt`. Room-schema 2 med riktig `Migration` 1→2 (`transmitted=1`→`SENT`, `0`→`PENDING`; **äldre poster med `transmitted=0` skickas automatiskt första gången**).
+- **Generisk kärna** i paketet `outbox/core` (ren Kotlin, inga Android-beroenden): `OutboxStore`, `OutboxTransport`, `BackoffPolicy`, `OutboxDispatcher`. MQTT (Paho) och Room är adaptrar. Kan återanvändas av FASAD (annat repo, orört) — se `wiki/Outbox.md`.
+- **Utskick:** WorkManager (`androidx.work:work-runtime-ktx:2.12.0`, nytt beroende) med unik kö, nätverkskrav och exponentiell backoff; workern skapar egen MQTT-anslutning från sparade inställningar och körs även när appen är stängd. Triggas av ny avläsning, appstart, nätverk och *Skicka nu*.
+- **Dubblettskydd:** meddelandet har `id`, `deviceId`, `messageId`; dashboarden ignorerar redan sedda (LRU i minnet, enhetstestat).
+- **Test:** `cd RFIDManager && ANDROID_HOME=~/Android/Sdk ./gradlew assembleDebug testDebugUnitTest` och `cd dashboard && python3 -m unittest`; migrering mot riktig SQLite: `python3 RFIDManager/tools/verify_migration_1_2.py`.
 
 ---
 

@@ -32,7 +32,7 @@ created: 2026-06-13
 
 ### Kända begränsningar (kvarstående teknisk skuld)
 
-- `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades (oförändrat, rättas separat; möjlig lösning *outbox*, se [[Ordlista]]).
+- `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades på `feature/sqlite`/`main`. **Rättat på `feature/outbox`** (2026-10-03, ej mergad, ej provkört på telefon) — se [[Outbox]].
 - Testskript (`test/fas2-mqtt/mqtt/`) och MQTT Explorer ansluter anonymt och behöver användare nu när brokern kräver inloggning.
 - `assembleRelease` misslyckas på fakir: `~/.android/debug.keystore` saknas. `assembleDebug` påverkas inte.
 - `readings.json.migrated` raderas aldrig automatiskt.

@@ -1,5 +1,19 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] feature | Utkorg (outbox) för MQTT-överföring på `feature/outbox`
+
+**Gren:** `feature/outbox` (utgår från `feature/sqlite` `d95e9a8`; ej mergad). Beskrivning: [[Outbox]].
+
+**Utfört:** Spara först, skicka sedan — varje avläsning skrivs som `PENDING` direkt. Statusmodell `PENDING`/`SENT`/`FAILED` + `attempts`, `lastError`, `lastAttemptAt`, `sentAt`. Room-schema 1→2 med riktig `Migration` (schema `2.json`; `transmitted=1`→`SENT`, `0`→`PENDING`; kolumnen `transmitted` behålls som spegling). Generisk kärna utan Android-beroenden i `outbox/core` (`OutboxStore`, `OutboxTransport`, `BackoffPolicy`, `OutboxDispatcher`) som FASAD kan återanvända; MQTT-transport (Paho QoS 1, ack via leveranstoken) och Room-store som adaptrar. Utskick via WorkManager (`work-runtime-ktx 2.12.0`, unik kö, nätverkskrav, exponentiell backoff) som skapar egen MQTT-anslutning och körs även när appen är stängd. Dubblettskydd: `id`/`deviceId`/`messageId` i meddelandet, dashboarden ignorerar redan sedda id:n (LRU i minnet). UI: *Skicka nu*, status Väntar/Skickad/Misslyckad med felorsak, antal väntande i Inställningar.
+
+**Teknisk skuld löst:** `markAsTransmitted` (status sattes oavsett om publiceringen lyckades) är borttagen; en post blir `SENT` först när brokern bekräftat.
+
+**Ej verifierat:** körning på telefon (WorkManager, riktig broker, migrering av telefonens befintliga databas). Migrering 1→2 är verifierad med JVM-test av SQL mot schemafilerna och med Python `sqlite3` (`tools/verify_migration_1_2.py`), inte med `MigrationTestHelper`.
+
+**Dokumentation uppdaterad:** [[Outbox]] (ny), [[Ordlista]], [[App-Architecture]], [[Kanban]], [[Produkt-Roadmap]], [[Release-Notes]], [[Fas-200-Web-Dashboard]], README.
+
+---
+
 ## [2026-10-03] underhåll | MQTT-inloggning aktiv, Room/SQLite som enda lagring, bygginfo i appen
 
 **MQTT-inloggning (på `main`, `f08ff22`):** Brokern på ishtar kräver inloggning sedan 2026-10-03 (`allow_anonymous false`, `password_file`, `acl_file`). `rfid-app` skriver och `rfid-dashboard` läser `rfidmanager/+/telemetry` (ACL). `passwd` och `acl` ägs av uid 1883 med mode `0600`; lösenord skapas med `mosquitto_passwd -b` via `read -rs`. Verifierat end-to-end. Anslut-knappen ger bekräftelse vid första tryck (`12012a2`).
