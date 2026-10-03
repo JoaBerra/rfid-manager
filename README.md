@@ -93,7 +93,7 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 | ID | Beskrivning | Referens |
 |----|-------------|----------|
 | **Fas-101** | Full MQTT-konfig i appen. *Autentisering (användarnamn/lösenord, Anslut-knapp med bekräftelse) är klar 2026-10-03*; kvar: TLS, Sparkplug-id, topics, QoS, testknapp | `wiki/Fas-101-MQTT-Configuration.md` |
-| **Utkorg (outbox)** | ✅ Implementerad på `feature/outbox` (2026-10-03; ersätter `markAsTransmitted`). **Verifierad på telefon och mot riktiga brokern 2026-10-03** (felvägarna fel lösenord/12 försök/`FAILED`/omstart provade och verifierade på telefon 2026-10-03). Kvar: merga (efter `feature/sqlite`) | `wiki/Outbox.md` |
+| **Utkorg (outbox)** | ✅ Implementerad och på `main` (2026-10-03; ersätter `markAsTransmitted`). **Verifierad på telefon och mot riktiga brokern 2026-10-03** (felvägarna fel lösenord/12 försök/`FAILED`/omstart provade och verifierade på telefon 2026-10-03). **Omförsök i omgångar** (gren `feature/outbox-rounds`, ej mergad) är verifierade av Joakim på telefon 2026-10-03; kontrastfixen för pausraden är gjord men ej omprovad | `wiki/Outbox.md` |
 | **Merge** | Besluta om och merga `feature/sqlite` till `main` (verifierad på telefon, `48e8a89`) | *Room/SQLite (feature/sqlite)* |
 | **UAT NFC** | NFC-scan/write inte körd i senaste smoke — verifiera på Note 10 | `wiki/UAT-fakir-smoke-test.md` |
 | **Release v1.0.2** | Ev. ny APK efter `network_security_config` (endast `.151`), MQTT-inloggning och Room. `assembleRelease` kräver `~/.android/debug.keystore`, som saknas på fakir | `wiki/Release-Notes.md` |
@@ -146,7 +146,7 @@ Bygga och testa: `cd RFIDManager && ANDROID_HOME=~/Android/Sdk ./gradlew assembl
 
 ## Utkorg (feature/outbox)
 
-**Status 2026-10-03:** implementerad på grenen `feature/outbox` (utgår från `feature/sqlite`; ej mergad; **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**). Full beskrivning: `wiki/Outbox.md`.
+**Status 2026-10-03:** implementerad och på `main` (grenarna `feature/sqlite`, `feature/outbox` och `feature/mqtt-auth` är mergade och borttagna; **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**). Omförsök i omgångar (gren `feature/outbox-rounds`, ej mergad) är verifierade av Joakim på telefon 2026-10-03; kontrastfixen för pausraden är gjord men ej omprovad. Full beskrivning: `wiki/Outbox.md`.
 
 - **Spara först, skicka sedan:** varje avläsning skrivs som `PENDING` i Room direkt. Status `PENDING` (Väntar) / `SENT` (Skickad, brokern har bekräftat med QoS 1) / `FAILED` (Misslyckad) + `attempts`, `lastError`, `lastAttemptAt`, `sentAt`. Room-schema 2 med riktig `Migration` 1→2 (`transmitted=1`→`SENT`, `0`→`PENDING`; **äldre poster med `transmitted=0` skickas automatiskt första gången**).
 - **Generisk kärna** i paketet `outbox/core` (ren Kotlin, inga Android-beroenden): `OutboxStore`, `OutboxTransport`, `BackoffPolicy`, `OutboxDispatcher`. MQTT (Paho) och Room är adaptrar. Kan återanvändas av FASAD (annat repo, orört) — se `wiki/Outbox.md`.

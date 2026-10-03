@@ -6,9 +6,9 @@ created: 2026-10-03
 
 # Utkorg (outbox)
 
-> **Status:** implementerad på grenen `feature/outbox` (utgår från `feature/sqlite`, ej mergad till `main`). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
+> **Status:** implementerad och **mergad till `main`** (grenarna `feature/sqlite`, `feature/outbox` och `feature/mqtt-auth` är mergade och borttagna). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
 
-> **Ny gren `feature/outbox-rounds` (utgår från `main` `2e3ee25`, ej mergad, ej pushad till `main`):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger; INTE provat på telefon.**
+> **Gren `feature/outbox-rounds` (utgår från `main` `2e3ee25`, pushad som egen gren, ej mergad till `main`):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger, och funktionen är verifierad av Joakim på telefon 2026-10-03** (installerad 12:50). Kontrastfixen för pausraden är gjord men **ännu inte omprovad** förrän Joakim sett den.
 
 ## Varför
 
@@ -92,7 +92,7 @@ Ren Kotlin: endast `kotlin.*`, `kotlinx.coroutines.*`, `java.*` (testet `CoreHas
 
 ## Omförsök i omgångar (gren `feature/outbox-rounds`)
 
-> **Status (ärlig):** byggt och **enhetstestat på JVM** (28 nya tester; alla 108 gröna) samt `assembleDebug` OK. **Inte provat på telefon**, inte installerat, inte mergat. Hur WorkManager beter sig i verkligheten (schemaläggning efter pausen, överlevnad vid omstart, UI-text) är alltså **otestat på enhet**.
+> **Status (ärlig):** byggt, **enhetstestat på JVM** (28 nya tester; alla 108 gröna) och **verifierat av Joakim på telefon 2026-10-03** (installerad 12:50; inställningar 2 försök / 1 minut / 3 omgångar: 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva). Inte mergat till `main`. **Kontrast:** pausraden var först nästan osynlig (färgen `colorScheme.secondary`, i mörkt läge `#1A1D20` på kortet `#111416`, i ljust läge `#E5E7EB` på vitt); den är nu `colorScheme.onSurface` (mörkt `#E8EAED`, ljust `#1F2937`) och hjälptexten i inställningskortet likaså. Fixen är **gjord men inte omprovad** förrän Joakim sett den på telefonen.
 
 **Önskemål (Joakim 2026-10-03):** för arbete i fält utan täckning ska en post inte ge upp efter 12 direkta försök, utan försöka i *omgångar*: 12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, och först därefter `FAILED`.
 
@@ -124,8 +124,9 @@ Inom en omgång gäller samma exponentiella backoff som förut (30 s, 60 s … t
 - **Första posten blockerar köerna** (som förut): poster bakom en post i paus skickas inte förrän den är skickad eller `FAILED`. Med standardvärden kan det vara drygt två timmar.
 - **Inget nätverk = inga försök räknas.** WorkManager kör bara med nätverk (`CONNECTED`). I fält helt utan täckning pausar därför hela kön av sig själv; omgångarna räknas när telefonen har nät men brokern inte svarar (t.ex. mobildata utan fungerande väg ut). Hur mycket detta spelar roll i Joakims användning är inte utrett.
 - Pausens sluttid räknas från `lastAttemptAt` + paus; ändras systemklockan kan visningen bli fel.
-- *Anslutning*-vyn (`MqttStatusScreen`) visar försök och felorsak men ännu ingen pausrad.
-- Ej provat på telefon: UI-texten, kortet i Inställningar, `scheduleAfter` med verklig `initialDelay`, omstart under paus.
+- *Anslutning*-vyn (`MqttStatusScreen`) visar försök och felorsak men **saknar pausrad** (verifierat 2026-10-03; pausraden visas bara i Avläsningar).
+- Statusordet *Väntar* (`outboxStatusColor`, `PENDING`) använder fortfarande `colorScheme.secondary` och kan ha samma kontrastproblem; ändrades inte.
+- Fortfarande inte provat på telefon: kontrastfixen, omstart under paus.
 
 ### Kalle (FASAD-172): så återanvänder du omgångarna
 
@@ -178,7 +179,9 @@ Begränsningar att känna till: id är `Long`; en post i taget (ingen batch); `d
 | 12 misslyckade försök → status `FAILED`, *Skicka nu* köar om | Manuellt, Joakim 2026-10-03: posten blev *Misslyckad* (röd), nästa post gick igenom samma process; efter rätt lösenord och *Skicka nu* blev båda Misslyckade posterna *Skickade* | ✅ verifierad på enhet |
 | Telefon omstartad (flygplansläge på) medan poster väntade → skickas när nätet slås på, utan att appen öppnas | Manuellt, Joakim 2026-10-03: alla väntande poster skickades av sig själva inom ett par minuter | ✅ verifierad på enhet |
 | Omgångar: gränser, paus, `FAILED` först efter sista omgången, Skicka nu, nätverk tillbaka, standardvärden, en omgång = gammalt beteende; validering 1–100/1–1440/1–20 | JVM-enhetstest (`RetryPolicyTest`, `OutboxDispatcherRoundsTest`, `OutboxRoundsInputTest`, 28 nya; totalt 108 gröna) på `feature/outbox-rounds` | ✅ enhetstestat |
-| Omgångar: WorkManager `initialDelay` efter pausen, överlevnad vid omstart, pausraden och inställningskortet i UI | — | ❌ **ej provat på telefon** |
+| Omgångar på telefon: 2 försök / 1 min / 3 omgångar → 6 försök över tre omgångar → *Misslyckad* (röd); rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva (WorkManager efter pausen) | Manuellt, Joakim 2026-10-03 (installerad 12:50) | ✅ verifierad på enhet |
+| Omgångar: omstart under paus; *Anslutning*-vyn saknar pausrad | — | ❌ omstart under paus ej provad; pausrad i Anslutning finns inte |
+| Kontrast i pausraden och hjälptexten (ljust och mörkt läge) | Kodändring till `onSurface`; bygge och enhetstester gröna | ⏳ gjord, **ej omprovad** förrän Joakim sett den |
 
 ## Manuell test på telefonen
 

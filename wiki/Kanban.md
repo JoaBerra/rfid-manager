@@ -90,7 +90,6 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
-- [ ] **Omförsöksmönster i omgångar** (12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, därefter Misslyckad; inställbart i Inställningar; önskemål från Joakim 2026-10-03, gäller även FASAD-172) — **byggt på gren `feature/outbox-rounds`, enhetstestat (108 tester gröna), ej provat på enhet, ej mergat, ej installerat**; Room-schemat oförändrat (rundnummer härleds ur `attempts`) ([[Outbox]])
 - [ ] **Room/SQLite på `feature/sqlite`** — klar och verifierad på telefon 2026-10-03 (3 poster migrerade, databasen kontrollerad); väntar på merge till `main` ([[Release-Notes]], [[Ordlista]])
 
 
@@ -102,6 +101,7 @@ kanban-plugin: board
 
 ## ✅ Klart (Done)
 
+- [x] **Omförsöksmönster i omgångar** (12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, därefter Misslyckad; inställbart i Inställningar; önskemål från Joakim 2026-10-03, gäller även FASAD-172) — ✅ verifierad av Joakim på telefon 2026-10-03 (installerad 12:50; inställningar 2 försök/1 min/3 omgångar: 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva). Gren `feature/outbox-rounds`, ej mergad till `main`. **Kvar:** *Anslutning*-vyn saknar pausrad; **kontrastfixen för pausraden är gjord men ej omprovad** förrän Joakim sett den ([[Outbox]])
 - [x] **Utkorg (outbox) på `feature/outbox`** — spara först/skicka sedan, WorkManager, ack (QoS 1), dubblettskydd, Room 1→2 — ✅ verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern (offline → *Väntar*, skickas när nätverk finns även med appen stängd, en gång var på dashboarden, status *Skickad*; migrering 1→2 på telefonens riktiga databas: 4 poster blev `SENT`; dashboard med dubblettskydd driftsatt på ishtar, `c16ef43`). Felvägarna provade och verifierade av Joakim på telefon 2026-10-03 (fel lösenord → *Väntar* med röd felorsak och växande *Försök*; 12 försök → *Misslyckad* (`FAILED`), nästa post går igenom samma process, *Skicka nu* köar om Misslyckade; telefon omstartad med väntande poster → skickas av sig själva inom ett par minuter när nätet slås på). Merge till `main` återstår ([[Outbox]])
 - [x] **MQTT-inloggning på ishtar** — `allow_anonymous false`, ACL (`rfid-app` skriver, `rfid-dashboard` läser), `passwd`/`acl` ägda av uid 1883 mode `0600`, lösenord via `mosquitto_passwd -b` + `read -rs` — ✅ aktiv och verifierad end-to-end 2026-10-03, på `main` (`f08ff22`)
 - [x] **Bygginfo i Inställningar** — version, byggtid, git-commit från `BuildConfig` i stället för hårdkodat *Fas 5 (juni 2026)* — ✅ `48e8a89`, 2026-10-03 (på `feature/sqlite`)

@@ -1,5 +1,19 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] verifiering | Omgångsfunktionen verifierad på telefon; kontrastfix i pausraden
+
+**Gren:** `feature/outbox-rounds` (ej mergad, `main` orörd). Beskrivning: [[Outbox]].
+
+**Verifierat av Joakim på telefon 2026-10-03** (installerad 12:50; inställningar 2 försök / 1 minut / 3 omgångar): 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva. *Anslutning*-vyn saknar pausrad.
+
+**Kontrastfix:** pausraden ("Paus: omgång N av M klar …") var nästan osynlig – färgen var `colorScheme.secondary` (mörkt läge `#1A1D20` på kortet `#111416`, ljust läge `#E5E7EB` på vitt). Nu `colorScheme.onSurface` (mörkt `#E8EAED`, ljust `#1F2937`). Hjälptexten i inställningskortet ändrades från `onSurfaceVariant` till `onSurface` (mörkt läge `#6B7280` hade för låg kontrast). **Gjord men ej omprovad** förrän Joakim sett den på telefonen.
+
+**Rättat i [[Outbox]]:** utkorgen ligger på `main`; `feature/sqlite`, `feature/outbox` och `feature/mqtt-auth` är mergade och borttagna.
+
+**Dokumentation uppdaterad:** [[Outbox]], [[Kanban]] (omgångskortet → Klart), README (utkorgens status).
+
+---
+
 ## [2026-10-03] feature | Omförsök i omgångar i utkorgen på `feature/outbox-rounds`
 
 **Gren:** `feature/outbox-rounds` (utgår från `main` `2e3ee25`; pushad som egen gren, **inte** mergad, `main` orörd). Beskrivning: [[Outbox]] (avsnittet *Omförsök i omgångar*).
