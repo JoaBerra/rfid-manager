@@ -240,7 +240,8 @@ class MainActivity : ComponentActivity() {
                         detectedTags = detectedTags,
                         onWrite = onWrite,
                         onPersist = onPersist,
-                        onSendNow = { appContainer.outboxScheduler.sendNow() }
+                        onSendNow = { appContainer.outboxScheduler.sendNow() },
+                        onOutboxSettingsChanged = { appContainer.outboxScheduler.onSettingsChanged() }
                     )
                 }
             }

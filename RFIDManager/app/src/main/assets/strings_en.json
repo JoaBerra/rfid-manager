@@ -103,5 +103,20 @@
   "persisted_item.send_now": "Send now",
   "persisted_item.sent_check": "Sent ✓",
   "screen.settings.outbox_pending": "Pending in outbox",
-  "screen.settings.outbox_failed": "Failed (press Send now)"
+  "screen.settings.outbox_failed": "Failed (press Send now)",
+  "outbox.round": "round {n} of {total}",
+  "outbox.pause": "Pause: round {done} of {total} done. Next round starts at {time} (in {min} min)",
+  "outbox.pause_due": "Pause over – next round starts as soon as there is a network",
+  "screen.settings.outbox_rounds_title": "Outbox – retry in rounds",
+  "screen.settings.outbox_rounds_help": "A failed send is retried in rounds: attempts, pause, attempts, pause … Only after the last round does the entry become Failed. Send now skips the pause.",
+  "screen.settings.outbox_attempts_per_round": "Attempts per round (1–100)",
+  "screen.settings.outbox_pause_minutes": "Pause between rounds, minutes (1–1440)",
+  "screen.settings.outbox_round_count": "Number of rounds (1–20)",
+  "screen.settings.outbox_rounds_default": "Default",
+  "screen.settings.outbox_err_attempts": "Enter a whole number from 1 to 100",
+  "screen.settings.outbox_err_pause": "Enter a whole number from 1 to 1440 minutes",
+  "screen.settings.outbox_err_rounds": "Enter a whole number from 1 to 20",
+  "screen.settings.outbox_rounds_save": "Save",
+  "screen.settings.outbox_rounds_reset": "Defaults",
+  "screen.settings.outbox_rounds_saved": "Saved ✓"
 }

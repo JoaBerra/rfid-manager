@@ -22,9 +22,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Köpolicy:
  * - [onReadingSaved] / [onAppStart]: APPEND_OR_REPLACE – läggs sist i kön. Ingen risk att en avläsning
  *   som sparas medan en körning håller på att avsluta missas, och en körning i backoff trampas inte på.
- * - [sendNow] / [onNetworkAvailable]: REPLACE med force – ersätter väntande/pågående körning och försöker
- *   direkt utan att vänta ut backoff. (Pågående körning avbryts; posten förblir väntande och skickas om,
- *   vilket är ofarligt tack vare dubblettskyddet.)
+ * - [sendNow]: REPLACE med force och skipPause – ersätter väntande/pågående körning och försöker direkt,
+ *   kringgår både backoff och pausen mellan omgångar. (Pågående körning avbryts; posten förblir väntande
+ *   och skickas om, vilket är ofarligt tack vare dubblettskyddet.)
+ * - [onNetworkAvailable]: REPLACE med force men UTAN skipPause – hoppar över backoff men inte pausen mellan
+ *   omgångar. Står första posten i paus planerar workern om körningen till pausens slut.
+ * - [scheduleAfter]: planerar nästa körning efter en paus (initialDelay). WorkManager lagrar jobbet, så det
+ *   överlever omstart av appen och telefonen. REPLACE, så att bara en väntande körning finns.
  */
 class OutboxScheduler(context: Context) {
     private val appContext = context.applicationContext
@@ -33,16 +37,29 @@ class OutboxScheduler(context: Context) {
 
     fun onAppStart() = enqueue(ExistingWorkPolicy.APPEND_OR_REPLACE, force = false)
 
-    fun onNetworkAvailable() = enqueue(ExistingWorkPolicy.REPLACE, force = true)
+    fun onNetworkAvailable() = enqueue(ExistingWorkPolicy.REPLACE, force = true, skipPause = false)
 
-    fun sendNow() = enqueue(ExistingWorkPolicy.REPLACE, force = true)
+    fun sendNow() = enqueue(ExistingWorkPolicy.REPLACE, force = true, skipPause = true)
 
-    private fun enqueue(policy: ExistingWorkPolicy, force: Boolean) {
+    /** Utkorgsinställningarna (omgångar/paus) ändrades: låt workern räkna om tidpunkten (ingen force). */
+    fun onSettingsChanged() = enqueue(ExistingWorkPolicy.REPLACE, force = false)
+
+    /** Nästa körning efter [delayMillis] (pausens slut). Ersätter tidigare väntande körning. */
+    fun scheduleAfter(delayMillis: Long) =
+        enqueue(ExistingWorkPolicy.REPLACE, force = false, delayMillis = delayMillis.coerceAtLeast(0L))
+
+    private fun enqueue(
+        policy: ExistingWorkPolicy,
+        force: Boolean,
+        skipPause: Boolean = false,
+        delayMillis: Long = 0L
+    ) {
         try {
             val request = OneTimeWorkRequestBuilder<OutboxWorker>()
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
-                .setInputData(workDataOf(OutboxWorker.KEY_FORCE to force))
+                .setInputData(workDataOf(OutboxWorker.KEY_FORCE to force, OutboxWorker.KEY_SKIP_PAUSE to skipPause))
+                .apply { if (delayMillis > 0) setInitialDelay(delayMillis, TimeUnit.MILLISECONDS) }
                 .addTag(UNIQUE_NAME)
                 .build()
             WorkManager.getInstance(appContext).enqueueUniqueWork(UNIQUE_NAME, policy, request)

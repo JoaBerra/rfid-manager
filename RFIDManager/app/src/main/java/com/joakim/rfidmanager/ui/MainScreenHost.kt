@@ -49,7 +49,9 @@ fun MainScreenHost(
     onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
     // Utkorg: 'Skicka nu' (tvingat utskick via WorkManager)
-    onSendNow: () -> Unit = {}
+    onSendNow: () -> Unit = {},
+    // Utkorg: omgångsinställningarna ändrades (planera om nästa körning)
+    onOutboxSettingsChanged: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -125,6 +127,7 @@ fun MainScreenHost(
                     val searchQuery by viewModel.searchQuery.collectAsState()
                     val hasMore by viewModel.hasMore.collectAsState()
                     val pageSize by settings?.pageSize?.collectAsState() ?: remember { mutableStateOf(50) }
+                    val roundsConfig by settings?.outboxRounds?.collectAsState() ?: remember { mutableStateOf(com.joakim.rfidmanager.outbox.core.RoundsConfig()) }
                     val fontSizeScale by settings?.fontSizeScale?.collectAsState() ?: remember { mutableStateOf(1.0f) }
                     var isLoading by remember { mutableStateOf(true) }
 
@@ -280,7 +283,8 @@ fun MainScreenHost(
                                     PersistedListItem(
                                         reading = reading,
                                         onTransmit = { viewModel.sendNow(reading) },
-                                        fontSizeScale = fontSizeScale
+                                        fontSizeScale = fontSizeScale,
+                                        roundsConfig = roundsConfig
                                     )
                                 }
                                 if (hasMore) {
@@ -340,6 +344,7 @@ fun MainScreenHost(
                     onReconnect = { host, port, username, password ->
                         mqttManager?.reconnect(host, port, username, password)
                     },
+                    onOutboxSettingsChanged = onOutboxSettingsChanged,
                     modifier = Modifier.background(MaterialTheme.colorScheme.background)
                 )
             }

@@ -1,6 +1,7 @@
 package com.joakim.rfidmanager.data.settings
 
 import android.content.Context
+import com.joakim.rfidmanager.outbox.core.RoundsConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,6 +73,36 @@ class AppSettings(context: Context) {
                 }
         }
 
+    private val _outboxRounds = MutableStateFlow(readOutboxRounds())
+
+    /**
+     * Utkorgens omförsök i omgångar: försök per omgång, paus (minuter) och antal omgångar.
+     * Standard 12 / 60 / 3. Sparas i samma SharedPreferences som övriga inställningar; läses av
+     * OutboxWorker vid varje körning, så en ändring gäller direkt nästa körning.
+     */
+    val outboxRounds: StateFlow<RoundsConfig> = _outboxRounds.asStateFlow()
+
+    /** Sparar giltig konfiguration (valideras av [OutboxRoundsInput] i UI:t; [RoundsConfig] kräver >= 1). */
+    fun setOutboxRounds(config: RoundsConfig) {
+        prefs.edit()
+            .putInt(KEY_OUTBOX_ATTEMPTS, config.attemptsPerRound)
+            .putInt(KEY_OUTBOX_PAUSE_MIN, config.pauseMinutes)
+            .putInt(KEY_OUTBOX_ROUNDS, config.rounds)
+            .apply()
+        _outboxRounds.value = config
+    }
+
+    /** Okänt/ogiltigt sparat värde (utanför appens gränser) ersätts med standardvärdet. */
+    private fun readOutboxRounds(): RoundsConfig {
+        fun int(key: String, default: Int, range: IntRange) =
+            prefs.getInt(key, default).takeIf { it in range } ?: default
+        return RoundsConfig(
+            attemptsPerRound = int(KEY_OUTBOX_ATTEMPTS, RoundsConfig.DEFAULT_ATTEMPTS_PER_ROUND, OutboxRoundsInput.ATTEMPTS_RANGE),
+            pauseMinutes = int(KEY_OUTBOX_PAUSE_MIN, RoundsConfig.DEFAULT_PAUSE_MINUTES, OutboxRoundsInput.PAUSE_MINUTES_RANGE),
+            rounds = int(KEY_OUTBOX_ROUNDS, RoundsConfig.DEFAULT_ROUNDS, OutboxRoundsInput.ROUNDS_RANGE)
+        )
+    }
+
     fun setFontSizeScale(scale: Float) {
         val clamped = scale.coerceIn(1.0f, 1.8f)
         prefs.edit().putFloat(KEY_FONT_SIZE, clamped).apply()
@@ -120,5 +151,8 @@ class AppSettings(context: Context) {
         private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_MQTT_USERNAME = "mqtt_username"
         private const val KEY_MQTT_PASSWORD_ENC = "mqtt_password_enc"
+        private const val KEY_OUTBOX_ATTEMPTS = "outbox_attempts_per_round"
+        private const val KEY_OUTBOX_PAUSE_MIN = "outbox_pause_minutes"
+        private const val KEY_OUTBOX_ROUNDS = "outbox_rounds"
     }
 }

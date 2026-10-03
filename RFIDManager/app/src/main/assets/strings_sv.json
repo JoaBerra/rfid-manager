@@ -103,5 +103,20 @@
   "persisted_item.send_now": "Skicka nu",
   "persisted_item.sent_check": "Skickad ✓",
   "screen.settings.outbox_pending": "Väntande i utkorgen",
-  "screen.settings.outbox_failed": "Misslyckade (tryck Skicka nu)"
+  "screen.settings.outbox_failed": "Misslyckade (tryck Skicka nu)",
+  "outbox.round": "omgång {n} av {total}",
+  "outbox.pause": "Paus: omgång {done} av {total} klar. Nästa omgång startar kl {time} (om {min} min)",
+  "outbox.pause_due": "Paus slut – nästa omgång startar så snart nätverk finns",
+  "screen.settings.outbox_rounds_title": "Utkorg – omförsök i omgångar",
+  "screen.settings.outbox_rounds_help": "Misslyckat utskick försöks igen i omgångar: försök, paus, försök, paus … Först efter sista omgången blir posten Misslyckad. Skicka nu hoppar över pausen.",
+  "screen.settings.outbox_attempts_per_round": "Försök per omgång (1–100)",
+  "screen.settings.outbox_pause_minutes": "Paus mellan omgångar, minuter (1–1440)",
+  "screen.settings.outbox_round_count": "Antal omgångar (1–20)",
+  "screen.settings.outbox_rounds_default": "Standard",
+  "screen.settings.outbox_err_attempts": "Ange ett heltal mellan 1 och 100",
+  "screen.settings.outbox_err_pause": "Ange ett heltal mellan 1 och 1440 minuter",
+  "screen.settings.outbox_err_rounds": "Ange ett heltal mellan 1 och 20",
+  "screen.settings.outbox_rounds_save": "Spara",
+  "screen.settings.outbox_rounds_reset": "Standardvärden",
+  "screen.settings.outbox_rounds_saved": "Sparat ✓"
 }

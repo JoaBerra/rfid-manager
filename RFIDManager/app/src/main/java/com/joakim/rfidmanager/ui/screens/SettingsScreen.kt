@@ -23,6 +23,8 @@ import com.joakim.rfidmanager.data.export.ReadingExporter
 import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
 import com.joakim.rfidmanager.data.settings.AppSettings
 import com.joakim.rfidmanager.data.settings.BrokerDefaults
+import com.joakim.rfidmanager.data.settings.OutboxRoundsInput
+import com.joakim.rfidmanager.outbox.core.RoundsConfig
 import com.joakim.rfidmanager.ui.LocalLocalization
 import com.joakim.rfidmanager.ui.str
 import com.joakim.rfidmanager.ui.theme.Dimens
@@ -38,6 +40,7 @@ fun SettingsScreen(
     mqttStatus: StateFlow<String>? = null,
     mqttError: StateFlow<String>? = null,
     onReconnect: (host: String, port: Int, username: String, password: String) -> Unit = { _, _, _, _ -> },
+    onOutboxSettingsChanged: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val fontSizeScale by settings?.fontSizeScale?.collectAsState() ?: remember { mutableStateOf(1.0f) }
@@ -54,6 +57,12 @@ fun SettingsScreen(
     var usernameInput by remember { mutableStateOf(savedUsername) }
     // Lösenordsfältet fylls aldrig i med det sparade lösenordet; tomt fält = behåll sparat.
     var passwordInput by remember { mutableStateOf("") }
+    val savedRounds by settings?.outboxRounds?.collectAsState() ?: remember { mutableStateOf(RoundsConfig()) }
+    var attemptsInput by remember { mutableStateOf(savedRounds.attemptsPerRound.toString()) }
+    var pauseInput by remember { mutableStateOf(savedRounds.pauseMinutes.toString()) }
+    var roundsInput by remember { mutableStateOf(savedRounds.rounds.toString()) }
+    var roundsErrors by remember { mutableStateOf(emptySet<OutboxRoundsInput.Field>()) }
+    var roundsSaved by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val loc = LocalLocalization.current
     val currentLang by loc.currentLanguage.collectAsState()
@@ -280,6 +289,96 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
+            }
+        }
+
+        Spacer(Modifier.height(Dimens.sectionSpacing))
+
+        // Utkorg: omförsök i omgångar
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(modifier = Modifier.padding(Dimens.cardPadding)) {
+                Text(str("screen.settings.outbox_rounds_title"), fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(Dimens.smallGap))
+                Text(
+                    str("screen.settings.outbox_rounds_help"),
+                    fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(Dimens.smallGap))
+                @Composable
+                fun roundsField(
+                    value: String,
+                    onChange: (String) -> Unit,
+                    labelKey: String,
+                    defaultValue: Int,
+                    errorKey: String,
+                    field: OutboxRoundsInput.Field
+                ) {
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { onChange(it.filter { c -> c.isDigit() }); roundsSaved = false },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(str(labelKey), fontFamily = FontFamily.Monospace, fontSize = 11.sp) },
+                        supportingText = {
+                            Text(
+                                if (field in roundsErrors) str(errorKey) else str("screen.settings.outbox_rounds_default") + ": " + defaultValue,
+                                fontFamily = FontFamily.Monospace, fontSize = 10.sp
+                            )
+                        },
+                        isError = field in roundsErrors,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                    )
+                }
+                roundsField(attemptsInput, { attemptsInput = it }, "screen.settings.outbox_attempts_per_round",
+                    RoundsConfig.DEFAULT_ATTEMPTS_PER_ROUND, "screen.settings.outbox_err_attempts", OutboxRoundsInput.Field.ATTEMPTS)
+                Spacer(Modifier.height(Dimens.smallGap))
+                roundsField(pauseInput, { pauseInput = it }, "screen.settings.outbox_pause_minutes",
+                    RoundsConfig.DEFAULT_PAUSE_MINUTES, "screen.settings.outbox_err_pause", OutboxRoundsInput.Field.PAUSE_MINUTES)
+                Spacer(Modifier.height(Dimens.smallGap))
+                roundsField(roundsInput, { roundsInput = it }, "screen.settings.outbox_round_count",
+                    RoundsConfig.DEFAULT_ROUNDS, "screen.settings.outbox_err_rounds", OutboxRoundsInput.Field.ROUNDS)
+                Spacer(Modifier.height(Dimens.smallGap))
+                if (roundsSaved) {
+                    Text(str("screen.settings.outbox_rounds_saved"), fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(Dimens.smallGap))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            focusManager.clearFocus()
+                            when (val r = OutboxRoundsInput.validate(attemptsInput, pauseInput, roundsInput)) {
+                                is OutboxRoundsInput.Result.Invalid -> { roundsErrors = r.fields; roundsSaved = false }
+                                is OutboxRoundsInput.Result.Valid -> {
+                                    roundsErrors = emptySet()
+                                    settings?.setOutboxRounds(r.config)
+                                    onOutboxSettingsChanged()
+                                    roundsSaved = true
+                                }
+                            }
+                        }
+                    ) {
+                        Text(str("screen.settings.outbox_rounds_save"), fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            focusManager.clearFocus()
+                            val d = RoundsConfig()
+                            attemptsInput = d.attemptsPerRound.toString()
+                            pauseInput = d.pauseMinutes.toString()
+                            roundsInput = d.rounds.toString()
+                            roundsErrors = emptySet()
+                            settings?.setOutboxRounds(d)
+                            onOutboxSettingsChanged()
+                            roundsSaved = true
+                        }
+                    ) {
+                        Text(str("screen.settings.outbox_rounds_reset"), fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                    }
+                }
             }
         }
 
