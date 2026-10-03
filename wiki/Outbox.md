@@ -6,9 +6,9 @@ created: 2026-10-03
 
 # Utkorg (outbox)
 
-> **Status:** implementerad och **mergad till `main`** (grenarna `feature/sqlite`, `feature/outbox` och `feature/mqtt-auth` är mergade och borttagna). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
+> **Status:** implementerad och **mergad till `main`** (grenarna `feature/sqlite`, `feature/outbox` och `feature/mqtt-auth` är mergade och borttagna; `feature/outbox-rounds` och `feature/nfc-write-button` mergades 2026-10-03). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
 
-> **Gren `feature/outbox-rounds` (utgår från `main` `2e3ee25`, pushad som egen gren, ej mergad till `main`):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger, och funktionen är verifierad av Joakim på telefon 2026-10-03** (installerad 12:50). Kontrastfixen är gjord (explicit `OutboxPalette` i `ui/theme/OutboxPalette.kt`, kontrast ≥ 4,5:1 i ljust och mörkt läge, enhetstestad och mätt i skärmbilder) men **ännu inte omprovad av Joakim**. Orsaken: *Väntar* ritades med `colorScheme.secondary`, nästan samma färg som kortets standardbakgrund.
+> **Gren `feature/outbox-rounds` (utgick från `main` `2e3ee25`; mergad till `main` 2026-10-03):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger, och funktionen är verifierad av Joakim på telefon 2026-10-03** (installerad 12:50). Kontrastfixen (explicit `OutboxPalette` i `ui/theme/OutboxPalette.kt`, kontrast ≥ 4,5:1 i ljust och mörkt läge, enhetstestad och mätt i skärmbilder) är **verifierad av Joakim på telefon 2026-10-03: kontrast OK i ljust och mörkt läge**. Orsaken: *Väntar* ritades med `colorScheme.secondary`, nästan samma färg som kortets standardbakgrund.
 
 ## Varför
 
@@ -57,7 +57,7 @@ Ren Kotlin: endast `kotlin.*`, `kotlinx.coroutines.*`, `java.*` (testet `CoreHas
 | `OutboxStore.kt` | `OutboxStore<T>`: `nextPending(limit)` (endast PENDING, äldst först), `markSent`, `markAttemptFailed`, `markFailed`, `requeue(id)`, `requeueFailed()`, `countPending()` |
 | `OutboxTransport.kt` | `OutboxTransport<T>`: `suspend fun send(entry): SendResult` — `Acked` först när mottagaren bekräftat |
 | `BackoffPolicy.kt` | `BackoffPolicy`, `ExponentialBackoff(base=30 s, max=30 min, factor=2)`, `NoBackoff` |
-| `RetryPolicy.kt` | *(grenen `feature/outbox-rounds`)* `RoundsConfig`, `RetryPolicy` — omgångar och paus ovanpå backoff |
+| `RetryPolicy.kt` | *(mergad från `feature/outbox-rounds`)* `RoundsConfig`, `RetryPolicy` — omgångar och paus ovanpå backoff |
 | `OutboxDispatcher.kt` | `OutboxDispatcher<T>(store, transport, backoff, maxAttempts=12, clock).drain(force)` (på `feature/outbox-rounds` även `OutboxDispatcher(store, transport, RetryPolicy, clock).drain(force, skipPause)`) → `DrainResult.Drained(sent)` / `Blocked(sent, retryAfterMillis, error, paused)` |
 | `InMemoryOutboxStore.kt` | Referensimplementation i minnet (tester, exempel) |
 
@@ -65,7 +65,7 @@ Ren Kotlin: endast `kotlin.*`, `kotlinx.coroutines.*`, `java.*` (testet `CoreHas
 
 1. Äldsta `PENDING` först, **en i taget**; `markSent` först efter `Acked`.
 2. **Stannar vid första felet** (`Blocked`): posten får `attempts+1` + `lastError`; senare poster skickas aldrig förbi.
-3. Efter sista omgångens sista försök (standard 12 × 3 = 36 på grenen `feature/outbox-rounds`; tidigare `maxAttempts` = 12) → `FAILED` (lämnar kön, körningen stannar ändå). Ny körning går vidare till nästa post. `requeue`/`requeueFailed` ger nytt försök.
+3. Efter sista omgångens sista försök (standard 12 × 3 = 36 sedan omgångarna mergades 2026-10-03; tidigare `maxAttempts` = 12) → `FAILED` (lämnar kön, körningen stannar ändå). Ny körning går vidare till nästa post. `requeue`/`requeueFailed` ger nytt försök.
 4. Väntetid: utan `force` skickas inte en post förrän `lastAttemptAt + väntetid(attempts)` passerat (backoff, eller paus vid omgångsslut); `force = true` ('Skicka nu', nätverk tillbaka) ignorerar backoff, och `skipPause` ('Skicka nu') ignorerar även pausen.
 5. **At-least-once / idempotent:** kraschar processen efter ack men före `markSent` skickas posten igen. Transporten ska därför ge mottagaren en stabil nyckel (postens id) att avduplicera på.
 6. `CancellationException` kastas vidare orört (posten förblir `PENDING`); övriga undantag från transporten räknas som misslyckat försök.
@@ -90,9 +90,9 @@ Ren Kotlin: endast `kotlin.*`, `kotlinx.coroutines.*`, `java.*` (testet `CoreHas
 - Tom kö → ingen anslutning alls. Misslyckad körning → `Result.retry()`; omkörningar använder aldrig `force`.
 - Två lager backoff: postnivå (dispatcher, `lastAttemptAt`) och körningsnivå (WorkManager). De är avsiktligt likartade (30 s start); WorkManager tar max 5 h, dispatcherns tak är 30 min.
 
-## Omförsök i omgångar (gren `feature/outbox-rounds`)
+## Omförsök i omgångar (från gren `feature/outbox-rounds`, mergad till `main` 2026-10-03)
 
-> **Status (ärlig):** byggt, **enhetstestat på JVM** (28 nya tester; alla 108 gröna) och **verifierat av Joakim på telefon 2026-10-03** (installerad 12:50; inställningar 2 försök / 1 minut / 3 omgångar: 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva). Inte mergat till `main`. **Kontrast:** pausraden var först nästan osynlig (färgen `colorScheme.secondary`, i mörkt läge `#1A1D20` på kortet `#111416`, i ljust läge `#E5E7EB` på vitt); den är nu `colorScheme.onSurface` (mörkt `#E8EAED`, ljust `#1F2937`) och hjälptexten i inställningskortet likaså. Fixen är **gjord men inte omprovad** förrän Joakim sett den på telefonen.
+> **Status (ärlig):** byggt, **enhetstestat på JVM** (28 nya tester; alla 108 gröna) och **verifierat av Joakim på telefon 2026-10-03** (installerad 12:50; inställningar 2 försök / 1 minut / 3 omgångar: 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva). Mergat till `main` 2026-10-03. **Kontrast:** pausraden var först nästan osynlig (färgen `colorScheme.secondary`, i mörkt läge `#1A1D20` på kortet `#111416`, i ljust läge `#E5E7EB` på vitt); den är nu `colorScheme.onSurface` (mörkt `#E8EAED`, ljust `#1F2937`) och hjälptexten i inställningskortet likaså. Fixen är **verifierad av Joakim på telefon 2026-10-03: kontrast OK i ljust och mörkt läge**.
 
 **Önskemål (Joakim 2026-10-03):** för arbete i fält utan täckning ska en post inte ge upp efter 12 direkta försök, utan försöka i *omgångar*: 12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, och först därefter `FAILED`.
 
@@ -178,10 +178,10 @@ Begränsningar att känna till: id är `Long`; en post i taget (ingen batch); `d
 | Fel lösenord → posten förblir *Väntar* med felorsak och växande *Försök* | Manuellt på telefonen mot riktiga brokern, Joakim 2026-10-03 (röd felorsak "Not Authorised to connect") | ✅ verifierad på enhet |
 | 12 misslyckade försök → status `FAILED`, *Skicka nu* köar om | Manuellt, Joakim 2026-10-03: posten blev *Misslyckad* (röd), nästa post gick igenom samma process; efter rätt lösenord och *Skicka nu* blev båda Misslyckade posterna *Skickade* | ✅ verifierad på enhet |
 | Telefon omstartad (flygplansläge på) medan poster väntade → skickas när nätet slås på, utan att appen öppnas | Manuellt, Joakim 2026-10-03: alla väntande poster skickades av sig själva inom ett par minuter | ✅ verifierad på enhet |
-| Omgångar: gränser, paus, `FAILED` först efter sista omgången, Skicka nu, nätverk tillbaka, standardvärden, en omgång = gammalt beteende; validering 1–100/1–1440/1–20 | JVM-enhetstest (`RetryPolicyTest`, `OutboxDispatcherRoundsTest`, `OutboxRoundsInputTest`, 28 nya; totalt 108 gröna) på `feature/outbox-rounds` | ✅ enhetstestat |
+| Omgångar: gränser, paus, `FAILED` först efter sista omgången, Skicka nu, nätverk tillbaka, standardvärden, en omgång = gammalt beteende; validering 1–100/1–1440/1–20 | JVM-enhetstest (`RetryPolicyTest`, `OutboxDispatcherRoundsTest`, `OutboxRoundsInputTest`, 28 nya; totalt 108 gröna) på `feature/outbox-rounds` (mergad till `main`) | ✅ enhetstestat |
 | Omgångar på telefon: 2 försök / 1 min / 3 omgångar → 6 försök över tre omgångar → *Misslyckad* (röd); rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva (WorkManager efter pausen) | Manuellt, Joakim 2026-10-03 (installerad 12:50) | ✅ verifierad på enhet |
 | Omgångar: omstart under paus; *Anslutning*-vyn saknar pausrad | — | ❌ omstart under paus ej provad; pausrad i Anslutning finns inte |
-| Kontrast i pausraden och hjälptexten (ljust och mörkt läge) | Kodändring till `onSurface`; bygge och enhetstester gröna | ⏳ gjord, **ej omprovad** förrän Joakim sett den |
+| Kontrast i pausraden och hjälptexten (ljust och mörkt läge) | Kodändring till `onSurface`; bygge och enhetstester gröna | ✅ verifierad av Joakim på telefon 2026-10-03 (kontrast OK i ljust och mörkt läge) |
 
 ## Manuell test på telefonen
 

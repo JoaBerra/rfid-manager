@@ -1,7 +1,7 @@
 # App Architecture – RFID Manager
 
 Denna sida beskriver den aktuella mjukvaruarkitekturen för applikationen **RFID Manager**.
-Senast uppdaterad 2026-10-03 (persistenslagret enligt `feature/sqlite`: Room/SQLite är enda lagring; övriga avsnitt oförändrade sedan 2026-06-13) — täcker Fas 3 (navigation, ViewModels, spacing), Fas 4 (i18n, dark mode, MQTT, export, haptik, sök, paginering) och Fas 5 (kodgenomgång, dynamisk layout, radar trail, tag-svansar).
+Senast uppdaterad 2026-10-03 (persistenslagret enligt `main`, mergat från `feature/sqlite` 2026-10-03: Room/SQLite är enda lagring; övriga avsnitt oförändrade sedan 2026-06-13) — täcker Fas 3 (navigation, ViewModels, spacing), Fas 4 (i18n, dark mode, MQTT, export, haptik, sök, paginering) och Fas 5 (kodgenomgång, dynamisk layout, radar trail, tag-svansar).
 
 ## Övergripande arkitektur
 
@@ -32,7 +32,7 @@ graph TD
     end
 
     subgraph Storage["Persistence"]
-        Room["Room / SQLite<br/>(enda lagring, feature/sqlite)"]
+        Room["Room / SQLite<br/>(enda lagring, på main)"]
         Migr["JsonToRoomMigrator<br/>(engångs: readings.json → .migrated)"]
     end
 
@@ -74,7 +74,7 @@ graph TD
 | **UI**         | `ui/screens`, `ui/theme`, `ui/components` | Compose UI: 4 skärmar, navigation, temahantering (LIGHT/DARK), i18n |
 | **ViewModels** | `ui/viewmodel`                     | State per vy: scanning, readings, MQTT-anslutning |
 | **Data**       | `data/repository`, `data/settings`, `data/mqtt`, `data/export` | Repository, SharedPreferences, MQTT, CSV/JSON-export |
-| **Persistence** | `data.local`, `data.migration`     | Room/SQLite är enda lagring på `feature/sqlite`; engångsmigrering av `readings.json` (`data.migration`). På `main`/v1.0.1: Room blockerad + JSON-fallback *(historiskt)* |
+| **Persistence** | `data.local`, `data.migration`     | Room/SQLite är enda lagring på `main` (mergad 2026-10-03); engångsmigrering av `readings.json` (`data.migration`). I v1.0.1: Room blockerad + JSON-fallback *(historiskt)* |
 | **NFC**        | `nfc`                              | NfcManager interface + AndroidNfcManager (reader mode, vibration, ljud) |
 | **Domain**     | `domain.model`                     | Rena modeller: RfidTag, PersistedReading, MessageType |
 | **External**   | —                                  | MQTT-broker (Docker Mosquitto), fysiska NFC-taggar |
@@ -104,7 +104,7 @@ Detta beslut dokumenteras här för att undvika att det glöms bort när projekt
 
 ## För nybörjare: DAO vs In-memory StateFlow (enkelt förklarat)
 
-> **Status 2026-10-03:** Texten nedan förklarar valet och är delvis *historisk*. På grenen `feature/sqlite` är Room/SQLite den **enda** lagringen — JSON-fallbacken och minneslistan (dual-mode) är borttagna och det finns ingen tyst reserv: misslyckas databasen loggas felet och kastas vidare. Termer (Room, KSP, DAO, migrering) finns i [[Ordlista]]. På `main` (v1.0.1) gäller fortfarande dual-mode.
+> **Status 2026-10-03:** Texten nedan förklarar valet och är delvis *historisk*. På `main` (mergat från `feature/sqlite` 2026-10-03) är Room/SQLite den **enda** lagringen — JSON-fallbacken och minneslistan (dual-mode) är borttagna och det finns ingen tyst reserv: misslyckas databasen loggas felet och kastas vidare. Termer (Room, KSP, DAO, migrering) finns i [[Ordlista]]. I den släppta v1.0.1 gällde dual-mode.
 
 Detta är en viktig del av hur vi lagrar data i appen (t.ex. sparade RFID-läsningar).
 
@@ -119,10 +119,10 @@ Detta är en viktig del av hur vi lagrar data i appen (t.ex. sparade RFID-läsni
 - Som att skriva in saker i en riktig anteckningsbok eller databas på telefonen.
 - Data sparas permanent på telefonen (i SQLite). Den överlever app-omstart, telefon-omstart och force-stop.
 - Detta är vad vi vill ha i den färdiga appen.
-- DAO är "kontaktpersonen" som pratar med databasen åt oss. Den har metoder som `getAll()`, `insert()`, `nextPending()`, `markSent()` etc. (`markAsTransmitted()` är ersatt av utkorgens statusmetoder på `feature/outbox`).
+- DAO är "kontaktpersonen" som pratar med databasen åt oss. Den har metoder som `getAll()`, `insert()`, `nextPending()`, `markSent()` etc. (`markAsTransmitted()` är ersatt av utkorgens statusmetoder; `feature/outbox` mergad till `main` 2026-10-03).
 - Room är biblioteket från Google som gör det lätt att använda SQLite i Android på ett modernt sätt.
 
-**Varför hade vi båda samtidigt? (dual-mode — historiskt, borttaget på `feature/sqlite`)**
+**Varför hade vi båda samtidigt? (dual-mode — historiskt, borttaget; mergat till `main` 2026-10-03)**
 Under Fas 2 hade vi tekniska problem med att få databas-verktygen (KSP) att bygga korrekt. För att ändå kunna testa hela kedjan (NFC → spara → Transmit-knapp → MQTT-meddelande) byggde vi in en "reservplan":
 - Om det finns en riktig DAO → använd databasen.
 - Om det inte finns någon DAO (null) → använd den tillfälliga minneslistan.
@@ -130,7 +130,7 @@ Under Fas 2 hade vi tekniska problem med att få databas-verktygen (KSP) att byg
 Detta gör att UI-koden (skärmar, listor, Transmit-knapp) inte bryr sig om var datan kommer ifrån. Den frågar bara "ge mig listan över sparade läsningar".
 
 **Vad betyder det för Fas 3?** *(historiskt/löst 2026-10-03)*
-I Fas 3 ville vi slå på den riktiga databasen (DAO + Room). Det blockerades då av att KSP inte stödde AGP 9 (Fas 3.4 landade på JSON-fallback). Det är löst på `feature/sqlite` med Room 2.8.5 + KSP 2.3.12: sparade läsningar ligger i SQLite och överlever omstart.
+I Fas 3 ville vi slå på den riktiga databasen (DAO + Room). Det blockerades då av att KSP inte stödde AGP 9 (Fas 3.4 landade på JSON-fallback). Det är löst (mergat från `feature/sqlite` till `main` 2026-10-03) med Room 2.8.5 + KSP 2.3.12: sparade läsningar ligger i SQLite och överlever omstart.
 
 **Migrering från den gamla JSON-filen:** vid första start efter uppdatering läses `filesDir/readings.json` in i Room i en enda transaktion (id bevaras, id-krockar och dubbletter hanteras), därefter döps filen om till `readings.json.migrated` (raderas aldrig). Vid fel ligger JSON-filen kvar orörd, felet loggas och visas i Inställningar → Lagring, och migreringen provas igen vid nästa start. Verifierad på telefonen 2026-10-03: 3 poster migrerade.
 
@@ -266,11 +266,11 @@ Språk hanteras av `LocalizationManager` (separat från AppSettings).
 - `MqttConnectionManager` — klass (inte object), persistent TCP-anslutning som startas vid app-start.
 - StateFlows: `connectionStatus` ("CONNECTED"/"DISCONNECTED"), `lastHeartbeat` (String).
 - Automatisk återanslutning var 35:e sekund. Keep-alive var 30:e sekund.
-- `MqttSender` är **borttagen på `feature/outbox`**; utskick sker via utkorgen (egen MQTT-anslutning i `OutboxWorker`). `MqttConnectionManager` används nu bara för anslutningsstatus/Anslut-knappen i UI.
+- `MqttSender` är **borttagen** (med utkorgen, mergad till `main` 2026-10-03); utskick sker via utkorgen (egen MQTT-anslutning i `OutboxWorker`). `MqttConnectionManager` används nu bara för anslutningsstatus/Anslut-knappen i UI.
 - `ConnectivityViewModel` läser från MqttConnectionManager — ingen demo-data.
 - Broker: `192.168.50.151:1883` (ishtar, Docker `eclipse-mosquitto:2`, okrypterat för dev).
 - **Inloggning (sedan 2026-10-03):** brokern nekar anonym anslutning. Appen ansluter som `rfid-app` (användarnamn/lösenord från Inställningar, lösenordet lagras krypterat); ACL ger `rfid-app` skrivrätt och `rfid-dashboard` läsrätt på `rfidmanager/+/telemetry`. `MqttConnectionManager.reconnect(host, port, username, password)` sätter status `CONNECTING...` synkront; UI väntar på slutstatus (med tidsgräns) och visar *Ansluten* eller *Misslyckades* med felorsak (`lastError`, `12012a2`). Se README, *Nätverk och säkerhet (MQTT)*.
-- **Utkorg (feature/outbox):** ~~status `transmitted` sattes oavsett om publiceringen lyckades (`markAsTransmitted`)~~ — löst. Avläsningar sparas som `PENDING` och skickas av WorkManager (`OutboxWorker`) i tidsordning; `SENT` först efter brokerns ack (QoS 1). Paket: `outbox/core` (ren Kotlin, återanvändbar), `outbox/room`, `outbox/mqtt`, `outbox/work`. Verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03 (migrering 1→2 på telefonens riktiga databas: 4 poster blev `SENT`; felvägarna fel lösenord/12 försök/`FAILED`/omstart provade och verifierade på telefon 2026-10-03: fel lösenord → *Väntar* med felorsak och växande *Försök*; efter 12 försök `FAILED`, *Skicka nu* köar om; omstart med väntande poster → skickas av sig själva när nätet slås på). Se [[Outbox]] och [[Ordlista]].
+- **Utkorg (mergad till `main` 2026-10-03; byggd på `feature/outbox`):** ~~status `transmitted` sattes oavsett om publiceringen lyckades (`markAsTransmitted`)~~ — löst. Avläsningar sparas som `PENDING` och skickas av WorkManager (`OutboxWorker`) i tidsordning; `SENT` först efter brokerns ack (QoS 1). Paket: `outbox/core` (ren Kotlin, återanvändbar), `outbox/room`, `outbox/mqtt`, `outbox/work`. Verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03 (migrering 1→2 på telefonens riktiga databas: 4 poster blev `SENT`; felvägarna fel lösenord/12 försök/`FAILED`/omstart provade och verifierade på telefon 2026-10-03: fel lösenord → *Väntar* med felorsak och växande *Försök*; efter 12 försök `FAILED`, *Skicka nu* köar om; omstart med väntande poster → skickas av sig själva när nätet slås på). Se [[Outbox]] och [[Ordlista]].
 
 ## Temahantering (Fas 4)
 
@@ -382,11 +382,11 @@ graph TD
     }
     ```
   - **Alternativ stark standard:** Sparkplug B (om kund kräver industriell interoperabilitet). Den har predefined Message Types (NDATA, NCMD, NBIRTH...) + strukturerad "metrics". Vi kan mappa våra verb till den vid behov.
-- **Persistens:** Lokalt på mobil (Room/SQLite, enda lagring på `feature/sqlite`). I testmiljö: valfritt (SQLite i Python-script eller Docker Postgres). Readings sparas med uid, raw data, parsed, timestamp, source (RFID/Barcode), sent flag.
+- **Persistens:** Lokalt på mobil (Room/SQLite, enda lagring på `main`). I testmiljö: valfritt (SQLite i Python-script eller Docker Postgres). Readings sparas med uid, raw data, parsed, timestamp, source (RFID/Barcode), sent flag.
 
 ### Persistence (lokal på telefon)
 
-- Room + SQLite (aktivt på `feature/sqlite`; entiteten heter i koden `PersistedReadingEntity`, tabell `persisted_readings` — `RfidReadingEntity`/`BarcodeReadingEntity` nedan är den ursprungliga Fas 2-skissen).
+- Room + SQLite (aktivt på `main`; entiteten heter i koden `PersistedReadingEntity`, tabell `persisted_readings` — `RfidReadingEntity`/`BarcodeReadingEntity` nedan är den ursprungliga Fas 2-skissen).
 - Entiteter: `RfidReadingEntity`, `BarcodeReadingEntity` (se Nomenclature för exakta fält).
 - Repository pattern: `ReadingRepository` (CRUD + query by type/date).
 - UI: Lista över persisterade + "Transmit to MQTT" knapp (använder befintligt armed-pattern från Fas 1 för reliability).

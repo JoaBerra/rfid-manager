@@ -13,7 +13,7 @@ created: 2026-06-07
 ## Fas 2 – Slutfört (UAT godkänd 2026-06-07)
 
 **Mål som uppnåtts:**
-- Lokal persistens av läsningar (in-memory fallback + Room-entiteter/DAO/Repository redo). *(Historiskt: Room är sedan 2026-10-03 enda lagring på `feature/sqlite`.)*
+- Lokal persistens av läsningar (in-memory fallback + Room-entiteter/DAO/Repository redo). *(Historiskt: Room är sedan 2026-10-03 enda lagring, mergad till `main`.)*
 - MQTT-kommunikation (Sparkplug-liknande JSON på `rfidmanager/<uid>/telemetry`).
 - UI för persisterade läsningar + Transmit ↑ + grundläggande MQTT-status.
 - End-to-end validering på fysisk Samsung Galaxy Note 10 (read/write → persist → transmit → subscriber + SQLite).
@@ -27,7 +27,7 @@ created: 2026-06-07
 
 **Öppna punkter från Fas 2-godkännande (prioriteras i Fas 3):**
 - ViewModel-refaktor (bättre state-hantering).
-- Reaktivera riktig Room (KSP istället för in-memory). *(Löst 2026-10-03 på `feature/sqlite`, se nedan.)*
+- Reaktivera riktig Room (KSP istället för in-memory). *(Löst 2026-10-03, mergad till `main` 2026-10-03; se nedan.)*
 - UI-polish och andrum (se nedan).
 - Kryptering: Produktion skall vara krypterad (dev okrypterat godkänt under utveckling).
 
@@ -77,7 +77,7 @@ Se full design note: [[Fas3-Navigation-Spacing-Design]] (innehåller låsta besl
 
 ### Villkor för riktig Room-databas *(historiskt/löst 2026-10-03)*
 
-> ✅ **Löst på grenen `feature/sqlite` 2026-10-03:** Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1 / Kotlin 2.2.10 / Gradle 9.4.1. Room är enda lagring, `readings.json` migreras i en transaktion (filen döps om till `readings.json.migrated`), verifierat på telefonen (3 poster migrerade). Kvar: merge till `main` och ev. release. Tabellen och instruktionen nedan beskriver läget **före** lösningen och behålls som historik. Termer: [[Ordlista]].
+> ✅ **Löst 2026-10-03 (gren `feature/sqlite`, mergad till `main` 2026-10-03):** Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1 / Kotlin 2.2.10 / Gradle 9.4.1. Room är enda lagring, `readings.json` migreras i en transaktion (filen döps om till `readings.json.migrated`), verifierat på telefonen (3 poster migrerade). Mergad till `main` 2026-10-03; kvar: ev. release. Tabellen och instruktionen nedan beskriver läget **före** lösningen och behålls som historik. Termer: [[Ordlista]].
 
 **Status (historiskt, v1.0/v1.0.1):** Room-källkod (entiteter, DAO, databas, repository) fanns i trädet och kompilerade. JSON-fallback aktiv i produktion — data överlever app-omstart. Riktig Room krävde en annotationsprocessor som då inte var kompatibel med AGP 9.2.1 + Kotlin 2.2.10.
 
@@ -87,7 +87,7 @@ Se full design note: [[Fas3-Navigation-Spacing-Design]] (innehåller låsta besl
 | kapt borttaget i Kotlin 2.2.x | Kapt-pluginet är inkompatibelt med built-in Kotlin, och Kotlin 2.2 har tagit bort kapt-konfigurationen | Använd KSP istället (nedan) |
 | Opt-out (builtInKotlin=false) krockar med AGP | AGP läser ändå in KGP på classpath → "already on classpath" vid plugin-applicering | Kräver AGP-fix eller annan plugin-hantering |
 
-**Så här återaktiverar du Room när KSP är kompatibelt:** *(historiskt — gjort med `ksp = 2.3.12` på `feature/sqlite`; `AppContainer` har ingen try/catch-reserv längre)*
+**Så här återaktiverar du Room när KSP är kompatibelt:** *(historiskt — gjort med `ksp = 2.3.12`, mergat till `main` 2026-10-03; `AppContainer` har ingen try/catch-reserv längre)*
 
 ```kotlin
 // app/build.gradle.kts
@@ -115,8 +115,8 @@ Ta sedan bort try/catch i `AppContainer.kt` och låt `DatabaseProvider.getDataba
 
 - **Produktionshärdning:**
   - Riktig kryptering (MQTT over TLS / wss). *(MQTT-inloggning med ACL är aktiv sedan 2026-10-03; TLS återstår.)*
-  - Riktig Room-persistens + migreringar (se villkor ovan) — *klart på `feature/sqlite` 2026-10-03; framtida schemaändringar kräver riktig `Migration`, ingen `fallbackToDestructiveMigration`*.
-  - Bättre felhantering, retry, offline-kö — **implementerat som *outbox* på `feature/outbox`** (2026-10-03, se [[Outbox]]); rättar även att `markAsTransmitted` satte status oavsett om publiceringen lyckades. **Verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**; felvägarna (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) provade och verifierade av Joakim på telefon 2026-10-03. Kvar: merga.
+  - Riktig Room-persistens + migreringar (se villkor ovan) — *klart och mergat till `main` 2026-10-03; framtida schemaändringar kräver riktig `Migration`, ingen `fallbackToDestructiveMigration`*.
+  - Bättre felhantering, retry, offline-kö — **implementerat som *outbox* (`feature/outbox`, mergad till `main` 2026-10-03; se [[Outbox]]); rättar även att `markAsTransmitted` satte status oavsett om publiceringen lyckades. **Verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**; felvägarna (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) provade och verifierade av Joakim på telefon 2026-10-03. Omgångar och NFC-skrivknapp är också mergade till `main` 2026-10-03 och verifierade av Joakim på telefon.
   - Release builds, Play Store (valfritt).
 
 - **Avancerat:**
@@ -286,7 +286,7 @@ Projektet är pausat (2026-07-14), men två spår drevs 2026-10-03. Termerna är
 | Spår | Status | Referens |
 |------|--------|----------|
 | MQTT-inloggning (brokern + ACL, `rfid-app` skriver, `rfid-dashboard` läser) | ✅ Aktiv på ishtar 2026-10-03, på `main` (`f08ff22`), verifierad end-to-end | README *Nätverk och säkerhet (MQTT)* |
-| Room/SQLite som enda lagring + migrering från `readings.json` | ✅ Klar och verifierad på telefon på `feature/sqlite` (`eab6b6a..48e8a89`); ⏳ ej mergad till `main` | [[Release-Notes]] |
+| Room/SQLite som enda lagring + migrering från `readings.json` | ✅ Klar, verifierad på telefon och mergad till `main` 2026-10-03 (`feature/sqlite`, `eab6b6a..48e8a89`) | [[Release-Notes]] |
 | Bygginfo i Inställningar (version, byggtid, commit) | ✅ `48e8a89` | [[Release-Notes]] |
 | Anslut-knappen ger bekräftelse vid första tryck | ✅ `12012a2` | [[Release-Notes]] |
 
@@ -294,12 +294,12 @@ Projektet är pausat (2026-07-14), men två spår drevs 2026-10-03. Termerna är
 
 | Punkt | Beskrivning |
 |-------|-------------|
-| ~~`markAsTransmitted`~~ | ~~Status `transmitted` sattes oavsett om MQTT-publiceringen lyckades.~~ Löst på `feature/outbox` (2026-10-03) med *outbox*, se [[Outbox]]; verifierad på telefon och mot riktiga brokern 2026-10-03 (felvägarna fel lösenord/12 försök/`FAILED`/omstart provade och verifierade på telefon 2026-10-03); kvar: merga. |
+| ~~`markAsTransmitted`~~ | ~~Status `transmitted` sattes oavsett om MQTT-publiceringen lyckades.~~ Löst med *outbox* (`feature/outbox`, mergad till `main` 2026-10-03), se [[Outbox]]; verifierad på telefon och mot riktiga brokern 2026-10-03 (felvägarna fel lösenord/12 försök/`FAILED`/omstart provade och verifierade på telefon 2026-10-03). |
 | Anonyma testverktyg | Testskript i `test/fas2-mqtt/mqtt/` och MQTT Explorer saknar användare och kan inte ansluta mot brokern. |
 | `assembleRelease` | `~/.android/debug.keystore` saknas på fakir, så release-bygget misslyckas. |
 | Fel lösenord | Felmeddelandet (*Misslyckades ✗*) är inte visuellt verifierat på telefonen. |
 | `readings.json.migrated` | Raderas aldrig automatiskt; bestäm när den får tas bort manuellt. |
-| Merge `feature/sqlite` → `main` | Beslut och ev. release v1.0.2. |
+| ~~Merge `feature/sqlite` → `main`~~ | ✅ Mergad 2026-10-03 (tillsammans med outbox, omgångar och NFC-skrivknapp). Kvar: beslut om ev. release v1.0.2. |
 
 ## Hur vi håller roadmapen levande
 

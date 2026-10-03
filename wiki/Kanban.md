@@ -4,10 +4,10 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
-- [ ] **Merga `feature/outbox` → `main`** (provkörd på telefon 2026-10-03; bygger på `feature/sqlite`, som måste mergas först)
+- [x] ~~**Merga `feature/outbox` → `main`**~~ — ✅ klart 2026-10-03 (mergad tillsammans med sqlite, omgångar och NFC-skrivknapp)
 - [ ] **FASAD: återanvänd utkorgskärnan** (`outbox/core`) — beskrivet i [[Outbox]]; FASAD-repot ägs av Kalle PL Fasad. **FASAD-172** (utvärdering av utkorgsmönstret) kan starta; Kalle PL Fasad är informerad 2026-10-03
-- [x] ~~**Rätta `markAsTransmitted`**~~ — löst på `feature/outbox` 2026-10-03: *outbox* implementerad ([[Outbox]]), en post blir `SENT` först när brokern bekräftat (QoS 1)
-- [ ] **Merga `feature/sqlite` → `main`** (Room/SQLite verifierad på telefon) och avgör ev. release v1.0.2 — kräver att `~/.android/debug.keystore` finns för `assembleRelease`
+- [x] ~~**Rätta `markAsTransmitted`**~~ — löst 2026-10-03 med utkorgen (`feature/outbox`, mergad till `main`): *outbox* implementerad ([[Outbox]]), en post blir `SENT` först när brokern bekräftat (QoS 1)
+- [x] ~~**Merga `feature/sqlite` → `main`**~~ — ✅ mergad 2026-10-03. Kvar: avgör ev. release v1.0.2 — kräver att `~/.android/debug.keystore` finns för `assembleRelease`
 - [ ] **Verifiera felmeddelande vid fel lösenord i Inställningar** (*Misslyckades ✗*, `12012a2`) — ej provat på enhet (utkorgens felvägar är verifierade, se Klart)
 - [ ] **`assembleRelease` saknar `~/.android/debug.keystore`** på fakir — skapa/ange signeringsnyckel
 - [ ] **Beslut om `readings.json.migrated`** — raderas aldrig automatiskt; bestäm när den får tas bort manuellt
@@ -90,8 +90,6 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
-- [ ] **Skrivknapp i stället för automatiskt skrivläge** (gren `feature/nfc-write-button`, från `feature/outbox-rounds`; önskemål från Joakim 2026-10-03) — en läsning visar/sparar bara läsningen; *Skriv till tagg* startar skrivläget för senast lästa tagg, med Avbryt/tillbaka/timeout (30 s) och bekräftelse. **Enhetstestat och bygger; ej provat på telefon** ([[RFID-och-NFC]])
-- [ ] **Room/SQLite på `feature/sqlite`** — klar och verifierad på telefon 2026-10-03 (3 poster migrerade, databasen kontrollerad); väntar på merge till `main` ([[Release-Notes]], [[Ordlista]])
 
 
 
@@ -102,12 +100,14 @@ kanban-plugin: board
 
 ## ✅ Klart (Done)
 
-- [x] **Omförsöksmönster i omgångar** (12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, därefter Misslyckad; inställbart i Inställningar; önskemål från Joakim 2026-10-03, gäller även FASAD-172) — ✅ verifierad av Joakim på telefon 2026-10-03 (installerad 12:50; inställningar 2 försök/1 min/3 omgångar: 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva). Gren `feature/outbox-rounds`, ej mergad till `main`. **Kvar:** *Anslutning*-vyn saknar pausrad; **kontrastfixen (explicit `OutboxPalette`, orsak: *Väntar* hade samma färg som kortet) är enhetstestad och mätt i skärmbilder men ej omprovad av Joakim** ([[Outbox]])
-- [x] **Utkorg (outbox) på `feature/outbox`** — spara först/skicka sedan, WorkManager, ack (QoS 1), dubblettskydd, Room 1→2 — ✅ verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern (offline → *Väntar*, skickas när nätverk finns även med appen stängd, en gång var på dashboarden, status *Skickad*; migrering 1→2 på telefonens riktiga databas: 4 poster blev `SENT`; dashboard med dubblettskydd driftsatt på ishtar, `c16ef43`). Felvägarna provade och verifierade av Joakim på telefon 2026-10-03 (fel lösenord → *Väntar* med röd felorsak och växande *Försök*; 12 försök → *Misslyckad* (`FAILED`), nästa post går igenom samma process, *Skicka nu* köar om Misslyckade; telefon omstartad med väntande poster → skickas av sig själva inom ett par minuter när nätet slås på). Merge till `main` återstår ([[Outbox]])
+- [x] **Skrivknapp i stället för automatiskt skrivläge** (gren `feature/nfc-write-button`, mergad till `main` 2026-10-03; önskemål från Joakim 2026-10-03) — en läsning visar/sparar bara läsningen; *Skriv till tagg* startar skrivläget för senast lästa tagg, med Avbryt/tillbaka/timeout (30 s) och bekräftelse. ✅ Verifierad av Joakim på telefon 2026-10-03 (kontrast OK i ljust och mörkt läge) ([[RFID-och-NFC]])
+- [x] **Room/SQLite** (gren `feature/sqlite`) — ✅ klar och verifierad på telefon 2026-10-03 (3 poster migrerade, databasen kontrollerad); mergad till `main` 2026-10-03 ([[Release-Notes]], [[Ordlista]])
+- [x] **Omförsöksmönster i omgångar** (12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, därefter Misslyckad; inställbart i Inställningar; önskemål från Joakim 2026-10-03, gäller även FASAD-172) — ✅ verifierad av Joakim på telefon 2026-10-03 (installerad 12:50; inställningar 2 försök/1 min/3 omgångar: 6 försök över tre omgångar → *Misslyckad* och röd; rätt lösenord + *Skicka nu* → *Skickad*; försöken räknades upp av sig själva). Gren `feature/outbox-rounds`, mergad till `main` 2026-10-03; kontrastfixen (explicit `OutboxPalette`, orsak: *Väntar* hade samma färg som kortet) verifierad av Joakim 2026-10-03: kontrast OK i ljust och mörkt läge. **Kvar (idé):** *Anslutning*-vyn saknar pausrad ([[Outbox]])
+- [x] **Utkorg (outbox)** (gren `feature/outbox`, mergad till `main` 2026-10-03) — spara först/skicka sedan, WorkManager, ack (QoS 1), dubblettskydd, Room 1→2 — ✅ verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern (offline → *Väntar*, skickas när nätverk finns även med appen stängd, en gång var på dashboarden, status *Skickad*; migrering 1→2 på telefonens riktiga databas: 4 poster blev `SENT`; dashboard med dubblettskydd driftsatt på ishtar, `c16ef43`). Felvägarna provade och verifierade av Joakim på telefon 2026-10-03 (fel lösenord → *Väntar* med röd felorsak och växande *Försök*; 12 försök → *Misslyckad* (`FAILED`), nästa post går igenom samma process, *Skicka nu* köar om Misslyckade; telefon omstartad med väntande poster → skickas av sig själva inom ett par minuter när nätet slås på). Mergad till `main` 2026-10-03 ([[Outbox]])
 - [x] **MQTT-inloggning på ishtar** — `allow_anonymous false`, ACL (`rfid-app` skriver, `rfid-dashboard` läser), `passwd`/`acl` ägda av uid 1883 mode `0600`, lösenord via `mosquitto_passwd -b` + `read -rs` — ✅ aktiv och verifierad end-to-end 2026-10-03, på `main` (`f08ff22`)
-- [x] **Bygginfo i Inställningar** — version, byggtid, git-commit från `BuildConfig` i stället för hårdkodat *Fas 5 (juni 2026)* — ✅ `48e8a89`, 2026-10-03 (på `feature/sqlite`)
+- [x] **Bygginfo i Inställningar** — version, byggtid, git-commit från `BuildConfig` i stället för hårdkodat *Fas 5 (juni 2026)* — ✅ `48e8a89`, 2026-10-03 (från `feature/sqlite`, mergad till `main` 2026-10-03)
 - [x] **Anslut-knappen** — bekräftelse redan vid första tryck — ✅ `12012a2`, 2026-10-03
-- [x] **Room/KSP-blockering (historiskt, löst)** — Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1; JSON → Room-migrering, status `transmitted` — ✅ 2026-10-03 på `feature/sqlite` (merge återstår, se Pågår)
+- [x] **Room/KSP-blockering (historiskt, löst)** — Room 2.8.5 + KSP 2.3.12 bygger med AGP 9.2.1; JSON → Room-migrering, status `transmitted` — ✅ 2026-10-03 (`feature/sqlite`, mergad till `main` 2026-10-03)
 
 - [x] **BUG-002** | Write-funktion borta | TC-SCAN-006, TC-E2E-003 | ✅ Godkänt 2026-06-13
 - [x] **BUG-003** | Background NDEF | TC-SCAN-004 | ✅ Godkänt 2026-06-13

@@ -11,9 +11,9 @@ created: 2026-06-13
 
 ---
 
-## Ej släppt — MQTT-inloggning och gren `feature/sqlite` (Room/SQLite)
+## Ej släppt — MQTT-inloggning, Room/SQLite, utkorg, omgångar och NFC-skrivknapp (alla på `main`)
 
-**Status (2026-10-03):** Inget av detta är taggat eller släppt som APK. Senaste release är fortfarande v1.0.1.
+**Status (2026-10-03):** sqlite, outbox, omgångar och NFC-skrivknapp är mergade till `main` 2026-10-03 och verifierade av Joakim på telefon (omgångar och skrivknapp: verifierade 2026-10-03, kontrast OK i ljust/mörkt läge). Inget av detta är taggat eller släppt som APK. Senaste release är fortfarande v1.0.1.
 
 ### MQTT-inloggning (på `main`, commit `f08ff22`)
 
@@ -22,7 +22,7 @@ created: 2026-06-13
 - Appen: Inställningar → MQTT-anslutning med *Användarnamn* och *Lösenord* (lagras krypterat). Anslut-knappen ger bekräftelse (*Ansluten* / *Misslyckades* med felorsak) redan vid första tryck (`12012a2`).
 - Verifierat end-to-end 2026-10-03: telefonen som `rfid-app`, dashboarden som `rfid-dashboard`, en NFC-avläsning nådde dashboarden. **Inte visuellt verifierat:** felmeddelandet vid fel lösenord.
 
-### Gren `feature/sqlite` (Room/SQLite; commits `eab6b6a..48e8a89`, ej mergad till `main`)
+### Gren `feature/sqlite` (Room/SQLite; commits `eab6b6a..48e8a89`, mergad till `main` 2026-10-03)
 
 - **Room/SQLite är enda lagringen** (Room 2.8.5 + KSP 2.3.12 med AGP 9.2.1 / Kotlin 2.2.10) — ersätter JSON-fallback och minnesläge. "KSP blockerad" längre ned gäller bara v1.0/v1.0.1 *(historiskt/löst)*.
 - **Engångsmigrering** av `readings.json` till Room i en transaktion; filen döps om till `readings.json.migrated` (raderas aldrig). Vid fel behålls JSON-filen, felet loggas (`JsonToRoomMigration`) och visas i Inställningar → Lagring, nytt försök vid nästa start.
@@ -30,7 +30,7 @@ created: 2026-06-13
 - Enhetlig status `transmitted` vid överföring (tidigare `transmitted via Sparkplug` i JSON-läget).
 - **Bygginfo (`48e8a89`):** Inställningar → App-info visar version, byggtid och git-commit från `BuildConfig` (`BUILD_TIME`, `GIT_COMMIT`) i stället för hårdkodat *Fas 5 (juni 2026)*.
 
-### Gren `feature/outbox` (utkorg; ej mergad till `main`, bygger på `feature/sqlite`)
+### Gren `feature/outbox` (utkorg; mergad till `main` 2026-10-03, byggde på `feature/sqlite`)
 
 - **Utkorg (outbox):** avläsningar sparas först som `PENDING` (*Väntar*) och skickas av WorkManager; `SENT` (*Skickad*) först när brokern bekräftat (QoS 1). Meddelandet har `id`, `deviceId`, `messageId`. Room-schema 2 (migrering 1→2). Se [[Outbox]].
 - **Verifierad av Joakim 2026-10-03 på telefon och mot riktiga brokern:** avläsningar blir *Väntar* offline, skickas när nätverk finns (även med appen stängd), kommer fram en gång var på dashboarden, status *Skickad*. Room-migrering 1→2 körd på telefonens riktiga databas: 4 poster blev `SENT`.
@@ -39,7 +39,7 @@ created: 2026-06-13
 
 ### Kända begränsningar (kvarstående teknisk skuld)
 
-- `markAsTransmitted` anropas oavsett om MQTT-publiceringen lyckades på `feature/sqlite`/`main`. **Rättat på `feature/outbox`** (2026-10-03, ej mergad; **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**) — se [[Outbox]].
+- `markAsTransmitted` anropades oavsett om MQTT-publiceringen lyckades före utkorgen *(historiskt/löst)*. **Rättat av `feature/outbox`** (2026-10-03, mergad till `main`; **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03**) — se [[Outbox]].
 - Testskript (`test/fas2-mqtt/mqtt/`) och MQTT Explorer ansluter anonymt och behöver användare nu när brokern kräver inloggning.
 - `assembleRelease` misslyckas på fakir: `~/.android/debug.keystore` saknas. `assembleDebug` påverkas inte.
 - `readings.json.migrated` raderas aldrig automatiskt.
