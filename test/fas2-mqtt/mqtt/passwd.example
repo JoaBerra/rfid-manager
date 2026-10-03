@@ -2,10 +2,15 @@
 # Den riktiga filen heter mqtt/passwd, skapas lokalt och ligger i .gitignore.
 # Brokern startar inte utan mqtt/passwd (se mosquitto.conf: password_file).
 #
-# Skapa den från repots rot (ingen broker behöver köra; lösenordet frågas interaktivt):
-#   docker run --rm -it -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd -c /work/passwd rfid-app
-# Lägg sedan till nästa användare UTAN -c (med -c skrivs filen över):
-#   docker run --rm -it -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd /work/passwd rfid-dashboard
+# Skapa den från repots rot. REKOMMENDERAT SÄTT (det interaktiva `docker run -it ... mosquitto_passwd`
+# fungerade inte – lösenordet godkändes inte):
+#   read -rs PW; docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd -b -c /work/passwd rfid-app "$PW"
+#   unset PW
+# Nästa användare (rfid-dashboard) UTAN -c – med -c skrivs hela filen över:
+#   read -rs PW; docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd -b /work/passwd rfid-dashboard "$PW"
+#   unset PW
+# VARNING: skriv aldrig lösenordet i klartext på kommandoraden (mosquitto_passwd -b ... rfid-app hemligt) –
+# då hamnar det i shell-historiken. read -rs läser det dolt, och unset PW rensar det efteråt.
 #
 # Förväntade användare (se mqtt/acl): rfid-app, rfid-dashboard
 #

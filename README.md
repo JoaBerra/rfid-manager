@@ -106,44 +106,50 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 |----|-------------|
 | **MCP-server** | Parkerad idé i AH — `mcp-server/`, dashboard + Explorer räcker idag |
 | **Room/KSP** | Riktig Room-databas blockerad av KSP/AGP — in-memory + JSON idag |
+| **SQLite** | SQLite istället för `readings.json` (Room/KSP saknas i bygget) — se *Teknisk skuld* |
 | **hemmanatverk** | Uppdatera nätverksdiagram (falstaff avvecklad) |
 
 ### Teknisk skuld
 
 - `README` var inaktuell före 2026-07-14 (rättad i samband med avslut)
 - README i root pekade på icke-existerande `rfid-manager-android`-repo
-- MQTT utan autentisering på ishtar (se avsnittet *Nätverk och säkerhet (MQTT)*), accepterat tills labbet blir riktig drift
+- ~~MQTT utan autentisering på ishtar~~ — löst: inloggning aktiv sedan 2026-10-03 (se avsnittet *Nätverk och säkerhet (MQTT)*)
+- Appen visar inget tydligt fel vid felaktigt lösenord – verifiera att meddelandet *Misslyckades ✗* (commit `12012a2`) faktiskt visas
+- Testskripten i `test/fas2-mqtt/mqtt/` och MQTT Explorer ansluter anonymt och behöver användare (`rfid-app`/`rfid-dashboard`) nu när brokern kräver inloggning
+- SQLite istället för `readings.json` (Room/KSP saknas i bygget)
 
 ---
 
 ## Nätverk och säkerhet (MQTT)
 
-Beslut 2026-10-03 (Joakim, tillsammans med Nora Nät som sköter hemmanätet): MQTT-testlabbet på ishtar körs **medvetet utan autentisering**. Det är en accepterad risk, inte ett förbiseende.
+**Inloggning aktiv sedan 2026-10-03.** MQTT-brokern på ishtar kräver användarnamn och lösenord; anonym anslutning nekas. Driftsättningen gjordes 2026-10-03 (09:00–09:11) och verifierades end-to-end: telefonen anslöt som `rfid-app`, instrumentpanelen som `rfid-dashboard`, och en NFC-avläsning kom fram till panelen.
 
-- **Broker:** Mosquitto, container `rfid-mqtt-hulda`, `192.168.50.151:1883`, `allow_anonymous true` (se `test/fas2-mqtt/mqtt/mosquitto.conf`).
-- **Instrumentpanel:** container `rfid-mqtt-dashboard`, `192.168.50.151:8000`. Ansluter som standard till brokern utan användarnamn eller lösenord. Panelen kan logga in om miljövariablerna `MQTT_USERNAME` och `MQTT_PASSWORD` sätts (se nedan); utan dem är den anonym.
-- **Klienter:** appen RFID Manager (Android, klient-id `rfid-android-client`, telefonen på `192.168.50.110`) och panelen på ishtar själv.
-- **Varför det är acceptabelt nu:** båda tjänsterna nås bara från hemnätet (192.168.50.0/24). Routern har ingen port vidarebefordrad och ligger bakom CGNAT, så inget går att nå från internet. Det är ett testlab.
+- **Broker:** Mosquitto, container `rfid-mqtt-hulda`, `192.168.50.151:1883`, `allow_anonymous false` med `password_file` och `acl_file` (se `test/fas2-mqtt/mqtt/mosquitto.conf`).
+- **Användare och ACL** (`test/fas2-mqtt/mqtt/acl`): `rfid-app` **skriver** och `rfid-dashboard` **läser** på `rfidmanager/+/telemetry`. Appen kan alltså inte läsa och panelen kan inte skriva.
+- **Instrumentpanel:** container `rfid-mqtt-dashboard`, `192.168.50.151:8000`. Loggar in som `rfid-dashboard` via miljövariablerna `MQTT_USERNAME` och `MQTT_PASSWORD` (se nedan).
+- **Klienter:** appen RFID Manager (Android, klient-id `rfid-android-client`, telefonen på `192.168.50.110`, användare `rfid-app`) och panelen på ishtar själv (användare `rfid-dashboard`).
+- **Backup av gamla konfigurationen:** finns på ishtar i `~/backup-mqtt-2026-10-03`.
+- **Nätet:** båda tjänsterna nås bara från hemnätet (192.168.50.0/24). Routern har ingen port vidarebefordrad och ligger bakom CGNAT, så inget går att nå från internet. Det är fortfarande ett testlab.
 - **Brandvägg:** ishtar har varken `ufw` eller `iptables`, och Docker publicerar portarna direkt. Kuku (BTCPay) får inte `ufw` av samma skäl.
 
-**Gör detta samtidigt om något i MQTT-kedjan ändras, eller om labbet blir riktig drift:**
+**Gör detta samtidigt om något i MQTT-kedjan ändras (nytt lösenord, ny användare, ny klient):**
 
-1. Sätt `allow_anonymous false` och en lösenordsfil (`password_file`) i `mosquitto.conf`.
-2. Lägg in användarnamn och lösenord i Android-appen: Inställningar → MQTT-anslutning (fälten *Användarnamn* och *Lösenord*, tryck *Anslut*). Lösenordet lagras krypterat (Android Keystore, AES-GCM). Tomt användarnamn = anonym anslutning. Stödet finns i grenen/koden; default är fortfarande anonymt.
-3. Sätt `MQTT_USERNAME` och `MQTT_PASSWORD` för panelen. `dashboard/docker-compose.ishtar.yml` läser dem som `${MQTT_USERNAME:-}` och `${MQTT_PASSWORD:-}`; lägg värdena i en `.env` bredvid compose-filen (`dashboard/.env`, ignoreras av git) eller i skalets miljö – aldrig i compose-filen eller i git. Utan `MQTT_USERNAME` loggar panelen inte in.
+1. Brokern: `allow_anonymous false`, `password_file` och `acl_file` i `mosquitto.conf` (redan så).
+2. Android-appen: Inställningar → MQTT-anslutning (fälten *Användarnamn* och *Lösenord*, tryck *Anslut*). Lösenordet lagras krypterat (Android Keystore, AES-GCM). Tomt användarnamn = anonym anslutning, vilket brokern nu nekar.
+3. Panelen: `MQTT_USERNAME` och `MQTT_PASSWORD`. `dashboard/docker-compose.ishtar.yml` läser dem som `${MQTT_USERNAME:-}` och `${MQTT_PASSWORD:-}`; lägg värdena i en `.env` bredvid compose-filen (`dashboard/.env`, ignoreras av git) eller i skalets miljö – aldrig i compose-filen eller i git. Utan `MQTT_USERNAME` loggar panelen inte in.
 4. Testa från telefonen och panelen att båda ansluter, och be Nora Nät uppdatera nätverksdokumentationen i repot `hemmanatverk` (avsnitt om ishtar och E3).
 
-Ändra aldrig bara en av delarna: bara lösenord i brokern gör att både appen och panelen tappar anslutningen.
+Ändra aldrig bara en av delarna: ändras lösenordet bara i brokern tappar både appen och panelen anslutningen.
 
-### Brokerfilerna för inloggning (förberedda, ännu inte tillämpade)
+### Brokerfilerna för inloggning (tillämpade 2026-10-03)
 
-Steg 1 ovan är förberett i `test/fas2-mqtt/mqtt/`: `mosquitto.conf` har `allow_anonymous false`, `password_file` och `acl_file`; `acl` ger `rfid-app` skrivrätt och `rfid-dashboard` läsrätt på `rfidmanager/+/telemetry`; `mosquitto.conf.anon` är den tidigare anonyma konfigurationen (återgångsfil). `docker-compose.hulda.yml` monterar `passwd` och `acl` skrivskyddat. Raden om `allow_anonymous true` ovan beskriver alltså det som körs på ishtar nu, tills nedanstående är genomfört.
+Filerna i `test/fas2-mqtt/mqtt/`: `mosquitto.conf` har `allow_anonymous false`, `password_file` och `acl_file`; `acl` ger `rfid-app` skrivrätt och `rfid-dashboard` läsrätt på `rfidmanager/+/telemetry`; `mosquitto.conf.anon` är den tidigare anonyma konfigurationen (återgångsfil). `docker-compose.hulda.yml` monterar `passwd` och `acl` skrivskyddat.
 
-**Brokern startar inte utan `mqtt/passwd`** (och Docker skapar en tom katalog med det namnet om filen saknas). Tillämpa därför inte ändringen på ishtar förrän lösenordsfilen finns.
+**Brokern startar inte utan `mqtt/passwd`** (och Docker skapar en tom katalog med det namnet om filen saknas).
 
-Ordning vid införande:
+Ordning vid (nyinförande eller) byte av lösenord:
 
-1. Skapa `test/fas2-mqtt/mqtt/passwd` enligt instruktionen i `mqtt/passwd.example` (`mosquitto_passwd`, användarna `rfid-app` och `rfid-dashboard`). Filen ignoreras av git.
+1. Skapa `test/fas2-mqtt/mqtt/passwd` enligt avsnittet *Skapa lösenord (rekommenderat sätt)* nedan (och `mqtt/passwd.example`). Filen ignoreras av git.
 2. **Direkt efter att `passwd` skapats** (på körkopian på ishtar, från repots rot) – sätt ägare och rättigheter för både `passwd` och `acl`:
    ```bash
    docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 sh -c 'chown 1883:1883 /work/passwd /work/acl && chmod 0600 /work/passwd /work/acl'
@@ -152,6 +158,27 @@ Ordning vid införande:
 3. Ställ in lösenorden i appen och för panelen (`MQTT_USERNAME`/`MQTT_PASSWORD`) enligt punkt 2–3 ovan.
 4. Hämta ändringarna till ishtar och starta om: `docker compose -f test/fas2-mqtt/docker-compose.hulda.yml up -d --force-recreate`. Kör om chown/chmod-kommandot i steg 2 efter varje `git pull`/`checkout` som kan ha rört `acl`.
 5. Testa att appen och panelen ansluter (steg 4 ovan).
+
+#### Skapa lösenord (rekommenderat sätt)
+
+Det interaktiva sättet (`docker run -it ... mosquitto_passwd`) fungerade inte i praktiken – lösenordet godkändes inte. Använd i stället `read -rs` och `-b`. Från repots rot:
+
+```bash
+read -rs PW; docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd -b -c /work/passwd rfid-app "$PW"
+unset PW
+```
+
+Kör sedan samma sak för nästa användare, `rfid-dashboard`, **utan `-c`**:
+
+```bash
+read -rs PW; docker run --rm -v $PWD/test/fas2-mqtt/mqtt:/work eclipse-mosquitto:2 mosquitto_passwd -b /work/passwd rfid-dashboard "$PW"
+unset PW
+```
+
+- **`-c` skriver över hela filen.** Använd det bara för den första användaren, annars försvinner tidigare användare.
+- `read -rs` läser lösenordet utan att visa det och utan att det hamnar i kommandoraden. **Skriv aldrig lösenordet i klartext på kommandoraden** (`... -b ... rfid-app hemligt`): då hamnar det i shell-historiken (och syns i processlistan).
+- `unset PW` direkt efteråt så lösenordet inte ligger kvar i skalets miljö.
+- Kör sedan chown/chmod-steget (steg 2 ovan).
 
 #### Filägare och rättigheter (`passwd` och `acl`)
 
@@ -163,7 +190,7 @@ Mosquitto 2.1 kör som uid 1883 i containern och kräver att `passwd` och `acl` 
 
 #### Provkörning (Nora Nät)
 
-Nora Nät har provkört brokern på ishtar med Mosquitto 2.1.2 (syntax och ACL, på port 11883, vid sidan av den ordinarie brokern). Resultat:
+Nora Nät provkörde brokern på ishtar före driftsättning med Mosquitto 2.1.2 (syntax och ACL, på port 11883, vid sidan av den ordinarie brokern). Resultat:
 
 - Anonym anslutning nekas.
 - Fel lösenord nekas.
