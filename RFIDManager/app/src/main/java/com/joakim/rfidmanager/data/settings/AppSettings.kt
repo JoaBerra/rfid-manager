@@ -59,6 +59,19 @@ class AppSettings(context: Context) {
         _hasMqttPassword.value = user.isNotEmpty() && password.isNotEmpty()
     }
 
+    /**
+     * Stabilt, slumpat id för den här installationen (8 hex-tecken). Ingår i varje MQTT-meddelande
+     * (deviceId + messageId) så att dashboarden kan avduplicera även om flera telefoner använder
+     * samma lokala post-id. Skapas första gången det efterfrågas och bevaras därefter.
+     */
+    val deviceId: String
+        get() = synchronized(AppSettings::class.java) {
+            prefs.getString(KEY_DEVICE_ID, null)?.takeIf { it.isNotBlank() }
+                ?: java.util.UUID.randomUUID().toString().replace("-", "").take(8).also {
+                    prefs.edit().putString(KEY_DEVICE_ID, it).commit()
+                }
+        }
+
     fun setFontSizeScale(scale: Float) {
         val clamped = scale.coerceIn(1.0f, 1.8f)
         prefs.edit().putFloat(KEY_FONT_SIZE, clamped).apply()
@@ -104,6 +117,7 @@ class AppSettings(context: Context) {
         private const val KEY_PAGE_SIZE = "page_size"
         private const val KEY_BROKER_HOST = "broker_host"
         private const val KEY_BROKER_PORT = "broker_port"
+        private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_MQTT_USERNAME = "mqtt_username"
         private const val KEY_MQTT_PASSWORD_ENC = "mqtt_password_enc"
     }
