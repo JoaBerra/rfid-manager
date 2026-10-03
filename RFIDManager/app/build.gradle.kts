@@ -1,7 +1,40 @@
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+}
+
+// Bygginfo som visas i Inställningar. Värdena beräknas vid konfigurering, dvs. vid varje
+// Gradle-körning (konfigurations-cache är inte aktiverat). Ändras värdet ändras
+// BuildConfig-indata, så generateXxxBuildConfig körs om och värdet fryses inte.
+// OBS: aktiveras org.gradle.configuration-cache måste detta flyttas till en uppgift
+// som alltid körs, annars återanvänds tidsstämpeln från cachen.
+fun gitOutput(vararg args: String): String? = try {
+    val process = ProcessBuilder(listOf("git") + args)
+        .directory(rootDir)
+        .redirectErrorStream(true)
+        .start()
+    val out = process.inputStream.bufferedReader().readText().trim()
+    if (process.waitFor() == 0) out else null
+} catch (e: Exception) {
+    null
+}
+
+val buildTimeStamp: String = ZonedDateTime.now(ZoneId.of("Europe/Stockholm"))
+    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+
+val gitCommitLabel: String = run {
+    val hash = gitOutput("rev-parse", "--short", "HEAD")?.takeIf { it.isNotEmpty() }
+    if (hash == null) {
+        "okänd"
+    } else {
+        val dirty = gitOutput("status", "--porcelain")?.isNotEmpty() ?: false
+        if (dirty) "$hash-dirty" else hash
+    }
 }
 
 android {
@@ -20,6 +53,9 @@ android {
         versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BUILD_TIME", "\"$buildTimeStamp\"")
+        buildConfigField("String", "GIT_COMMIT", "\"$gitCommitLabel\"")
     }
 
     signingConfigs {
@@ -48,6 +84,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

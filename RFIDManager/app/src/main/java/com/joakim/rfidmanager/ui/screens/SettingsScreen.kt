@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.joakim.rfidmanager.BuildConfig
 import com.joakim.rfidmanager.data.export.ReadingExporter
 import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
 import com.joakim.rfidmanager.data.settings.AppSettings
@@ -410,8 +411,8 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(Dimens.cardPadding)) {
                 Text(str("screen.settings.app_info"), fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(Dimens.smallGap))
-                InfoRow(str("screen.settings.version"), "1.0.0")
-                InfoRow(str("screen.settings.build"), str("screen.settings.build_label"))
+                InfoRow(str("screen.settings.version"), BuildConfig.VERSION_NAME)
+                InfoRow(str("screen.settings.build"), "${BuildConfig.BUILD_TIME} · ${BuildConfig.GIT_COMMIT}")
                 InfoRow(str("screen.settings.framework"), "Compose + Material 3")
                 InfoRow(str("screen.settings.mqtt"), "Paho 1.2.5")
             }
@@ -422,7 +423,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            str("screen.settings.footer"),
+            "${str("screen.settings.footer")} ${BuildConfig.VERSION_NAME}",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
