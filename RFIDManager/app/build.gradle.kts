@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -50,6 +51,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -64,10 +69,10 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Room persistence — runtime only (KSP/kapt unavailable in AGP 9.x + Kotlin 2.2)
+    // Room persistence (SQLite) – kod genereras med KSP
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    // Annotation processor temporarily unavailable; JSON-file fallback active.
+    ksp(libs.androidx.room.compiler)
 
     // Paho MQTT
     implementation(libs.paho.mqtt.client)

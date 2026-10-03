@@ -8,7 +8,8 @@ lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 kotlin = "2.2.10"
 composeBom = "2026.02.01"
-room = "2.6.1"
+room = "2.8.5"
+ksp = "2.3.12"
 pahoMqtt = "1.2.5"
 navigationCompose = "2.8.0"
 lifecycleViewmodelCompose = "2.8.6"
@@ -44,5 +45,6 @@ paho-mqtt-client = { group = "org.eclipse.paho", name = "org.eclipse.paho.client
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
