@@ -45,3 +45,13 @@ Dessa klasser gör det möjligt att:
 - Permissions: `NFC` + ofta `VIBRATE` för feedback.
 
 Se [[Eskortminne]], [[Android-NFC-API]] och [[Hårdvarukrav-och-Enheter]].
+
+## Skrivläge i appen (`feature/nfc-write-button`)
+
+Skrivning till tagg sker i ett uttryckligt **skrivläge** som styrs av ren Kotlin i `nfc/WriteMode.kt` (tillstånd `Idle → Editing → Armed → Finished`).
+
+- **Före (på `feature/outbox-rounds`):** en läsning lade taggen i SCAN-listan. Tryck på kortet — eller på *Spara läsning*, som också markerade taggen — fällde ut skrivformuläret (adress + data + SPARA). Markeringen kunde inte tas bort igen, så man kom inte förbi formuläret. SPARA armerade `pendingWrite` i `MainActivity`; nästa detektion av samma UID utförde skrivningen. Ingen avbrytsfunktion, ingen timeout.
+- **Nu:** läsning visar/sparar bara läsningen. Knappen **Skriv till tagg** (aktiv bara för senast lästa tagg, läst för under 2 min sedan, och skrivbar enligt lock-bytes på sida 2; Classic/utan lock-info räknas som skrivbar) startar formuläret. **SKRIV** armerar skrivningen i 30 s. Avbryt, tillbaka-knappen, stoppad skanning, appen i bakgrunden, en annan lästa tagg eller timeout stänger skrivläget. Efter skrivning visas bekräftelse på kortet.
+- **Status:** enhetstestat (`WriteModeTest`, 29 tester), bygger. **Ej provat på telefon** — bara att appen startar och inte kraschar är kontrollerat.
+
+Se [[Användarmanual]] (avsnittet *Skriva till tagg*) och [[Kanban]].

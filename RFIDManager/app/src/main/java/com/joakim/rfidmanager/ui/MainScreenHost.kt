@@ -48,6 +48,12 @@ fun MainScreenHost(
     detectedTags: List<com.joakim.rfidmanager.ui.model.RFIDTag> = emptyList(),
     onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
+    // Skrivläge (nfc/WriteMode.kt): knappen "Skriv till tagg" startar det, Avbryt/tillbaka/timeout stänger det
+    writeState: com.joakim.rfidmanager.nfc.WriteModeState = com.joakim.rfidmanager.nfc.WriteModeState.Idle,
+    lastRead: com.joakim.rfidmanager.nfc.LastRead? = null,
+    nowMs: Long = System.currentTimeMillis(),
+    onEnterWrite: (String) -> Unit = {},
+    onCancelWrite: () -> Unit = {},
     // Utkorg: 'Skicka nu' (tvingat utskick via WorkManager)
     onSendNow: () -> Unit = {},
     // Utkorg: omgångsinställningarna ändrades (planera om nästa körning)
@@ -113,6 +119,11 @@ fun MainScreenHost(
                     onWrite = onWrite,
                     onPersist = handlePersist,
                     persistedUids = sessionPersistedUids.value,
+                    writeState = writeState,
+                    lastRead = lastRead,
+                    nowMs = nowMs,
+                    onEnterWrite = onEnterWrite,
+                    onCancelWrite = onCancelWrite,
                     fontSizeScale = fontSizeScale
                 )
             }

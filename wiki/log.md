@@ -1,5 +1,19 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] feature | Skrivknapp: skrivläge startar bara med "Skriv till tagg" på `feature/nfc-write-button`
+
+**Gren:** `feature/nfc-write-button` (från `feature/outbox-rounds`; pushad som egen gren, **inte** mergad, `main` orörd).
+
+**Orsak (nuvarande flöde):** `ScanScreen` fällde ut skrivformuläret (adress + data) för den markerade taggen, och markeringen sattes både vid tryck på kortet och av *Spara läsning* – men kunde aldrig tas bort. SPARA armerade `pendingWrite` i `MainActivity`, som utfördes vid nästa detektion av samma UID, utan avbrytsfunktion eller timeout.
+
+**Utfört:** ny ren tillståndslogik `nfc/WriteMode.kt` (+ `TagLocks.kt`), knappen *Skriv till tagg* (aktiv bara för senast lästa, nyss lästa och skrivbara tagg), formulär med SKRIV/Avbryt, nedräkning och timeout (30 s), tillbaka-knapp/bakgrund/stoppad skanning avbryter, bekräftelse efter skrivning. Svenska och engelska strängar. Läsning och sparande i utkorgen är oförändrade.
+
+**Verifierat:** 29 nya JVM-enhetstester (`WriteModeTest`), alla 143 gröna, `assembleDebug` OK; installerad på telefonen, appen startar, skanning startar/stoppas utan krasch (logcat). **Ej provat med riktig tagg – skrivflödet är inte provat på telefon.**
+
+**Dokumentation uppdaterad:** [[RFID-och-NFC]], [[Användarmanual]], [[Kanban]].
+
+---
+
 ## [2026-10-03] fix | Kontrast i omgångskortet – orsak funnen och rättad (ljust läge)
 
 **Gren:** `feature/outbox-rounds` (ej mergad, `main` orörd).

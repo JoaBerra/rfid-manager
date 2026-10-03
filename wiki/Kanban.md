@@ -90,6 +90,7 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
+- [ ] **Skrivknapp i stället för automatiskt skrivläge** (gren `feature/nfc-write-button`, från `feature/outbox-rounds`; önskemål från Joakim 2026-10-03) — en läsning visar/sparar bara läsningen; *Skriv till tagg* startar skrivläget för senast lästa tagg, med Avbryt/tillbaka/timeout (30 s) och bekräftelse. **Enhetstestat och bygger; ej provat på telefon** ([[RFID-och-NFC]])
 - [ ] **Room/SQLite på `feature/sqlite`** — klar och verifierad på telefon 2026-10-03 (3 poster migrerade, databasen kontrollerad); väntar på merge till `main` ([[Release-Notes]], [[Ordlista]])
 
 

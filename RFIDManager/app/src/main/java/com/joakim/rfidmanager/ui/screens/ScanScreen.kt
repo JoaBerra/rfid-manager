@@ -27,6 +27,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
+import com.joakim.rfidmanager.nfc.TagLocks
+import com.joakim.rfidmanager.nfc.WriteMode
+import com.joakim.rfidmanager.nfc.WriteModeState
+import com.joakim.rfidmanager.nfc.WriteResult
+import com.joakim.rfidmanager.nfc.LastRead
 import com.joakim.rfidmanager.ui.theme.Dimens
 import com.joakim.rfidmanager.ui.str
 import kotlin.math.cos
@@ -45,6 +50,12 @@ fun ScanScreen(
     onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
     persistedUids: Set<String> = emptySet(),
+    // Skrivläge (ren tillståndslogik i nfc/WriteMode.kt; ägs av MainActivity)
+    writeState: WriteModeState = WriteModeState.Idle,
+    lastRead: LastRead? = null,
+    nowMs: Long = System.currentTimeMillis(),
+    onEnterWrite: (String) -> Unit = {},
+    onCancelWrite: () -> Unit = {},
     fontSizeScale: Float = 1.0f,
     modifier: Modifier = Modifier
 ) {
@@ -294,14 +305,66 @@ fun ScanScreen(
                                 )
                             }
 
-                            if (isSelected) {
-                                val lockedPages = remember(tag.fullSectors) { parseLockedPages(tag.fullSectors) }
+                            // --- Skrivläge: bara efter tryck på "Skriv till tagg" (se nfc/WriteMode.kt) ---
+                            val editing = (writeState as? WriteModeState.Editing)?.takeIf { it.uidHex == tag.uid }
+                            val armed = (writeState as? WriteModeState.Armed)?.takeIf { it.request.uidHex == tag.uid }
+                            val finished = (writeState as? WriteModeState.Finished)?.takeIf { it.uidHex == tag.uid }
+                            val isLastRead = lastRead?.uidHex == tag.uid
+
+                            if (editing == null && armed == null) {
+                                Spacer(Modifier.height(4.dp))
+                                OutlinedButton(
+                                    onClick = { onEnterWrite(tag.uid) },
+                                    enabled = WriteMode.canStartWrite(writeState, lastRead, tag.uid, nowMs),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(str("screen.scan.write_button"), fontFamily = FontFamily.Monospace, fontSize = (12 * fontSizeScale).sp)
+                                }
+                                if (isLastRead && lastRead?.writable == false) {
+                                    Text(str("screen.scan.write_not_writable"), fontSize = (10 * fontSizeScale).sp, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.error)
+                                }
+                            }
+
+                            if (finished != null) {
+                                Spacer(Modifier.height(4.dp))
+                                val ok = finished.result == WriteResult.WRITTEN
+                                Text(
+                                    when (finished.result) {
+                                        WriteResult.WRITTEN -> str("screen.scan.write_done").replace("{addr}", finished.addr.toString())
+                                        WriteResult.FAILED -> str("screen.scan.write_failed")
+                                        WriteResult.TIMEOUT -> str("screen.scan.write_timeout")
+                                    },
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = (11 * fontSizeScale).sp,
+                                    color = if (ok) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                )
+                                TextButton(onClick = onCancelWrite) { Text(str("screen.scan.write_dismiss"), fontFamily = FontFamily.Monospace) }
+                            }
+
+                            if (armed != null) {
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    str("screen.scan.write_armed") + " (" + WriteMode.remainingSeconds(writeState, nowMs) + " s)",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = (12 * fontSizeScale).sp,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
+                                OutlinedButton(onClick = onCancelWrite, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                                    Text(str("screen.scan.write_cancel"), fontFamily = FontFamily.Monospace)
+                                }
+                            }
+
+                            if (editing != null) {
+                                val lockedPages = remember(tag.fullSectors) { TagLocks.parseLockedPages(tag.fullSectors) }
                                 val addrInt = writeAddress.toIntOrNull()
-                                val addrLocked = addrInt?.let { isPageLocked(it, lockedPages) } ?: false
+                                val addrLocked = addrInt?.let { TagLocks.isPageLocked(it, lockedPages) } ?: false
                                 val addrColor = if (addrInt == null) MaterialTheme.colorScheme.onSurfaceVariant
                                     else if (addrLocked) Color(0xFFEF4444) else Color(0xFF22C55E)
 
                                 Spacer(Modifier.height(8.dp))
+                                Text(str("screen.scan.write_title"), fontFamily = FontFamily.Monospace, fontSize = (12 * fontSizeScale).sp, color = MaterialTheme.colorScheme.tertiary)
+                                Spacer(Modifier.height(4.dp))
                                 OutlinedTextField(
                                     value = writeAddress,
                                     onValueChange = { writeAddress = it },
@@ -359,6 +422,9 @@ fun ScanScreen(
                                         fontSize = (12 * fontSizeScale).sp
                                     )
                                 }
+                                OutlinedButton(onClick = onCancelWrite, modifier = Modifier.fillMaxWidth()) {
+                                    Text(str("screen.scan.write_cancel"), fontFamily = FontFamily.Monospace)
+                                }
                             }
                         }
                     }
@@ -372,38 +438,13 @@ fun ScanScreen(
     }
 }
 
-private fun parseLockedPages(fullSectors: Map<Int, String>): Set<Int> {
-    val page2 = fullSectors[2] ?: return emptySet()
-    val bytes = page2.split(" ").mapNotNull { it.toIntOrNull(16) }
-    if (bytes.size < 2) return emptySet()
-    val lb0 = bytes[0]
-    val lb1 = bytes[1]
-    val locked = mutableSetOf<Int>()
-    for (bit in 0..3) {
-        if ((lb0 shr bit) and 1 == 1) {
-            locked.addAll((4 + bit * 4) until (8 + bit * 4))
-        }
-    }
-    for (bit in 0..3) {
-        if ((lb1 shr bit) and 1 == 1) {
-            locked.addAll((20 + bit * 4) until (24 + bit * 4))
-        }
-    }
-    return locked
-}
-
-private fun isPageLocked(page: Int, lockedPages: Set<Int>): Boolean {
-    if (page < 4) return true
-    return page in lockedPages
-}
-
 @Composable
 private fun MemoryMapSection(
     fullSectors: Map<Int, String>,
     currentAddress: String,
     onAddressClick: (String) -> Unit
 ) {
-    val lockedPages = remember(fullSectors) { parseLockedPages(fullSectors) }
+    val lockedPages = remember(fullSectors) { TagLocks.parseLockedPages(fullSectors) }
     var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {

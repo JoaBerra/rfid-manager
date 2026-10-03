@@ -11,15 +11,18 @@ När en tagg har detekterats och visas i SCAN-listan kan du skriva data till den
 
 ### Steg-för-steg
 
-1. **Scanna en tagg** — tryck STARTA SKANNING och håll taggen mot telefonen
-2. **Välj taggen** — tryck på taggens kort i listan (det markeras med highlight)
-3. **Write-formuläret visas** — under taggens kort visas nu:
+> **Ändrat på `feature/nfc-write-button` (2026-10-03, enhetstestat, ej provat på telefon):** en läsning visar och sparar bara läsningen. Skrivläget startar först när du trycker **Skriv till tagg**.
+
+1. **Scanna en tagg** — tryck STARTA SKANNING och håll taggen mot telefonen. Taggen visas i listan; du kan **Spara** läsningen som vanligt.
+2. **Tryck Skriv till tagg** på taggens kort. Knappen är aktiv bara för den senast lästa taggen (läst för under 2 minuter sedan) och om den går att skriva till (okänd typ eller helt låst Ultralight/NTAG ger röd text och inaktiv knapp).
+3. **Skrivformuläret visas** under kortet:
 
    | Fält | Beskrivning |
    |---|---|
    | **Mål page/block** | Ange adress (page för Ultralight, block för Classic) |
    | **Data (hex)** | Ange hex-data (t.ex. `48656C6C6F` = "Hello") |
-   | **SPARA** | Förbered skrivningen |
+   | **SKRIV** | Beställ skrivningen |
+   | **Avbryt** | Stäng skrivläget utan att skriva |
 
 ### Adress och låsstatus
 
@@ -41,12 +44,15 @@ Klicka på en rad i minneskartan för att fylla i adressen automatiskt.
 
 ### Genomföra skrivning
 
-1. Fyll i **mål page/block** (t.ex. `4`)
-2. Fyll i **data i hex** (t.ex. `48656C6C6F`)
-3. Tryck **SPARA** — du får toast "Redo att spara – håll taggen mot telefonen"
-4. **Håll taggen mot telefonen igen** — skrivningen exekveras
-5. Bekräftelse: toast "Write to page X succeeded!"
-6. Taggen i listan uppdateras med ny data
+1. Tryck **Skriv till tagg** på den nyss lästa taggen
+2. Fyll i **mål page/block** (t.ex. `4`)
+3. Fyll i **data i hex** (t.ex. `48656C6C6F`)
+4. Tryck **SKRIV** — kortet visar "⚡ Skrivläge – håll taggen mot telefonen (NN s)" med nedräkning (30 s)
+5. **Håll taggen mot telefonen igen** — skrivningen utförs
+6. Bekräftelse på kortet: "✓ Skrivning klar (sida/block X)" (grönt) eller "✗ Skrivningen misslyckades …" (rött); tryck OK för att stänga
+7. Taggen i listan uppdateras med ny data
+
+**Avbryta:** tryck **Avbryt**, tryck **tillbaka**, stoppa skanningen, lägg appen i bakgrunden eller läs en annan tagg — skrivläget stängs utan att något skrivs. Efter 30 sekunder utan tagg avbryts det av sig självt ("Skrivläget avbröts (tidsgräns)").
 
 > **OBS:** Endast hexadecimala värden (0–9, A–F) accepteras i datafältet. Vanlig text som "test" ger toast "Invalid hex data".
 

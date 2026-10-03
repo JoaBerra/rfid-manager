@@ -12,6 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.LaunchedEffect
 import com.joakim.rfidmanager.nfc.AndroidNfcManager
+import com.joakim.rfidmanager.nfc.LastRead
+import com.joakim.rfidmanager.nfc.WriteMode
+import com.joakim.rfidmanager.nfc.WriteModeState
+import com.joakim.rfidmanager.nfc.WriteRequest
+import com.joakim.rfidmanager.nfc.WriteResult
+import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.delay
 import com.joakim.rfidmanager.domain.model.RfidTag as DomainRfidTag
 import com.joakim.rfidmanager.domain.model.TagType
 import com.joakim.rfidmanager.domain.model.PersistedReading
@@ -41,6 +48,14 @@ class MainActivity : ComponentActivity() {
     private val detectedTags = mutableStateListOf<RFIDTag>()
     private var scanningEnabled by mutableStateOf(false)
 
+    // Skrivläge (ren logik i nfc/WriteMode.kt). Hoistat hit så att onPause kan avbryta det.
+    private var writeState by mutableStateOf<WriteModeState>(WriteModeState.Idle)
+    private var lastRead by mutableStateOf<LastRead?>(null)
+    private var nowMs by mutableLongStateOf(System.currentTimeMillis())
+
+    private fun s(key: String, fallback: String): String =
+        appContainer.localizationManager.strings.value[key] ?: fallback
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -61,8 +76,24 @@ class MainActivity : ComponentActivity() {
                 // Previous manual attempts' hybrid code removed.
                 val scope = rememberCoroutineScope()
 
-                data class PendingWrite(val uidHex: String, val addr: Int, val data: ByteArray, val isUltra: Boolean)
-                var pendingWrite by remember { mutableStateOf<PendingWrite?>(null) }
+                // Tillbaka-knappen avbryter skrivläget (annars gör tillbaka som vanligt)
+                BackHandler(enabled = writeState !is WriteModeState.Idle) {
+                    writeState = WriteMode.cancel(writeState)
+                }
+                // Klocka: håller "nyss läst" och skrivlägets nedräkning/timeout aktuella
+                LaunchedEffect(writeState, lastRead) {
+                    while (true) {
+                        nowMs = System.currentTimeMillis()
+                        val before = writeState
+                        writeState = WriteMode.tick(writeState, nowMs)
+                        val after = writeState
+                        if (before is WriteModeState.Armed && after is WriteModeState.Finished) {
+                            Toast.makeText(this@MainActivity, s("screen.scan.write_timeout", "Write mode cancelled (timeout)"), Toast.LENGTH_SHORT).show()
+                        }
+                        if (!(writeState is WriteModeState.Armed || WriteMode.isRecent(lastRead, nowMs))) break
+                        delay(1000)
+                    }
+                }
                 var writeStatusMessage by remember { mutableStateOf<String?>(null) }
 
                 // A1 + A4: persistens states
@@ -73,6 +104,8 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(scanningEnabled) {
                     if (scanningEnabled) {
                         detectedTags.clear()
+                        writeState = WriteMode.cancel(writeState)
+                        lastRead = null
                         nfcManager.startScanning { domainTag: DomainRfidTag ->
                             val uiTag = domainTag.toUiTag()
                             Log.i("RFIDManager", "scanCallback: uid=${uiTag.uid} dataPreview='${uiTag.dataPreview}' fullSectors.size=${uiTag.fullSectors.size}")
@@ -89,9 +122,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            // Always check pending writes (works even when scanning is "paused")
-                            pendingWrite?.let { pw ->
-                                if (uiTag.uid == pw.uidHex) {
+                            // En läsning visar/sparar bara läsningen. Den blir "senast läst" (knappen Skriv till tagg
+                            // blir aktiv om den är skrivbar) och utför bara en skrivning som användaren själv beställt.
+                            val readNow = System.currentTimeMillis()
+                            lastRead = LastRead(uiTag.uid, readNow, WriteMode.isWritable(uiTag.type, uiTag.fullSectors))
+                            val outcome = WriteMode.onTagRead(writeState, uiTag.uid, readNow)
+                            writeState = outcome.state
+                            outcome.execute?.let { pw ->
+                                run {
                                     val uidB = pw.uidHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
                                     val ok = runBlocking {
                                         if (pw.isUltra) {
@@ -101,7 +139,8 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                     Log.i("RFIDManager", "Write ${if (pw.isUltra) "Ultralight page" else "Classic block"} ${pw.addr} result=$ok (via pending)")
-                                    writeStatusMessage = if (ok) "Write to ${if (pw.isUltra) "page" else "block"} ${pw.addr} succeeded!" else "Write failed (locked or tag lost during write)"
+                                    writeStatusMessage = if (ok) s("screen.scan.write_done", "Write succeeded ({addr})").replace("{addr}", pw.addr.toString())
+                                        else s("screen.scan.write_failed", "Write failed (locked or tag lost during write)")
                                     Toast.makeText(this@MainActivity, writeStatusMessage, Toast.LENGTH_SHORT).show()
                                     if (ok) {
                                         // Patch the hex in the list entry for immediate UI verification without re-scan
@@ -148,14 +187,16 @@ class MainActivity : ComponentActivity() {
                                             }
                                         }
                                     }
-                                    pendingWrite = null
+                                    writeState = WriteMode.finish(writeState, ok)
                                 }
                             }
                         }
                     } else {
                         nfcManager.stopScanning()
                         detectedTags.clear()
-                        // Keep reader mode alive for background NDEF — don't null pendingWrite
+                        // Skanning stoppad = skrivläget avbryts. Reader mode lever kvar för bakgrunds-NDEF.
+                        writeState = WriteMode.cancel(writeState)
+                        lastRead = null
                     }
                 }
 
@@ -164,7 +205,7 @@ class MainActivity : ComponentActivity() {
                  *
                  * Anropas från WriteTagForm (via writeWithFeedback).
                  * Kollar selectedTagId (Architecture selectedId), bestämmer Ultra/Classic, kopierar data till 4/16 byte,
-                 * **armar** pendingWrite, sätter UI-status som visas i Accent i formen.
+                 * **armar** skrivläget (writeState = Armed), sätter UI-status som visas i Accent i formen.
                  * Den faktiska writen sker senare i LaunchedEffect-callbacken när en fresh detection matchar.
                  */
                 val onWrite: (String, Int, String) -> Unit = { text, addr, uidHex ->
@@ -185,12 +226,14 @@ class MainActivity : ComponentActivity() {
                             byteArrayOf()
                         }
                         if (bytes.isEmpty()) {
-                            writeStatusMessage = "Invalid hex data"
-                            Toast.makeText(this@MainActivity, "Invalid hex data", Toast.LENGTH_SHORT).show()
+                            val msg = s("screen.scan.write_invalid_hex", "Invalid hex data")
+                            writeStatusMessage = msg
+                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                         } else {
                             val padded = if (isUltra) bytes.copyOf(4) else bytes.copyOf(16)
-                            pendingWrite = PendingWrite(uidHex = uidHex, addr = addr, data = padded, isUltra = isUltra)
-                            val msg = "\u26A1 Save ready \u2013 hold tag to the phone"
+                            // Skrivläget måste ha startats med knappen "Skriv till tagg" (Editing) – annars händer inget.
+                            writeState = WriteMode.arm(writeState, WriteRequest(uidHex = uidHex, addr = addr, data = padded, isUltra = isUltra), System.currentTimeMillis())
+                            val msg = s("screen.scan.write_armed", "Write mode \u2013 hold the tag to the phone")
                             writeStatusMessage = msg
                             Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                             Log.i("RFIDManager", "onWrite: armed write for $uidHex addr=$addr isUltra=$isUltra data=${padded.joinToString(" ") { "%02X".format(it) }}")
@@ -240,6 +283,11 @@ class MainActivity : ComponentActivity() {
                         detectedTags = detectedTags,
                         onWrite = onWrite,
                         onPersist = onPersist,
+                        writeState = writeState,
+                        lastRead = lastRead,
+                        nowMs = nowMs,
+                        onEnterWrite = { uid -> writeState = WriteMode.enter(writeState, lastRead, uid, System.currentTimeMillis()) },
+                        onCancelWrite = { writeState = WriteMode.cancel(writeState) },
                         onSendNow = { appContainer.outboxScheduler.sendNow() },
                         onOutboxSettingsChanged = { appContainer.outboxScheduler.onSettingsChanged() }
                     )
@@ -250,6 +298,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        // Appen i bakgrunden avbryter skrivläget
+        writeState = WriteMode.cancel(writeState)
         if (::nfcManager.isInitialized) {
             nfcManager.stopScanning()
         }
@@ -258,7 +308,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // Restart reader mode on resume (system may have paused it in background)
-        // WITHOUT replacing the scanning callback (preserves pendingWrite handler from LaunchedEffect).
+        // WITHOUT replacing the scanning callback (preserves the armed-write handler from LaunchedEffect).
         if (::nfcManager.isInitialized && scanningEnabled) {
             nfcManager.restartReaderMode()
         }
