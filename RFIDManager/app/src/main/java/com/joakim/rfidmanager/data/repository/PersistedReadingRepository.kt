@@ -6,6 +6,7 @@ import com.joakim.rfidmanager.data.local.entities.PersistedReadingEntity
 import com.joakim.rfidmanager.data.migration.JsonToRoomMigrator
 import com.joakim.rfidmanager.data.migration.MigrationResult
 import com.joakim.rfidmanager.domain.model.PersistedReading
+import com.joakim.rfidmanager.outbox.core.OutboxStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +29,13 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 class PersistedReadingRepository(
     private val dao: PersistedReadingDao,
-    private val migrator: JsonToRoomMigrator? = null
+    private val migrator: JsonToRoomMigrator? = null,
+    /** Anropas efter att en ny avläsning sparats (startar utskick via utkorgen). */
+    private val onReadingSaved: () -> Unit = {}
 ) {
     companion object {
         private const val TAG = "PersistedReadingRepo"
         const val STATUS_PERSISTED = "persisted"
-        const val STATUS_TRANSMITTED = "transmitted"
     }
 
     val isUsingRealDatabase: Boolean get() = true
@@ -78,19 +80,34 @@ class PersistedReadingRepository(
     fun getReadingsByType(type: String): Flow<List<PersistedReading>> =
         dao.getByType(type).map { entities -> entities.map { it.toDomain() } }.logErrors(emptyList())
 
-    fun getPendingForTransmission(): Flow<List<PersistedReading>> =
-        dao.getPendingTransmission().map { entities -> entities.map { it.toDomain() } }.logErrors(emptyList())
+    /** Antal väntande (PENDING) poster i utkorgen. */
+    fun observePendingCount(): Flow<Int> = dao.observePendingCount().logErrors(0)
 
-    /** Returnerar true om avläsningen sparades. Fel loggas och syns i [storageError]. */
-    suspend fun saveReading(reading: PersistedReading): Boolean =
-        guarded("spara avläsning") { dao.insert(reading.toEntity()) }
+    /** Antal misslyckade (FAILED) poster i utkorgen. */
+    fun observeFailedCount(): Flow<Int> = dao.observeFailedCount().logErrors(0)
 
     /**
-     * Markerar som skickad. OBS: anropas idag oavsett om MQTT-publiceringen lyckades
-     * (känt fel, se backlog) – beteendet är medvetet oförändrat här.
+     * Sparar en ny avläsning som PENDING direkt (ingen väntan på nätverk) och triggar sedan
+     * utskick. Returnerar true om avläsningen sparades. Fel loggas och syns i [storageError].
      */
-    suspend fun markAsTransmitted(id: Long) {
-        guarded("markera som skickad") { dao.markAsTransmitted(id) }
+    suspend fun saveReading(reading: PersistedReading): Boolean {
+        val ok = guarded("spara avläsning") {
+            dao.insert(reading.copy(outboxStatus = OutboxStatus.PENDING, attempts = 0, lastError = null, lastAttemptAt = null, sentAt = null).toEntity())
+        }
+        if (ok) {
+            try {
+                onReadingSaved()
+            } catch (e: Exception) {
+                // Att starta utskicket får aldrig få själva sparandet att se misslyckat ut.
+                Log.e(TAG, "Kunde inte starta utskick efter sparande", e)
+            }
+        }
+        return ok
+    }
+
+    /** Sätter en FAILED-post tillbaka till PENDING så att den kan skickas igen ('Skicka nu'). */
+    suspend fun requeueIfFailed(id: Long) {
+        guarded("återköa misslyckad avläsning") { dao.requeue(id) }
     }
 
     suspend fun housekeeping(cutoffTimestamp: Long) {
@@ -115,39 +132,4 @@ class PersistedReadingRepository(
             false
         }
     }
-
-    // --- Mappers ---
-    private fun PersistedReadingEntity.toDomain() = PersistedReading(
-        id = id,
-        type = type,
-        uidOrCode = uidOrCode,
-        timestamp = timestamp,
-        source = source,
-        dataPreview = dataPreview,
-        status = status,
-        transmitted = transmitted,
-        memoryBank = memoryBank,
-        address = address,
-        length = length,
-        payload = payload,
-        sparkplugJson = sparkplugJson,
-        correlationId = correlationId
-    )
-
-    private fun PersistedReading.toEntity() = PersistedReadingEntity(
-        id = id,
-        type = type,
-        uidOrCode = uidOrCode,
-        timestamp = timestamp,
-        source = source,
-        dataPreview = dataPreview,
-        status = status,
-        transmitted = transmitted,
-        memoryBank = memoryBank,
-        address = address,
-        length = length,
-        payload = payload,
-        sparkplugJson = sparkplugJson,
-        correlationId = correlationId
-    )
 }

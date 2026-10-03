@@ -1,5 +1,7 @@
 package com.joakim.rfidmanager.domain.model
 
+import com.joakim.rfidmanager.outbox.core.OutboxStatus
+
 /**
  * Domain model for a persisted reading.
  *
@@ -14,7 +16,6 @@ data class PersistedReading(
     val source: String? = null,
     val dataPreview: String? = null,
     val status: String = "persisted",
-    val transmitted: Boolean = false,
 
     // RFID/Sparkplug details
     val memoryBank: Int? = null,
@@ -22,8 +23,18 @@ data class PersistedReading(
     val length: Int? = null,
     val payload: String? = null,
     val sparkplugJson: String? = null,
-    val correlationId: String? = null
+    val correlationId: String? = null,
+
+    // Utkorg: sändningsstatus (sanningen), försök, senaste fel och tidpunkter
+    val outboxStatus: OutboxStatus = OutboxStatus.PENDING,
+    val attempts: Int = 0,
+    val lastError: String? = null,
+    val lastAttemptAt: Long? = null,
+    val sentAt: Long? = null
 ) {
+    /** Härledd: brokern har bekräftat leveransen. Ersätter det tidigare fria fältet 'transmitted'. */
+    val transmitted: Boolean get() = outboxStatus == OutboxStatus.SENT
+
     fun isRfid(): Boolean = type.equals("RFID", ignoreCase = true)
     fun isEan(): Boolean = type.equals("EAN", ignoreCase = true)
 }
