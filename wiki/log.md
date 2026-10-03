@@ -1,5 +1,19 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-03] feature | Omförsök i omgångar i utkorgen på `feature/outbox-rounds`
+
+**Gren:** `feature/outbox-rounds` (utgår från `main` `2e3ee25`; pushad som egen gren, **inte** mergad, `main` orörd). Beskrivning: [[Outbox]] (avsnittet *Omförsök i omgångar*).
+
+**Utfört (på Joakims uppdrag, ja till bygge men inte till merge/installation):** utkorgen försöker nu i omgångar — försök per omgång (standard 12), paus mellan omgångar i minuter (standard 60), antal omgångar (standard 3); `FAILED` först efter sista omgångens sista försök. Logiken ligger i `outbox/core` (`RoundsConfig`, `RetryPolicy`, `OutboxDispatcher` med nytt `paused`-fält och `skipPause`); med en omgång är beteendet oförändrat. Under paus står posten som *Väntar* med felorsak och en rad om när nästa omgång startar; *Skicka nu* kringgår pausen, nätverk som kommer tillbaka gör det inte. WorkManager planerar nästa körning efter pausen (`initialDelay`). Tre fält med validering (1–100, 1–1440, 1–20) i Inställningar, sparade i `SharedPreferences`.
+
+**Room:** ingen migrering — rundnumret härleds ur `attempts`; schema oförändrat (v2).
+
+**Verifierat:** 28 nya JVM-enhetstester, alla 108 gröna (`testDebugUnitTest`), `assembleDebug` OK. **Ej provat på telefon**, ingen `adb install`.
+
+**Dokumentation uppdaterad:** [[Outbox]] (nytt avsnitt, inkl. stycke för Kalle/FASAD-172), [[Kanban]] (kortet flyttat till Pågår: byggt på gren, ej provat på enhet), [[Ordlista]] (omgång, paus m.fl.).
+
+---
+
 ## [2026-10-03] verifiering | Felvägarna i utkorgen verifierade på telefon
 
 **Gren:** `feature/outbox`. Beskrivning: [[Outbox]].

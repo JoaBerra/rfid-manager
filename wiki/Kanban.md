@@ -7,7 +7,6 @@ kanban-plugin: board
 - [ ] **Merga `feature/outbox` → `main`** (provkörd på telefon 2026-10-03; bygger på `feature/sqlite`, som måste mergas först)
 - [ ] **FASAD: återanvänd utkorgskärnan** (`outbox/core`) — beskrivet i [[Outbox]]; FASAD-repot ägs av Kalle PL Fasad. **FASAD-172** (utvärdering av utkorgsmönstret) kan starta; Kalle PL Fasad är informerad 2026-10-03
 - [x] ~~**Rätta `markAsTransmitted`**~~ — löst på `feature/outbox` 2026-10-03: *outbox* implementerad ([[Outbox]]), en post blir `SENT` först när brokern bekräftat (QoS 1)
-- [ ] **Omförsöksmönster i omgångar:** 12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, därefter Misslyckad; inställbart i appens inställningar (önskemål från Joakim 2026-10-03, gäller även FASAD-172; kräver Joakims ja innan bygge) — backlog, ej påbörjat
 - [ ] **Merga `feature/sqlite` → `main`** (Room/SQLite verifierad på telefon) och avgör ev. release v1.0.2 — kräver att `~/.android/debug.keystore` finns för `assembleRelease`
 - [ ] **Verifiera felmeddelande vid fel lösenord i Inställningar** (*Misslyckades ✗*, `12012a2`) — ej provat på enhet (utkorgens felvägar är verifierade, se Klart)
 - [ ] **`assembleRelease` saknar `~/.android/debug.keystore`** på fakir — skapa/ange signeringsnyckel
@@ -91,6 +90,7 @@ kanban-plugin: board
 
 ## 🔄 Pågår (In Progress)
 
+- [ ] **Omförsöksmönster i omgångar** (12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, därefter Misslyckad; inställbart i Inställningar; önskemål från Joakim 2026-10-03, gäller även FASAD-172) — **byggt på gren `feature/outbox-rounds`, enhetstestat (108 tester gröna), ej provat på enhet, ej mergat, ej installerat**; Room-schemat oförändrat (rundnummer härleds ur `attempts`) ([[Outbox]])
 - [ ] **Room/SQLite på `feature/sqlite`** — klar och verifierad på telefon 2026-10-03 (3 poster migrerade, databasen kontrollerad); väntar på merge till `main` ([[Release-Notes]], [[Ordlista]])
 
 

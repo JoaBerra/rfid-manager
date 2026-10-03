@@ -8,6 +8,8 @@ created: 2026-10-03
 
 > **Status:** implementerad på grenen `feature/outbox` (utgår från `feature/sqlite`, ej mergad till `main`). Verifierad med JVM-enhetstester och bygge, och **verifierad av Joakim på telefon och mot riktiga brokern 2026-10-03** (se *Verifiering* nedan). **Felvägarna** (fel lösenord, 12 försök → `FAILED`, omstart med väntande poster) är **provade och verifierade av Joakim på telefon 2026-10-03**. Termer: [[Ordlista]].
 
+> **Ny gren `feature/outbox-rounds` (utgår från `main` `2e3ee25`, ej mergad, ej pushad till `main`):** omförsök i omgångar, se avsnittet *Omförsök i omgångar* nedan. **Status: enhetstestat (JVM) och bygger; INTE provat på telefon.**
+
 ## Varför
 
 Tidigare markerades en avläsning som skickad oavsett om MQTT-publiceringen lyckades (`markAsTransmitted`), och inget skickades alls om telefonen var offline. Utkorgen ger: **spara först, skicka sedan**, ack-baserad status, omförsök med backoff, utskick även när appen är stängd och dubblettskydd hos mottagaren.
@@ -25,7 +27,8 @@ Avläsning ──► Room: PENDING (direkt, ingen väntan på nätverk)
         OutboxDispatcher: äldst först, en i taget
                  ▼  QoS 1, väntar på PUBACK
         ack ──► SENT          fel ──► attempts+1, stannar, backoff
-                              max försök ──► FAILED (manuellt 'Skicka nu')
+                              sista försöket i sista omgången ──► FAILED (manuellt 'Skicka nu')
+                              omgångsslut ──► paus (Väntar), sedan nästa omgång
 ```
 
 ## Statusmodell
@@ -54,15 +57,16 @@ Ren Kotlin: endast `kotlin.*`, `kotlinx.coroutines.*`, `java.*` (testet `CoreHas
 | `OutboxStore.kt` | `OutboxStore<T>`: `nextPending(limit)` (endast PENDING, äldst först), `markSent`, `markAttemptFailed`, `markFailed`, `requeue(id)`, `requeueFailed()`, `countPending()` |
 | `OutboxTransport.kt` | `OutboxTransport<T>`: `suspend fun send(entry): SendResult` — `Acked` först när mottagaren bekräftat |
 | `BackoffPolicy.kt` | `BackoffPolicy`, `ExponentialBackoff(base=30 s, max=30 min, factor=2)`, `NoBackoff` |
-| `OutboxDispatcher.kt` | `OutboxDispatcher<T>(store, transport, backoff, maxAttempts=12, clock).drain(force)` → `DrainResult.Drained(sent)` / `Blocked(sent, retryAfterMillis, error)` |
+| `RetryPolicy.kt` | *(grenen `feature/outbox-rounds`)* `RoundsConfig`, `RetryPolicy` — omgångar och paus ovanpå backoff |
+| `OutboxDispatcher.kt` | `OutboxDispatcher<T>(store, transport, backoff, maxAttempts=12, clock).drain(force)` (på `feature/outbox-rounds` även `OutboxDispatcher(store, transport, RetryPolicy, clock).drain(force, skipPause)`) → `DrainResult.Drained(sent)` / `Blocked(sent, retryAfterMillis, error, paused)` |
 | `InMemoryOutboxStore.kt` | Referensimplementation i minnet (tester, exempel) |
 
 ### Dispatcherns regler
 
 1. Äldsta `PENDING` först, **en i taget**; `markSent` först efter `Acked`.
 2. **Stannar vid första felet** (`Blocked`): posten får `attempts+1` + `lastError`; senare poster skickas aldrig förbi.
-3. Efter `maxAttempts` → `FAILED` (lämnar kön, körningen stannar ändå). Ny körning går vidare till nästa post. `requeue`/`requeueFailed` ger nytt försök.
-4. Backoff: utan `force` skickas inte en post förrän `lastAttemptAt + backoff(attempts)` passerat; `force = true` ('Skicka nu', nätverk tillbaka) ignorerar den.
+3. Efter sista omgångens sista försök (standard 12 × 3 = 36 på grenen `feature/outbox-rounds`; tidigare `maxAttempts` = 12) → `FAILED` (lämnar kön, körningen stannar ändå). Ny körning går vidare till nästa post. `requeue`/`requeueFailed` ger nytt försök.
+4. Väntetid: utan `force` skickas inte en post förrän `lastAttemptAt + väntetid(attempts)` passerat (backoff, eller paus vid omgångsslut); `force = true` ('Skicka nu', nätverk tillbaka) ignorerar backoff, och `skipPause` ('Skicka nu') ignorerar även pausen.
 5. **At-least-once / idempotent:** kraschar processen efter ack men före `markSent` skickas posten igen. Transporten ska därför ge mottagaren en stabil nyckel (postens id) att avduplicera på.
 6. `CancellationException` kastas vidare orört (posten förblir `PENDING`); övriga undantag från transporten räknas som misslyckat försök.
 
@@ -85,6 +89,48 @@ Ren Kotlin: endast `kotlin.*`, `kotlinx.coroutines.*`, `java.*` (testet `CoreHas
 - Workern använder eget MQTT-klient-id `rfid-outbox-<deviceId>-<slump>` så att den aldrig kastar ut UI:ts anslutning (`rfid-android-client`) hos brokern. Lösenordet loggas aldrig.
 - Tom kö → ingen anslutning alls. Misslyckad körning → `Result.retry()`; omkörningar använder aldrig `force`.
 - Två lager backoff: postnivå (dispatcher, `lastAttemptAt`) och körningsnivå (WorkManager). De är avsiktligt likartade (30 s start); WorkManager tar max 5 h, dispatcherns tak är 30 min.
+
+## Omförsök i omgångar (gren `feature/outbox-rounds`)
+
+> **Status (ärlig):** byggt och **enhetstestat på JVM** (28 nya tester; alla 108 gröna) samt `assembleDebug` OK. **Inte provat på telefon**, inte installerat, inte mergat. Hur WorkManager beter sig i verkligheten (schemaläggning efter pausen, överlevnad vid omstart, UI-text) är alltså **otestat på enhet**.
+
+**Önskemål (Joakim 2026-10-03):** för arbete i fält utan täckning ska en post inte ge upp efter 12 direkta försök, utan försöka i *omgångar*: 12 försök, en timmes paus, 12 försök, en timmes paus, 12 försök, och först därefter `FAILED`.
+
+### Mönstret
+
+| Inställning | Standard | Gräns i appen |
+|-------------|----------|---------------|
+| Försök per omgång | 12 | 1–100 |
+| Paus mellan omgångar (minuter) | 60 | 1–1440 |
+| Antal omgångar | 3 | 1–20 |
+
+Högst `försök × omgångar` försök (standard 36) innan `FAILED`. **Med 1 omgång är beteendet identiskt med det gamla** (backoff mellan försöken, `FAILED` efter sista försöket, ingen paus) — det bevisas av `RetryPolicyTest` och `OutboxDispatcherRoundsTest`.
+
+Inom en omgång gäller samma exponentiella backoff som förut (30 s, 60 s … tak 30 min), men den **börjar om** i varje ny omgång. Efter sista försöket i en omgång (utom den sista) väntar posten i en **paus**.
+
+### Designval
+
+- **Ingen Room-migrering.** Rundnumret *härleds* ur `attempts`: försök n ligger i omgång `(n−1) / försök_per_omgång + 1`, och en omgång är slut när `attempts % försök_per_omgång == 0`. Schemat är kvar på v2 (ingen `3.json`, ingen `Migration` 2→3). Följd: ändrar man inställningarna medan poster väntar, räknas de om med de nya värdena (t.ex. sänks antal omgångar till under redan gjorda försök blir nästa misslyckade försök det sista).
+- **Logiken ligger i kärnan** (`outbox/core`, ren Kotlin, ingen Android): `RoundsConfig(attemptsPerRound, pauseMinutes, rounds)` (konfiguration; kräver bara ≥ 1 — appens gränser 1–100/1–1440/1–20 hör till appen, `OutboxRoundsInput`) och `RetryPolicy(config, backoff)` med `isPause`, `isGiveUp`, `delayMillis`, `currentRound`, `nextRoundStartsAt`. `OutboxDispatcher` tar en `RetryPolicy`; den gamla konstruktorn `(store, transport, backoff, maxAttempts, clock)` finns kvar och betyder en omgång.
+- **`DrainResult.Blocked` har nytt fält `paused`** (standard `false`) så att anroparen vet om väntan är en paus.
+- **Skicka nu kringgår pausen** (`drain(force = true)`; `skipPause` är som standard lika med `force`). Det köar om och försöker direkt; en `FAILED`-post köas om med försök nollställda, som idag. Misslyckas ett Skicka nu under paus räknas det som första försöket i nästa omgång.
+- **Nätverk som kommer tillbaka** (`onNetworkAvailable`) skickar `force = true, skipPause = false`: hoppar över backoff inom en omgång (som idag) men **inte** pausen.
+- **Under paus:** posten är `PENDING` (*Väntar*), felorsaken står kvar (röd), och en rad visar *"Paus: omgång 1 av 3 klar. Nästa omgång startar kl 14:35 (om 59 min)"* (räknas om var 15:e sekund). Är pausen slut men inget nätverk finns står *"Paus slut – nästa omgång startar så snart nätverk finns"*. Med fler än en omgång visas även *"omgång 2 av 3"* på statusraden.
+- **WorkManager:** när första posten står i paus planerar `OutboxWorker` nästa körning med `OutboxScheduler.scheduleAfter(resterande paus)` (`OneTimeWork` med `initialDelay`, samma unika kö, `REPLACE`, nätverkskrav `CONNECTED`) och returnerar `success` i stället för `retry`. WorkManager lagrar jobbet i sin databas, så det ska överleva omstart av appen och telefonen. Ändras inställningarna planeras körningen om (`onSettingsChanged`). Workern läser konfigurationen ur `AppSettings` vid varje körning.
+- **Inställningar:** nytt kort *Utkorg – omförsök i omgångar* i Inställningar med tre numeriska fält, standardvärdet synligt under varje fält, felmeddelande på svenska vid ogiltigt värde (inget sparas då), knapparna *Spara* och *Standardvärden*. Sparas i samma `SharedPreferences` (`rfid_settings`) som övrigt: `outbox_attempts_per_round`, `outbox_pause_minutes`, `outbox_rounds`. Ogiltigt sparat värde läses som standardvärdet.
+
+### Begränsningar (kända, ej åtgärdade)
+
+- **Första posten blockerar köerna** (som förut): poster bakom en post i paus skickas inte förrän den är skickad eller `FAILED`. Med standardvärden kan det vara drygt två timmar.
+- **Inget nätverk = inga försök räknas.** WorkManager kör bara med nätverk (`CONNECTED`). I fält helt utan täckning pausar därför hela kön av sig själv; omgångarna räknas när telefonen har nät men brokern inte svarar (t.ex. mobildata utan fungerande väg ut). Hur mycket detta spelar roll i Joakims användning är inte utrett.
+- Pausens sluttid räknas från `lastAttemptAt` + paus; ändras systemklockan kan visningen bli fel.
+- *Anslutning*-vyn (`MqttStatusScreen`) visar försök och felorsak men ännu ingen pausrad.
+- Ej provat på telefon: UI-texten, kortet i Inställningar, `scheduleAfter` med verklig `initialDelay`, omstart under paus.
+
+### Kalle (FASAD-172): så återanvänder du omgångarna
+
+Kopiera även `RetryPolicy.kt` (där `RoundsConfig` också ligger) tillsammans med de övriga filerna i `outbox/core/`. Skapa dispatchern med `OutboxDispatcher(store, transport, RetryPolicy(RoundsConfig(attemptsPerRound = 12, pauseMinutes = 60, rounds = 3), ExponentialBackoff()))` — värdena är parametrar, inget är hårdkodat i Android. `drain()` returnerar `Blocked(retryAfterMillis, paused = true)` när en paus börjar: planera nästa körning om `retryAfterMillis` (hos oss WorkManager med `initialDelay`). Anropa `drain(force = true)` för ett manuellt "skicka nu" som kringgår pausen, och `drain(force = true, skipPause = false)` när du vill hoppa över backoff men vänta ut pausen. Ingen extra kolumn behövs i ditt lager: rundnumret härleds ur `attempts`. Utan `RetryPolicy` (gamla konstruktorn med `maxAttempts`) får du det gamla beteendet, en omgång. Testerna att kopiera: `RetryPolicyTest` och `OutboxDispatcherRoundsTest`.
+
 
 ## Dubblettskydd
 
@@ -131,6 +177,8 @@ Begränsningar att känna till: id är `Long`; en post i taget (ingen batch); `d
 | Fel lösenord → posten förblir *Väntar* med felorsak och växande *Försök* | Manuellt på telefonen mot riktiga brokern, Joakim 2026-10-03 (röd felorsak "Not Authorised to connect") | ✅ verifierad på enhet |
 | 12 misslyckade försök → status `FAILED`, *Skicka nu* köar om | Manuellt, Joakim 2026-10-03: posten blev *Misslyckad* (röd), nästa post gick igenom samma process; efter rätt lösenord och *Skicka nu* blev båda Misslyckade posterna *Skickade* | ✅ verifierad på enhet |
 | Telefon omstartad (flygplansläge på) medan poster väntade → skickas när nätet slås på, utan att appen öppnas | Manuellt, Joakim 2026-10-03: alla väntande poster skickades av sig själva inom ett par minuter | ✅ verifierad på enhet |
+| Omgångar: gränser, paus, `FAILED` först efter sista omgången, Skicka nu, nätverk tillbaka, standardvärden, en omgång = gammalt beteende; validering 1–100/1–1440/1–20 | JVM-enhetstest (`RetryPolicyTest`, `OutboxDispatcherRoundsTest`, `OutboxRoundsInputTest`, 28 nya; totalt 108 gröna) på `feature/outbox-rounds` | ✅ enhetstestat |
+| Omgångar: WorkManager `initialDelay` efter pausen, överlevnad vid omstart, pausraden och inställningskortet i UI | — | ❌ **ej provat på telefon** |
 
 ## Manuell test på telefonen
 
