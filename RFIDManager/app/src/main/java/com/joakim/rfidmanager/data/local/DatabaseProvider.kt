@@ -23,7 +23,8 @@ object DatabaseProvider {
                 context.applicationContext,
                 AppDatabase::class.java,
                 DATABASE_NAME
-            ).build().also { INSTANCE = it }
+            ).addMigrations(*Migrations.ALL)
+                .build().also { INSTANCE = it }
         }
     }
 }

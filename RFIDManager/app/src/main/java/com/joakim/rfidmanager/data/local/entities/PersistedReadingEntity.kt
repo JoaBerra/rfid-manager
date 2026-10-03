@@ -1,5 +1,6 @@
 package com.joakim.rfidmanager.data.local.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -13,15 +14,21 @@ import androidx.room.PrimaryKey
  * - source / location / context (e.g. "Gate 3 - Warehouse A", "Pallet 47-B")
  * - data preview + full Sparkplug data (memoryBank, address, length, payload)
  * - type (RFID / EAN)
- * - status ("persisted" eller "transmitted")
+ * - status ("persisted" eller "transmitted") – äldre fält, speglas från [outboxStatus]
+ * - utkorg (schema v2): [outboxStatus], [attempts], [lastError], [lastAttemptAt], [sentAt]
  *
  * This maps directly to the fields visible in the reference images and the
  * Figma Design Specification (Figma-Design-Spec-Fas2).
  */
 @Entity(
     tableName = "persisted_readings",
-    // timestamp: sortering/housekeeping, transmitted: lista över väntande sändningar
-    indices = [Index(value = ["timestamp"]), Index(value = ["transmitted"])]
+    // timestamp: sortering/housekeeping, transmitted: äldre index (behålls),
+    // outboxStatus+timestamp: utkorgens "nästa väntande, äldst först"
+    indices = [
+        Index(value = ["timestamp"]),
+        Index(value = ["transmitted"]),
+        Index(value = ["outboxStatus", "timestamp"])
+    ]
 )
 data class PersistedReadingEntity(
     @PrimaryKey(autoGenerate = true)
@@ -45,7 +52,11 @@ data class PersistedReadingEntity(
     /** Current persistence status: "persisted", "transmitted", "sending" etc. */
     val status: String = "persisted",
 
-    /** True if successfully sent via MQTT/Sparkplug */
+    /**
+     * Äldre kolumn (schema v1). Behålls för bakåtkompatibilitet (index, export, äldre kod) och
+     * hålls i synk av DAO:ns utkorgsfrågor: true exakt när [outboxStatus] = "SENT".
+     * Sanningen om sändningsstatus är [outboxStatus].
+     */
     val transmitted: Boolean = false,
 
     // --- RFID / Sparkplug specific metadata (from JSON in mocks and spec) ---
@@ -60,5 +71,30 @@ data class PersistedReadingEntity(
     val sparkplugJson: String? = null,
 
     /** Optional correlation / seq from MQTT */
-    val correlationId: String? = null
-)
+    val correlationId: String? = null,
+
+    // --- Utkorg (schema v2) ---
+
+    /** "PENDING", "SENT" eller "FAILED" (se OutboxStatus). Standard härleds från [transmitted]. */
+    @ColumnInfo(defaultValue = "'PENDING'")
+    val outboxStatus: String = if (transmitted) STATUS_SENT else STATUS_PENDING,
+
+    /** Antal sändningsförsök hittills. */
+    @ColumnInfo(defaultValue = "0")
+    val attempts: Int = 0,
+
+    /** Felorsak från senaste misslyckade försök, null om inget fel. */
+    val lastError: String? = null,
+
+    /** Millis då senaste sändningsförsök gjordes. */
+    val lastAttemptAt: Long? = null,
+
+    /** Millis då brokern bekräftade leveransen (null för poster som markerades skickade före schema v2). */
+    val sentAt: Long? = null
+) {
+    companion object {
+        const val STATUS_PENDING = "PENDING"
+        const val STATUS_SENT = "SENT"
+        const val STATUS_FAILED = "FAILED"
+    }
+}

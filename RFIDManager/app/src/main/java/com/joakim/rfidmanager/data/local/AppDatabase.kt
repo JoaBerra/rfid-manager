@@ -7,7 +7,7 @@ import com.joakim.rfidmanager.data.local.entities.PersistedReadingEntity
 
 @Database(
     entities = [PersistedReadingEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
