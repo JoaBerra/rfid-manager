@@ -42,3 +42,6 @@ RFIDManager/.kotlin/
 
 # Dashboard: lokala hemligheter (MQTT_PASSWORD m.m.)
 dashboard/.env
+
+# Mosquitto: lösenordsfil (skapas lokalt med mosquitto_passwd, aldrig i git)
+test/fas2-mqtt/mqtt/passwd
