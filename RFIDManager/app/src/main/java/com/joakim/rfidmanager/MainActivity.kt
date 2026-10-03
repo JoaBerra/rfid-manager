@@ -223,8 +223,8 @@ class MainActivity : ComponentActivity() {
                             sparkplugJson = null,
                             correlationId = null
                         )
-                        appContainer.persistedReadingRepository.saveReading(persisted)
-                        val msg = "Read persisted for ${tag.uid}"
+                        val saved = appContainer.persistedReadingRepository.saveReading(persisted)
+                        val msg = if (saved) "Read persisted for ${tag.uid}" else "FAILED to persist read for ${tag.uid}"
                         writeStatusMessage = msg
                         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                     }

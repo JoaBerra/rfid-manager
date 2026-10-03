@@ -1,186 +1,119 @@
 package com.joakim.rfidmanager.data.repository
 
-import android.content.Context
+import android.util.Log
 import com.joakim.rfidmanager.data.local.dao.PersistedReadingDao
 import com.joakim.rfidmanager.data.local.entities.PersistedReadingEntity
+import com.joakim.rfidmanager.data.migration.JsonToRoomMigrator
+import com.joakim.rfidmanager.data.migration.MigrationResult
 import com.joakim.rfidmanager.domain.model.PersistedReading
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.File
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Repository for persisted readings.
- * Provides domain models to the UI layer.
+ * Repository för sparade avläsningar. Room/SQLite är enda lagringen.
  *
- * Triple mode:
- * - If dao != null: real Room + SQLite (requires room-compiler processor at build time).
- * - If dao == null && context != null: JSON file-backed storage (survives app restart).
- * - If dao == null && context == null: pure in-memory (MutableStateFlow). Data lost on process death.
+ * Den gamla filen readings.json läses in av [JsonToRoomMigrator] (en gång per appstart,
+ * tills den lyckats) innan någon läs-/skrivoperation körs. Om migreringen misslyckas ligger
+ * JSON-filen kvar orörd och [migrationResult] visar felet; appen fortsätter spara nya
+ * avläsningar i Room men visar INTE JSON-innehållet (annars skulle två datakällor blandas
+ * och id:n kunna krocka). Det är säkrast: inget skrivs över och inget raderas, och den gamla
+ * datan kommer med vid nästa lyckade migrering.
  */
 class PersistedReadingRepository(
-    private val dao: PersistedReadingDao? = null,
-    private val appContext: Context? = null
+    private val dao: PersistedReadingDao,
+    private val migrator: JsonToRoomMigrator? = null
 ) {
-    val isUsingRealDatabase: Boolean get() = dao != null
-
-    /** True when JSON file storage is active (data survives restart without Room). */
-    val isUsingJsonFallback: Boolean get() = dao == null && appContext != null
-
-    private val jsonFile: File? by lazy {
-        appContext?.let { File(it.filesDir, "readings.json") }
+    companion object {
+        private const val TAG = "PersistedReadingRepo"
+        const val STATUS_PERSISTED = "persisted"
+        const val STATUS_TRANSMITTED = "transmitted"
     }
 
-    // --- In-memory fallback state (only used when dao == null) ---
-    private val _allReadings = MutableStateFlow<List<PersistedReading>>(emptyList())
-    private var nextId: Long = 1L
-    private var loaded = false
+    val isUsingRealDatabase: Boolean get() = true
 
-    private suspend fun ensureLoaded() {
-        if (dao != null || loaded) return
-        loaded = true
-        withContext(Dispatchers.IO) {
-            try {
-                val file = jsonFile ?: return@withContext
-                if (!file.exists()) return@withContext
-                val text = file.readText()
-                val arr = JSONArray(text)
-                val list = mutableListOf<PersistedReading>()
-                var maxId = 0L
-                for (i in 0 until arr.length()) {
-                    val obj = arr.getJSONObject(i)
-                    val r = jsonToReading(obj)
-                    list.add(r)
-                    if (r.id > maxId) maxId = r.id
-                }
-                _allReadings.value = list
-                nextId = maxId + 1
-                android.util.Log.i("PersistedReadingRepo", "Loaded ${list.size} readings from JSON file")
-            } catch (e: Exception) {
-                android.util.Log.e("PersistedReadingRepo", "Failed to load JSON file", e)
+    private val migrationMutex = Mutex()
+    private var migrationAttempted = false
+
+    private val _migrationResult = MutableStateFlow<MigrationResult?>(null)
+    /** null = migreringen har inte körts än i denna process. */
+    val migrationResult: StateFlow<MigrationResult?> = _migrationResult.asStateFlow()
+
+    private val _storageError = MutableStateFlow<String?>(null)
+    /** Senaste fel mot databasen (läsning/skrivning), eller null. */
+    val storageError: StateFlow<String?> = _storageError.asStateFlow()
+
+    /** Kör JSON->Room-migreringen (högst en gång per process). Alla operationer anropar den först. */
+    private suspend fun ensureMigrated() {
+        if (migrationAttempted) return
+        migrationMutex.withLock {
+            if (migrationAttempted) return
+            val m = migrator
+            if (m != null) {
+                _migrationResult.value = m.migrate() // kastar bara vid avbrott
             }
+            migrationAttempted = true
         }
     }
-
-    private suspend fun persistToFile() {
-        if (dao != null) return
-        withContext(Dispatchers.IO) {
-            try {
-                val file = jsonFile ?: return@withContext
-                val arr = JSONArray()
-                for (r in _allReadings.value) {
-                    arr.put(readingToJson(r))
-                }
-                file.writeText(arr.toString(2))
-            } catch (e: Exception) {
-                android.util.Log.e("PersistedReadingRepo", "Failed to persist JSON file", e)
-            }
-        }
-    }
-
-    private fun readingToJson(r: PersistedReading): JSONObject = JSONObject().apply {
-        put("id", r.id)
-        put("type", r.type)
-        put("uidOrCode", r.uidOrCode)
-        put("timestamp", r.timestamp)
-        put("status", r.status)
-        put("transmitted", r.transmitted)
-        r.source?.let { put("source", it) }
-        r.dataPreview?.let { put("dataPreview", it) }
-        r.memoryBank?.let { put("memoryBank", it) }
-        r.address?.let { put("address", it) }
-        r.length?.let { put("length", it) }
-        r.payload?.let { put("payload", it) }
-        r.sparkplugJson?.let { put("sparkplugJson", it) }
-        r.correlationId?.let { put("correlationId", it) }
-    }
-
-    private fun jsonToReading(obj: JSONObject): PersistedReading = PersistedReading(
-        id = obj.getLong("id"),
-        type = obj.getString("type"),
-        uidOrCode = obj.getString("uidOrCode"),
-        timestamp = obj.getLong("timestamp"),
-        source = if (obj.has("source") && !obj.isNull("source")) obj.getString("source") else null,
-        dataPreview = if (obj.has("dataPreview") && !obj.isNull("dataPreview")) obj.getString("dataPreview") else null,
-        status = obj.optString("status", "persisted"),
-        transmitted = obj.optBoolean("transmitted", false),
-        memoryBank = if (obj.has("memoryBank") && !obj.isNull("memoryBank")) obj.getInt("memoryBank") else null,
-        address = if (obj.has("address") && !obj.isNull("address")) obj.getInt("address") else null,
-        length = if (obj.has("length") && !obj.isNull("length")) obj.getInt("length") else null,
-        payload = if (obj.has("payload") && !obj.isNull("payload")) obj.getString("payload") else null,
-        sparkplugJson = if (obj.has("sparkplugJson") && !obj.isNull("sparkplugJson")) obj.getString("sparkplugJson") else null,
-        correlationId = if (obj.has("correlationId") && !obj.isNull("correlationId")) obj.getString("correlationId") else null
-    )
 
     suspend fun load() {
-        ensureLoaded()
+        ensureMigrated()
+    }
+
+    private fun <T> Flow<T>.logErrors(fallback: T): Flow<T> = catch { e ->
+        Log.e(TAG, "Kunde inte läsa från Room", e)
+        _storageError.value = e.message ?: e.javaClass.simpleName
+        emit(fallback)
     }
 
     fun getAllReadings(): Flow<List<PersistedReading>> =
-        if (dao != null) {
-            dao.getAll().map { entities -> entities.map { it.toDomain() } }
-        } else {
-            _allReadings
-        }
+        dao.getAll().map { entities -> entities.map { it.toDomain() } }.logErrors(emptyList())
 
     fun getReadingsByType(type: String): Flow<List<PersistedReading>> =
-        if (dao != null) {
-            dao.getByType(type).map { entities -> entities.map { it.toDomain() } }
-        } else {
-            _allReadings.map { list -> list.filter { it.type.equals(type, ignoreCase = true) } }
-        }
+        dao.getByType(type).map { entities -> entities.map { it.toDomain() } }.logErrors(emptyList())
 
     fun getPendingForTransmission(): Flow<List<PersistedReading>> =
-        if (dao != null) {
-            dao.getPendingTransmission().map { entities -> entities.map { it.toDomain() } }
-        } else {
-            _allReadings.map { list -> list.filter { !it.transmitted } }
-        }
+        dao.getPendingTransmission().map { entities -> entities.map { it.toDomain() } }.logErrors(emptyList())
 
-    suspend fun saveReading(reading: PersistedReading) {
-        ensureLoaded()
-        if (dao != null) {
-            dao.insert(reading.toEntity())
-        } else {
-            val withId = if (reading.id == 0L) reading.copy(id = nextId++) else reading
-            _allReadings.value = _allReadings.value + withId
-        }
-        persistToFile()
-    }
+    /** Returnerar true om avläsningen sparades. Fel loggas och syns i [storageError]. */
+    suspend fun saveReading(reading: PersistedReading): Boolean =
+        guarded("spara avläsning") { dao.insert(reading.toEntity()) }
 
+    /**
+     * Markerar som skickad. OBS: anropas idag oavsett om MQTT-publiceringen lyckades
+     * (känt fel, se backlog) – beteendet är medvetet oförändrat här.
+     */
     suspend fun markAsTransmitted(id: Long) {
-        ensureLoaded()
-        if (dao != null) {
-            dao.markAsTransmitted(id)
-        } else {
-            _allReadings.value = _allReadings.value.map { r ->
-                if (r.id == id) r.copy(transmitted = true, status = "transmitted via Sparkplug") else r
-            }
-        }
-        persistToFile()
+        guarded("markera som skickad") { dao.markAsTransmitted(id) }
     }
 
     suspend fun housekeeping(cutoffTimestamp: Long) {
-        ensureLoaded()
-        if (dao != null) {
-            dao.deleteOlderThan(cutoffTimestamp)
-        } else {
-            _allReadings.value = _allReadings.value.filter { it.timestamp >= cutoffTimestamp }
-        }
-        persistToFile()
+        guarded("rensa gamla avläsningar") { dao.deleteOlderThan(cutoffTimestamp) }
     }
 
     suspend fun clearAll() {
-        if (dao != null) {
-            dao.deleteAll()
-        } else {
-            _allReadings.value = emptyList()
+        guarded("rensa alla avläsningar") { dao.deleteAll() }
+    }
+
+    private suspend fun guarded(what: String, block: suspend () -> Unit): Boolean {
+        return try {
+            ensureMigrated()
+            block()
+            _storageError.value = null
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Room-fel vid $what", e)
+            _storageError.value = e.message ?: e.javaClass.simpleName
+            false
         }
-        persistToFile()
     }
 
     // --- Mappers ---

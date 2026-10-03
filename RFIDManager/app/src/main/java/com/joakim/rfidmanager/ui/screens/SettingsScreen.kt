@@ -109,14 +109,32 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(Dimens.cardPadding)) {
                 Text(str("screen.settings.storage_mode"), fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(Dimens.smallGap))
-                val mode = repository?.let {
-                    when {
-                        it.isUsingRealDatabase -> str("screen.settings.storage_room")
-                        it.isUsingJsonFallback -> str("screen.settings.storage_json")
-                        else -> str("screen.settings.storage_memory")
-                    }
-                } ?: str("screen.settings.storage_unknown")
+                val mode = repository?.let { str("screen.settings.storage_room") }
+                    ?: str("screen.settings.storage_unknown")
                 Text(mode, fontFamily = FontFamily.Monospace, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+                // Status för engångsmigreringen JSON -> Room samt ev. lagringsfel (tydligt, aldrig tyst)
+                val migration = repository?.migrationResult?.collectAsState()?.value
+                val storageError = repository?.storageError?.collectAsState()?.value
+                if (migration is com.joakim.rfidmanager.data.migration.MigrationResult.Failed) {
+                    Spacer(Modifier.height(Dimens.smallGap))
+                    Text(
+                        str("screen.settings.migration_failed") + " " + migration.message,
+                        fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.error
+                    )
+                } else if (migration is com.joakim.rfidmanager.data.migration.MigrationResult.Migrated && migration.imported > 0) {
+                    Spacer(Modifier.height(Dimens.smallGap))
+                    Text(
+                        str("screen.settings.migration_done") + " " + migration.imported,
+                        fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                if (storageError != null) {
+                    Spacer(Modifier.height(Dimens.smallGap))
+                    Text(
+                        str("screen.settings.storage_error") + " " + storageError,
+                        fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
 
