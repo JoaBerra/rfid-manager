@@ -121,7 +121,7 @@ Prioritera från `wiki/Kanban.md`. Sammanfattning:
 Beslut 2026-10-03 (Joakim, tillsammans med Nora Nät som sköter hemmanätet): MQTT-testlabbet på ishtar körs **medvetet utan autentisering**. Det är en accepterad risk, inte ett förbiseende.
 
 - **Broker:** Mosquitto, container `rfid-mqtt-hulda`, `192.168.50.151:1883`, `allow_anonymous true` (se `test/fas2-mqtt/mqtt/mosquitto.conf`).
-- **Instrumentpanel:** container `rfid-mqtt-dashboard`, `192.168.50.151:8000`. Ansluter till brokern utan användarnamn eller lösenord. Panelens kod saknar i dag stöd för inloggning mot brokern.
+- **Instrumentpanel:** container `rfid-mqtt-dashboard`, `192.168.50.151:8000`. Ansluter som standard till brokern utan användarnamn eller lösenord. Panelen kan logga in om miljövariablerna `MQTT_USERNAME` och `MQTT_PASSWORD` sätts (se nedan); utan dem är den anonym.
 - **Klienter:** appen RFID Manager (Android, klient-id `rfid-android-client`, telefonen på `192.168.50.110`) och panelen på ishtar själv.
 - **Varför det är acceptabelt nu:** båda tjänsterna nås bara från hemnätet (192.168.50.0/24). Routern har ingen port vidarebefordrad och ligger bakom CGNAT, så inget går att nå från internet. Det är ett testlab.
 - **Brandvägg:** ishtar har varken `ufw` eller `iptables`, och Docker publicerar portarna direkt. Kuku (BTCPay) får inte `ufw` av samma skäl.
@@ -129,8 +129,8 @@ Beslut 2026-10-03 (Joakim, tillsammans med Nora Nät som sköter hemmanätet): M
 **Gör detta samtidigt om något i MQTT-kedjan ändras, eller om labbet blir riktig drift:**
 
 1. Sätt `allow_anonymous false` och en lösenordsfil (`password_file`) i `mosquitto.conf`.
-2. Lägg in användarnamn och lösenord i Android-appen.
-3. Lägg till stöd för användarnamn och lösenord i panelen (t.ex. `MQTT_USERNAME` och `MQTT_PASSWORD` som miljövariabler i `dashboard/docker-compose.ishtar.yml`, utan att checka in hemligheter).
+2. Lägg in användarnamn och lösenord i Android-appen: Inställningar → MQTT-anslutning (fälten *Användarnamn* och *Lösenord*, tryck *Anslut*). Lösenordet lagras krypterat (Android Keystore, AES-GCM). Tomt användarnamn = anonym anslutning. Stödet finns i grenen/koden; default är fortfarande anonymt.
+3. Sätt `MQTT_USERNAME` och `MQTT_PASSWORD` för panelen. `dashboard/docker-compose.ishtar.yml` läser dem som `${MQTT_USERNAME:-}` och `${MQTT_PASSWORD:-}`; lägg värdena i en `.env` bredvid compose-filen (`dashboard/.env`, ignoreras av git) eller i skalets miljö – aldrig i compose-filen eller i git. Utan `MQTT_USERNAME` loggar panelen inte in.
 4. Testa från telefonen och panelen att båda ansluter, och be Nora Nät uppdatera nätverksdokumentationen i repot `hemmanatverk` (avsnitt om ishtar och E3).
 
 Ändra aldrig bara en av delarna: bara lösenord i brokern gör att både appen och panelen tappar anslutningen.
