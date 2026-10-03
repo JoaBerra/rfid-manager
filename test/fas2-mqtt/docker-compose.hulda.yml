@@ -10,6 +10,8 @@ services:
       - "1883:1883"
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mqtt/passwd:/mosquitto/config/passwd:ro
+      - ./mqtt/acl:/mosquitto/config/acl:ro
       - mosquitto-data:/mosquitto/data
     command: mosquitto -c /mosquitto/config/mosquitto.conf
 
