@@ -5,7 +5,8 @@ package com.joakim.rfidmanager.nfc
  *
  * Tidigare öppnades skrivformuläret (adress + data) så fort man markerade/sparade en tagg och
  * gick inte att stänga. Nu gäller: **en läsning visar/sparar bara läsningen.** Skrivläget startas
- * först när användaren trycker på knappen "Skriv till tagg" för den senast lästa taggen.
+ * först när användaren trycker på knappen "Skriv till tagg" för den senast lästa taggen, eller när
+ * Fasad begär en skyddad taggbindning via `fasad.rfid.WRITE_TAG` ([WriteMode.armFasad]).
  *
  * Tillstånd: [WriteModeState.Idle] → (knapp) [WriteModeState.Editing] → (Skriv) [WriteModeState.Armed]
  * → (taggen hålls mot telefonen) [WriteModeState.Finished]. Avbryt/tillbaka/timeout/ny tagg → Idle eller
@@ -15,13 +16,18 @@ class WriteRequest(
     val uidHex: String,
     val addr: Int,
     val data: ByteArray,
-    val isUltra: Boolean
+    val isUltra: Boolean,
+    val fasadUri: String? = null
 ) {
+    fun withUid(newUidHex: String): WriteRequest =
+        WriteRequest(uidHex = newUidHex, addr = addr, data = data, isUltra = isUltra, fasadUri = fasadUri)
+
     override fun equals(other: Any?): Boolean =
         other is WriteRequest && uidHex == other.uidHex && addr == other.addr &&
-            isUltra == other.isUltra && data.contentEquals(other.data)
+            isUltra == other.isUltra && fasadUri == other.fasadUri && data.contentEquals(other.data)
 
-    override fun hashCode(): Int = 31 * (31 * uidHex.hashCode() + addr) + data.contentHashCode()
+    override fun hashCode(): Int =
+        31 * (31 * (31 * uidHex.hashCode() + addr) + data.contentHashCode()) + (fasadUri?.hashCode() ?: 0)
 }
 
 /** Den senast lästa taggen: [readAt] i ms, [writable] enligt [WriteMode.isWritable]. */
@@ -53,6 +59,9 @@ object WriteMode {
     /** Hur länge skrivläget väntar på att taggen hålls mot telefonen. */
     const val ARM_TIMEOUT_MS = 30_000L
 
+    /** Platshållare för `uidHex` när en Fasad-taggbindning armeras innan taggen hållits mot telefonen. */
+    const val ANY_TAG_UID = "*"
+
     fun isRecent(lastRead: LastRead?, now: Long): Boolean =
         lastRead != null && now - lastRead.readAt in 0..RECENT_READ_MS
 
@@ -72,14 +81,39 @@ object WriteMode {
         else state
 
     /**
-     * En tagg lästes. Är skrivläget beställt, tiden inte gått ut och det är samma tagg → [TagReadOutcome.execute]
-     * anger skrivningen som ska utföras nu. Annars: en annan tagg under redigering stänger formuläret,
-     * en bekräftelse rensas av nästa läsning, en beställd skrivning till annan tagg väntar vidare.
+     * Armera skrivning av en Fasad-URI (`fasad://besiktning?...`) med 30 sekunders tidsfönster.
+     * Om [uidHex] är [ANY_TAG_UID] knyts den första skrivbara Ultralight/NTAG-tagg som hålls mot telefonen.
+     */
+    fun armFasad(fasadUri: String, now: Long, uidHex: String = ANY_TAG_UID): WriteModeState {
+        val pages = FasadNfcBridge.encodeUriToUltralightPages(fasadUri) ?: return WriteModeState.Idle
+        val firstPage = pages[FasadNfcBridge.USER_START_PAGE] ?: ByteArray(4)
+        val req = WriteRequest(
+            uidHex = uidHex,
+            addr = FasadNfcBridge.USER_START_PAGE,
+            data = firstPage,
+            isUltra = true,
+            fasadUri = fasadUri
+        )
+        return WriteModeState.Armed(req, now + ARM_TIMEOUT_MS)
+    }
+
+    /**
+     * En tagg lästes. Är skrivläget beställt, tiden inte gått ut och det är samma tagg (eller [ANY_TAG_UID]
+     * vid Fasad-taggbindning) → [TagReadOutcome.execute] anger skrivningen som ska utföras nu.
+     * Annars: en annan tagg under redigering stänger formuläret, en bekräftelse rensas av nästa läsning,
+     * en beställd skrivning till annan tagg väntar vidare.
      */
     fun onTagRead(state: WriteModeState, readUidHex: String, now: Long): TagReadOutcome = when (state) {
         is WriteModeState.Armed -> when {
             now >= state.deadlineAt -> TagReadOutcome(timedOut(state))
-            readUidHex == state.request.uidHex -> TagReadOutcome(state, state.request)
+            state.request.uidHex == ANY_TAG_UID || readUidHex == state.request.uidHex -> {
+                val resolved = if (state.request.uidHex == ANY_TAG_UID) {
+                    state.request.withUid(readUidHex)
+                } else {
+                    state.request
+                }
+                TagReadOutcome(WriteModeState.Armed(resolved, state.deadlineAt), resolved)
+            }
             else -> TagReadOutcome(state)
         }
         is WriteModeState.Editing ->

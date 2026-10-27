@@ -4,11 +4,14 @@ import android.app.Activity
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
+import android.nfc.NdefMessage
+import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.MifareClassic
 import android.nfc.tech.MifareUltralight
-import android.nfc.tech.NfcA
+import android.nfc.tech.Ndef
+import android.nfc.tech.NdefFormatable
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -23,21 +26,6 @@ import com.joakim.rfidmanager.domain.model.TagType
  *
  * Detta är **den riktiga implementationen** som pratar med Androids NFC-stack.
  * Se [[App-Architecture]]: NFC Layer → NfcManager Interface → AndroidNfcManager (när hårdvara finns).
- *
- * **Centrala ID-begrepp (Architecture-Design-Källkod):**
- * - `handleTag(tag: Tag)` — kärnan: läser data (sectorsRead/pages), sätter `lastTag`, vibrerar, levererar RfidTag till UI via tagListener.
- * - `lastTag: Tag?` — **kortlivad cache** av den Tag som precis kom från reader callback. Endast giltig under/ strax efter callback.
- *   Används för "armed write" och "on-demand" läs/skriv utan att Tag blir stale (vanlig orsak till "Transceive failed" / TagLostException).
- * - `page 2 Lock/OTP` (Ultralight): läses alltid (startPage=2). LB0-parser i UI (RFIDManagerScreen) visar låsta pages.
- *   Design-förankring: Figma "use this to pick safe Target page" + varningar i SELECTED TAG MEMORY.
- * - `enableReaderMode` + `FLAG_READER_NO_PLATFORM_SOUNDS` — förhindrar systemets NFC-chooser (se log.md 2026-06-02 "Fix: System chooser").
- * - `onTagDiscovered` — bro för onNewIntent fallback (när användaren väljer appen i chooser ändå).
- *
- * **Kotlin-novis:** `lastTag` är privat mutable state som hanteras trådsäkert via att writes bara sker från reader-callback eller runBlocking
- * i MainActivity LaunchedEffect. `suspend fun` + `runOnUiThread` för att leverera till Compose state.
- *
- * **Eskortminne-fokus:** Stödjer både MIFARE Classic (sector auth) och Ultralight (page reads 4-byte). Användarens taggar var Ultralight
- * (UID t.ex. 0479981A8A6A80) med NDEF + skrivbar user memory (page 12 "74 65 73 74" = "test" lyckades 2026-06-03).
  */
 class AndroidNfcManager(
     private val activity: Activity,
@@ -48,18 +36,6 @@ class AndroidNfcManager(
     private var nfcAdapter: NfcAdapter? = null
     private var isScanning = false
     private var tagListener: ((RfidTag) -> Unit)? = null
-    /**
-     * **lastTag (NFC-READ-WRITE-FRESH / Architecture NFC layer)**
-     *
-     * Endast giltig *kort* tid efter att reader mode callbacken (onTagDiscovered) eller onNewIntent har levererat en Tag.
-     * Sätts i handleTag.
-     *
-     * Varför? Androids Tag-objekt blir ogiltiga snabbt (TagLostException vid transceive om du väntar).
-     * Lösning: "armed write" i UI (MainActivity.pendingWrite) väntar på nästa fresh detection, som garanterar att lastTag är levande.
-     * Se writeMifareUltralightPage + MainActivity: onWrite + LaunchedEffect lambda som kör write när UID matchar.
-     *
-     * Design: Motsvarar Figma "Hold the selected tag to the phone NOW to write to page X" + status i accent-färg.
-     */
     private var lastTag: Tag? = null  // Only valid briefly inside/ right after the reader callback. Used for post-detection reads/writes.
 
     private val vibrator: Vibrator? by lazy {
@@ -68,7 +44,7 @@ class AndroidNfcManager(
             vm?.defaultVibrator
         } else {
             @Suppress("DEPRECATION")
-            activity.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+            activity.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
     }
 
@@ -90,15 +66,9 @@ class AndroidNfcManager(
     init {
         nfcAdapter = NfcAdapter.getDefaultAdapter(activity)
         beepSoundId = soundPool?.load(activity, com.joakim.rfidmanager.R.raw.beep, 1) ?: 0
-        // Start reader mode immediately so tags are always detectable
-        // (background NDEF, write execution, etc.)
         enableReaderMode()
     }
 
-    /**
-     * Enable reader mode with full flags but no tagListener yet.
-     * Called once at init; [startScanning] later sets the listener.
-     */
     private fun enableReaderMode() {
         val adapter = nfcAdapter ?: return
         if (!adapter.isEnabled) return
@@ -134,14 +104,12 @@ class AndroidNfcManager(
 
         tagListener = onTagDetected
         isScanning = true
-        // Reader mode already active since init; just ensure callback is set
         enableReaderMode()
         Log.i(TAG, "Scanning STARTED — tags will appear in UI list")
     }
 
     override fun stopScanning() {
         isScanning = false
-        // Keep reader mode active for background NDEF + pending write execution
         Log.d(TAG, "Scanning STOPPED — reader mode stays active for background NDEF")
     }
 
@@ -166,31 +134,6 @@ class AndroidNfcManager(
     }
 
     private fun handleTag(tag: Tag) {
-        /**
-         * **handleTag (NFC-HANDLE-TAG / Architecture NFC Layer core)**
-         *
-         * Detta är **hjärtat** i NFC-lagret.
-         * 1. Sparar `lastTag = tag` (för armed write + färska transceive).
-         * 2. Detekterar typ (Classic vs Ultralight/NTAG) från techList.
-         * 3. **Läser data medan Tag är "live"**:
-         *    - Classic: sector 0+ med default keys (MIFARE_CLASSIC_1K/4K).
-         *    - Ultralight (eskortminne): alltid page 2 (Lock/OTP + CC), sedan 4,8,12,16... (4 bytes per page).
-         *      `sectorsRead: Map<Int, ByteArray>` — nyckeln är page-nummer för Ultra, sector för Classic.
-         * 4. Bygger RfidTag (domain) och levererar via tagListener till MainActivity (som mappar till ui.model.RFIDTag + detectedTags).
-         * 5. Vibrerar (UX).
-         *
-         * **Varför läsa här och inte senare?** Tag-referensen är endast giltig under callbacken (se lastTag-kommentar).
-         * Detta är anledningen till "armed write"-mönstret: skrivningen armeras i UI, exekveras på nästa detection.
-         *
-         * **Page 2 Lock/OTP (NFC-READ-LOCK / Ultralight specifikt):**
-         * Många "giveaway" eskortminnen har låsta pages (LB0 i page 2). Vi läser alltid page 2 så UI kan varna
-         * och föreslå safe target page (se RFIDManagerScreen lock parser + WriteTagForm defaultAddr).
-         * Exempel från log: "20 48 F8 FF..." → LB0=0x20 betyder vissa pages låsta.
-         * Verifierat: page 12 var skrivbar på användarens lanabgroup.se-tagg.
-         *
-         * Design-förankring (Figma-to-Compose): SELECTED TAG MEMORY + "Lock bits: pages X locked" i accent #F59E0B.
-         * Se också Hardware-Testenheter.md för exakta Samsung-menytexter och udev-regler.
-         */
         lastTag = tag  // keep briefly for possible immediate follow-up reads/writes from UI
 
         val uid = tag.id ?: byteArrayOf()
@@ -206,14 +149,9 @@ class AndroidNfcManager(
         }
 
         val rssi = -50
-
         var sectorsRead = emptyMap<Int, ByteArray>()
 
-        // If Mifare Classic, attempt to read some sectors *right here* while the Tag is still valid in this callback.
-        // This is the only reliable place to do auth/read for escort memory without complex tag caching.
         if (type == TagType.MIFARE_CLASSIC_1K || type == TagType.MIFARE_CLASSIC_4K) {
-            // Read as many sectors as possible with default keys (common for escort memory cards)
-            // Start with 0 (manufacturer), then data sectors. Stop on first auth failure for speed.
             val maxSectors = if (type == TagType.MIFARE_CLASSIC_1K) 16 else 40
             for (s in 0 until maxSectors) {
                 val data = readMifareClassicSectorInternal(tag, s, byteArrayOf())
@@ -221,23 +159,25 @@ class AndroidNfcManager(
                     sectorsRead = sectorsRead + (s to data)
                     Log.i(TAG, "Sector $s read for ${uid.joinToString("") { "%02X".format(it) }}: ${data.joinToString(" ") { "%02X".format(it) }}")
                 } else {
-                    // If sector 0 fails we still want to continue? Usually 0 works. Stop early on consecutive fails.
                     if (s > 2) break
                 }
             }
         } else if (type == TagType.MIFARE_ULTRALIGHT || techList.any { it.contains("MifareUltralight") || it.contains("Ndef") }) {
-            // Read user data pages for Ultralight / NTAG (pages are 4 bytes, readPages returns 4 pages = 16 bytes)
             val mifareU = MifareUltralight.get(tag)
             if (mifareU != null) {
                 try {
                     mifareU.connect()
-                    // Read lock bytes and OTP/CC first (pages 2-3), then user memory.
-                    for (startPage in listOf(2, 4, 8, 12, 16)) {
+                    // Läs alltid sida 2 (Lock/OTP) samt sidorna 4..19, och fortsätt upp till sida 36 på NTAG
+                    // om NDEF-meddelandet sträcker sig längre än 64 byte (t.ex. fasad://besiktning?...).
+                    for (startPage in listOf(2, 4, 8, 12, 16, 20, 24, 28, 32, 36)) {
                         try {
-                            val data = mifareU.readPages(startPage)  // 16 bytes
+                            val data = mifareU.readPages(startPage)  // 16 bytes (4 sidor)
                             sectorsRead = sectorsRead + (startPage to data)
                             val label = if (startPage == 2) "Lock/OTP" else "pages"
                             Log.i(TAG, "Ultralight $label $startPage-${startPage + 3} read for ${uid.joinToString("") { "%02X".format(it) }}: ${data.joinToString(" ") { "%02X".format(it) }}")
+                            if (startPage >= 16 && (data.any { it == 0xFE.toByte() } || data.all { it == 0.toByte() })) {
+                                break
+                            }
                         } catch (e: Exception) {
                             Log.w(TAG, "Failed reading Ultralight pages starting at $startPage", e)
                             if (startPage >= 4) break
@@ -247,6 +187,23 @@ class AndroidNfcManager(
                     Log.e(TAG, "MifareUltralight connect/read error", e)
                 } finally {
                     try { mifareU.close() } catch (_: Exception) {}
+                }
+            }
+
+            // Fallback för NDEF-taggar där MifareUltralight inte gav sidor men cachedNdefMessage finns
+            if (sectorsRead[4] == null) {
+                try {
+                    val cached = Ndef.get(tag)?.cachedNdefMessage
+                    val uri = cached?.records?.firstNotNullOfOrNull { rec ->
+                        rec.toUri()?.toString()
+                    }
+                    if (uri != null && FasadNfcBridge.isFasadUri(uri)) {
+                        FasadNfcBridge.encodeUriToUltralightPages(uri)?.let { encoded ->
+                            sectorsRead = sectorsRead + encoded
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Cached NDEF fallback failed", e)
                 }
             }
         }
@@ -259,13 +216,11 @@ class AndroidNfcManager(
             sectorsRead = sectorsRead
         )
 
-        // Haptic + sound feedback on detection
         if (settings?.hapticEnabled?.value != false) vibrate()
         if (settings?.soundEnabled?.value != false) playBeep()
 
         Log.d(TAG, "Tag detected: ${detected.uidHex} type=$type techs=$techList sectorsRead=${sectorsRead.keys}")
 
-        // Deliver on main thread
         activity.runOnUiThread {
             tagListener?.invoke(detected)
         }
@@ -290,12 +245,9 @@ class AndroidNfcManager(
         }
     }
 
-    // --- Mifare Classic sector operations (to be called from background after detection) ---
-
     override suspend fun readMifareClassicSector(uid: ByteArray, sector: Int, keyA: ByteArray?): ByteArray? {
         val currentTag = lastTag
         if (currentTag != null && currentTag.id.contentEquals(uid)) {
-            // We have a (very) recent live tag for this UID — use it
             return readMifareClassicSectorInternal(currentTag, sector, keyA ?: byteArrayOf())
         }
         Log.w(TAG, "readMifareClassicSector: no live Tag available for UID (must call immediately after detection or during callback)")
@@ -321,16 +273,6 @@ class AndroidNfcManager(
     }
 
     override suspend fun writeMifareUltralightPage(uid: ByteArray, page: Int, data: ByteArray): Boolean {
-        /**
-         * **Armed write execution path (NFC-WRITE-ARMED)**
-         *
-         * UI (MainActivity.onWrite) armar `pendingWrite` + visar "Hold ... NOW".
-         * När nästa fresh tag kommer in i handleTag → lastTag uppdateras → listenern i LaunchedEffect matchar UID
-         * och anropar writeMifareUltralightPage (här) → använder live lastTag → internal writePage.
-         *
-         * Detta är lösningen på "write transceive fail on page 4" (lock bits + stale tag).
-         * Verifierat 2026-06-03: page 12 "74 65 73 74" (test ASCII) på lanabgroup-tagg.
-         */
         val currentTag = lastTag
         if (currentTag != null && currentTag.id.contentEquals(uid)) {
             return writeMifareUltralightPageInternal(currentTag, page, data)
@@ -339,11 +281,16 @@ class AndroidNfcManager(
         return false
     }
 
-    /**
-     * Example of how a real Mifare Classic read would look when we have a live Tag.
-     * Call this from within the reader callback or with a recently obtained Tag.
-     */
-    @Suppress("unused")
+    override suspend fun writeMifareUltralightPages(uid: ByteArray, pages: Map<Int, ByteArray>): Boolean {
+        if (pages.isEmpty()) return false
+        val currentTag = lastTag
+        if (currentTag != null && currentTag.id.contentEquals(uid)) {
+            return writeMifareUltralightPagesInternal(currentTag, pages)
+        }
+        Log.w(TAG, "writeMifareUltralightPages: no live Tag available for UID")
+        return false
+    }
+
     private fun readMifareClassicSectorInternal(tag: Tag, sector: Int, keyA: ByteArray): ByteArray? {
         val mifare = MifareClassic.get(tag) ?: return null
         return try {
@@ -354,7 +301,6 @@ class AndroidNfcManager(
             val auth = if (keyA.isNotEmpty()) {
                 mifare.authenticateSectorWithKeyA(sector, keyA)
             } else {
-                // Common default keys for many escort memories / access cards
                 val defaultKeys = listOf(
                     MifareClassic.KEY_DEFAULT,
                     MifareClassic.KEY_MIFARE_APPLICATION_DIRECTORY,
@@ -369,8 +315,7 @@ class AndroidNfcManager(
             }
 
             val blockIndex = mifare.sectorToBlock(sector)
-            val blockData = mifare.readBlock(blockIndex)  // 16 bytes typical
-            blockData
+            mifare.readBlock(blockIndex)
         } catch (e: Exception) {
             Log.e(TAG, "Mifare read error sector $sector", e)
             null
@@ -379,12 +324,10 @@ class AndroidNfcManager(
         }
     }
 
-    @Suppress("unused")
     private fun writeMifareClassicBlockInternal(tag: Tag, block: Int, data: ByteArray, keyA: ByteArray): Boolean {
         val mifare = MifareClassic.get(tag) ?: return false
         return try {
             mifare.connect()
-            // Determine which sector the block belongs to
             var targetSector = -1
             for (s in 0 until mifare.sectorCount) {
                 val firstBlock = mifare.sectorToBlock(s)
@@ -415,7 +358,6 @@ class AndroidNfcManager(
                 return false
             }
 
-            // Never write to the sector trailer (last block in sector) unless you really know what you're doing
             val firstBlock = mifare.sectorToBlock(targetSector)
             val blocksInSector = if (targetSector < 32) 4 else 16
             val trailerBlock = firstBlock + blocksInSector - 1
@@ -434,12 +376,11 @@ class AndroidNfcManager(
         }
     }
 
-    @Suppress("unused")
     private fun readMifareUltralightPagesInternal(tag: Tag, page: Int): ByteArray? {
         val mifareU = MifareUltralight.get(tag) ?: return null
         return try {
             mifareU.connect()
-            mifareU.readPages(page)  // returns 16 bytes (4 pages)
+            mifareU.readPages(page)
         } catch (e: Exception) {
             Log.e(TAG, "Ultralight readPages error at page $page", e)
             null
@@ -448,17 +389,11 @@ class AndroidNfcManager(
         }
     }
 
-    @Suppress("unused")
     private fun writeMifareUltralightPageInternal(tag: Tag, page: Int, data: ByteArray): Boolean {
-        /**
-         * Utför den faktiska `mifareU.writePage(page, 4bytes)`.
-         * Anropas **endast** med en Tag som just kom från handleTag (via lastTag).
-         * Se writeMifareUltralightPage för det "armed" flödet.
-         */
         val mifareU = MifareUltralight.get(tag) ?: return false
         return try {
             mifareU.connect()
-            val writeData = data.copyOf(4)  // Ultralight pages are 4 bytes
+            val writeData = data.copyOf(4)
             mifareU.writePage(page, writeData)
             true
         } catch (e: Exception) {
@@ -469,18 +404,59 @@ class AndroidNfcManager(
         }
     }
 
-    /**
-     * **onTagDiscovered (NFC-FALLBACK / chooser bridge)**
-     *
-     * Anropas både från:
-     * - Reader mode callback (det vanliga fallet efter enableReaderMode).
-     * - MainActivity.onNewIntent (när användaren manuellt väljer "RFID Manager" i NFC-chooser).
-     *
-     * Detta är **fallback-mekanismen** som garanterar att READ LOG fylls även om systemdispatch tar över
-     * (se AndroidManifest NDEF/TECH filters + processDiscoveredTag i MainActivity).
-     *
-     * ID: kopplas till "onTagDetectedFromIntent" koncept i äldre anteckningar.
-     */
+    private fun writeMifareUltralightPagesInternal(tag: Tag, pages: Map<Int, ByteArray>): Boolean {
+        val mifareU = MifareUltralight.get(tag)
+        if (mifareU != null) {
+            return try {
+                mifareU.connect()
+                for ((page, data) in pages.entries.sortedBy { it.key }) {
+                    mifareU.writePage(page, data.copyOf(4))
+                }
+                true
+            } catch (e: Exception) {
+                Log.e(TAG, "Ultralight multi-page write error", e)
+                false
+            } finally {
+                try { mifareU.close() } catch (_: Exception) {}
+            }
+        }
+
+        // Fallback via Ndef / NdefFormatable om MifareUltralight inte exponeras på enheten
+        val uri = FasadNfcBridge.decodeFasadUriFromPages(pages) ?: return false
+        val message = NdefMessage(arrayOf(NdefRecord.createUri(uri)))
+        val ndef = Ndef.get(tag)
+        if (ndef != null) {
+            return try {
+                ndef.connect()
+                if (!ndef.isWritable || ndef.maxSize < message.toByteArray().size) {
+                    false
+                } else {
+                    ndef.writeNdefMessage(message)
+                    true
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "NDEF write error", e)
+                false
+            } finally {
+                try { ndef.close() } catch (_: Exception) {}
+            }
+        }
+        val formatable = NdefFormatable.get(tag)
+        if (formatable != null) {
+            return try {
+                formatable.connect()
+                formatable.format(message)
+                true
+            } catch (e: Exception) {
+                Log.e(TAG, "NdefFormatable write error", e)
+                false
+            } finally {
+                try { formatable.close() } catch (_: Exception) {}
+            }
+        }
+        return false
+    }
+
     fun onTagDiscovered(tag: Tag) {
         handleTag(tag)
     }

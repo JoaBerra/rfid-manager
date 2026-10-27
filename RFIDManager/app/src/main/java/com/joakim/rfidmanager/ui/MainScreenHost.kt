@@ -20,19 +20,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.joakim.rfidmanager.FasadBindStatus
+import com.joakim.rfidmanager.data.mqtt.MqttConnectionManager
+import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
+import com.joakim.rfidmanager.data.settings.AppSettings
+import com.joakim.rfidmanager.ui.components.PersistedListItem
 import com.joakim.rfidmanager.ui.navigation.Screen
 import com.joakim.rfidmanager.ui.screens.MqttStatusScreen
 import com.joakim.rfidmanager.ui.screens.ScanScreen
 import com.joakim.rfidmanager.ui.screens.SettingsScreen
-import com.joakim.rfidmanager.ui.components.PersistedListItem
-import com.joakim.rfidmanager.data.repository.PersistedReadingRepository
-import com.joakim.rfidmanager.data.settings.AppSettings
-import com.joakim.rfidmanager.data.mqtt.MqttConnectionManager
+import com.joakim.rfidmanager.ui.theme.Dimens
 import com.joakim.rfidmanager.ui.viewmodel.ConnectivityViewModel
 import com.joakim.rfidmanager.ui.viewmodel.ReadingsViewModel
 import com.joakim.rfidmanager.ui.viewmodel.ScanViewModel
-import com.joakim.rfidmanager.ui.theme.Dimens
-import com.joakim.rfidmanager.ui.str
 
 /**
  * Main bottom navigation host with four dedicated screens: Scan, Readings, Connectivity, Settings.
@@ -42,21 +42,25 @@ fun MainScreenHost(
     mqttManager: MqttConnectionManager? = null,
     persistedReadingRepository: PersistedReadingRepository? = null,
     settings: AppSettings? = null,
-    // Scan props for Punkt 4 test (scanning in new structure)
     scanningEnabled: Boolean = false,
     onToggleScan: () -> Unit = {},
     detectedTags: List<com.joakim.rfidmanager.ui.model.RFIDTag> = emptyList(),
     onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
-    // Skrivläge (nfc/WriteMode.kt): knappen "Skriv till tagg" startar det, Avbryt/tillbaka/timeout stänger det
     writeState: com.joakim.rfidmanager.nfc.WriteModeState = com.joakim.rfidmanager.nfc.WriteModeState.Idle,
     lastRead: com.joakim.rfidmanager.nfc.LastRead? = null,
     nowMs: Long = System.currentTimeMillis(),
     onEnterWrite: (String) -> Unit = {},
     onCancelWrite: () -> Unit = {},
-    // Utkorg: 'Skicka nu' (tvingat utskick via WorkManager)
+    // Fasad NFC-brygga (fasad://besiktning & fasad.rfid.WRITE_TAG)
+    fasadTargetUri: String? = null,
+    fasadBindStatus: FasadBindStatus? = null,
+    fasadErrorMessage: String? = null,
+    onArmFasadWrite: () -> Unit = {},
+    onOpenInFasad: (String) -> Unit = {},
+    onDismissFasadMessage: () -> Unit = {},
+    // Utkorg
     onSendNow: () -> Unit = {},
-    // Utkorg: omgångsinställningarna ändrades (planera om nästa körning)
     onOutboxSettingsChanged: () -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -65,8 +69,12 @@ fun MainScreenHost(
 
     val scanViewModel = remember { ScanViewModel() }
 
-    // Session-scoped: tracks UIDs persisted in this session, survives nav because
-    // remember is at MainScreenHost level (above NavHost composable blocks).
+    LaunchedEffect(fasadTargetUri) {
+        if (fasadTargetUri != null && currentRoute != null && currentRoute != Screen.Scan.route) {
+            navController.navigate(Screen.Scan.route) { launchSingleTop = true }
+        }
+    }
+
     val sessionPersistedUids = remember { mutableStateOf<Set<String>>(emptySet()) }
     val handlePersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = { tag ->
         onPersist(tag)
@@ -124,11 +132,16 @@ fun MainScreenHost(
                     nowMs = nowMs,
                     onEnterWrite = onEnterWrite,
                     onCancelWrite = onCancelWrite,
+                    fasadTargetUri = fasadTargetUri,
+                    fasadBindStatus = fasadBindStatus,
+                    fasadErrorMessage = fasadErrorMessage,
+                    onArmFasadWrite = onArmFasadWrite,
+                    onOpenInFasad = onOpenInFasad,
+                    onDismissFasadMessage = onDismissFasadMessage,
                     fontSizeScale = fontSizeScale
                 )
             }
             composable(Screen.Readings.route) {
-                // Dedicated Readings view – full screen, no internal tabs.
                 if (persistedReadingRepository != null) {
                     val viewModel = remember(persistedReadingRepository, settings) {
                         ReadingsViewModel(persistedReadingRepository, settings!!, onSendNow)
@@ -166,9 +179,7 @@ fun MainScreenHost(
                             )
                             if (readings.isNotEmpty()) {
                                 TextButton(
-                                    onClick = {
-                                        viewModel.clearAll()
-                                    },
+                                    onClick = { viewModel.clearAll() },
                                     colors = ButtonDefaults.textButtonColors(
                                         contentColor = MaterialTheme.colorScheme.error
                                     )
@@ -182,7 +193,6 @@ fun MainScreenHost(
                             }
                         }
 
-                        // Search field
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { viewModel.setSearchQuery(it) },
@@ -209,7 +219,6 @@ fun MainScreenHost(
 
                         Spacer(Modifier.height(Dimens.smallGap))
 
-                        // Filter chips using VM
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             listOf(null, "RFID", "EAN").forEach { type ->
                                 val label = when (type) {
@@ -233,7 +242,6 @@ fun MainScreenHost(
                         Spacer(Modifier.height(Dimens.smallGap))
 
                         if (isLoading && readings.isEmpty()) {
-                            // Loading state
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
@@ -254,7 +262,6 @@ fun MainScreenHost(
                                 }
                             }
                         } else if (readings.isEmpty()) {
-                            // Empty state
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
@@ -284,7 +291,6 @@ fun MainScreenHost(
                                 }
                             }
                         } else {
-                            // Loading finished
                             LaunchedEffect(Unit) { isLoading = false }
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing),

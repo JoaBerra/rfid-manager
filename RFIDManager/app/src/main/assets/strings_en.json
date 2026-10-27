@@ -14,7 +14,6 @@
   "screen.scan.persisted": "✓ Persisted",
   "screen.scan.type": "Type",
   "screen.scan.persist_hint": "Persist [",
-
   "screen.readings.title": "PERSISTED READINGS",
   "screen.readings.search_hint": "Search UID…",
   "screen.readings.filter_all": "All",
@@ -27,7 +26,6 @@
   "screen.readings.clear_all": "Clear all",
   "screen.readings.clear_confirm": "Delete all persisted readings?",
   "screen.readings.unavailable": "Readings unavailable (no repository)",
-
   "screen.scan.write_title": "Write to tag",
   "screen.scan.write_address": "Target page/block",
   "screen.scan.write_data": "Data (hex)",
@@ -42,7 +40,6 @@
   "screen.scan.write_timeout": "Write mode cancelled (timeout)",
   "screen.scan.write_invalid_hex": "Invalid hex data",
   "screen.scan.write_dismiss": "OK",
-
   "screen.connectivity.title": "MQTT / Sparkplug",
   "screen.connectivity.status_connected": "SPARKPLUG CONNECTED ✓",
   "screen.connectivity.status_disconnected": "DISCONNECTED",
@@ -53,7 +50,6 @@
   "screen.connectivity.transmitted": "Transmitted",
   "screen.connectivity.type": "Type",
   "screen.connectivity.data": "Data",
-
   "screen.settings.title": "SETTINGS",
   "screen.settings.storage_mode": "Storage",
   "screen.settings.storage_room": "Room (SQLite)",
@@ -87,13 +83,11 @@
   "screen.settings.broker_connecting": "Connecting...",
   "screen.settings.haptic": "Vibration on scan",
   "screen.settings.sound": "Sound on scan",
-
   "common.loading": "Loading…",
   "common.error": "An error occurred",
   "common.ok": "OK",
   "common.cancel": "Cancel",
   "common.unknown_source": "Unknown source",
-
   "persisted_item.transmitted": "Transmitted via Sparkplug",
   "persisted_item.persisted": "Persisted",
   "persisted_item.transmit": "Transmit ↑",
@@ -125,5 +119,15 @@
   "screen.settings.outbox_err_rounds": "Enter a whole number from 1 to 20",
   "screen.settings.outbox_rounds_save": "Save",
   "screen.settings.outbox_rounds_reset": "Defaults",
-  "screen.settings.outbox_rounds_saved": "Saved ✓"
+  "screen.settings.outbox_rounds_saved": "Saved ✓",
+  "screen.scan.fasad_bind_title": "Bind NFC tag to Fasad",
+  "screen.scan.fasad_bind_hold": "Hold a writable tag to the phone",
+  "screen.scan.fasad_bind_arm": "Start write mode (30 s)",
+  "screen.scan.fasad_bind_done": "✓ Fasad tag bound ({uid})",
+  "screen.scan.fasad_bind_failed": "✗ Failed to write Fasad tag (locked tag or lost contact)",
+  "screen.scan.fasad_bind_invalid": "Invalid Fasad request (missing or invalid lgh)",
+  "screen.scan.fasad_tag_label": "Fasad tag",
+  "screen.scan.fasad_open": "Open in Fasad",
+  "screen.scan.fasad_send_uid": "Send UID to Fasad",
+  "screen.scan.fasad_not_installed": "The Fasad app (fasad.besiktning) is not installed on this phone"
 }

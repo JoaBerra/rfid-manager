@@ -6,7 +6,7 @@ created: 2026-10-27
 
 # Fasad NFC-integration — Gränssnittskontrakt
 
-> **Status:** Gränssnittskontrakt beslutat av Joakim 2026-10-27 i samråd mellan `rfid-manager` och @Kalle PL Fasad (`fasad.besiktning`). Implementation ligger som kort i [[Kanban]] (ej påbörjad). Termer: [[Ordlista]].
+> **Status:** Gränssnittskontrakt beslutat av Joakim 2026-10-27 (`t62u`) och byggt samt enhetstestat på grenen `feature/fasad-nfc-bridge` 2026-10-27 (`t63u`, 12 nya enhetstester i `FasadNfcBridgeTest`, totalt 155 gröna). Ännu **inte provat på telefon** och **inte mergat till `main`**. Kort i [[Kanban]]. Termer: [[Ordlista]].
 
 ## Syfte och arkitekturprincip
 
@@ -98,4 +98,5 @@ När en befintlig eller skrivskyddad tagg bara har sitt fabriks-UID (`tagUid`) o
 
 ## 5. Status
 
-- **2026-10-27:** Gränssnittskontrakt beslutat av Joakim (`t62u`). Dokumenterat i wikin och upplagt som avgränsat kort i [[Kanban]] (ej påbörjat i kod).
+- **2026-10-27:** Gränssnittskontrakt beslutat av Joakim (`t62u`). Dokumenterat i wikin och upplagt som avgränsat kort i [[Kanban]].
+- **2026-10-27:** Implementerat på grenen `feature/fasad-nfc-bridge` (`t63u`): ren Kotlin-brygga `nfc/FasadNfcBridge.kt` (URI-byggare/tolk + NDEF Type 2 TLV sidkodning/avkodning + `TagLocks`-kontroll), utökad `WriteMode.armFasad` (30 s nedräkning), flersidig Ultralight/NTAG-läsning och skrivning i `AndroidNfcManager`, `fasad.rfid.WRITE_TAG`-mottagning och `fasad://besiktning`-utskick i `MainActivity` och `ScanScreen`. 12 nya JVM-enhetstester i `FasadNfcBridgeTest` (totalt 155/155 gröna), `assembleDebug` OK. **Ej provat på telefon, ej mergat till `main`.**

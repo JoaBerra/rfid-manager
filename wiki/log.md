@@ -1,5 +1,21 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-27] feature | NFC-brygga till Fasad (`fasad://besiktning` & `fasad.rfid.WRITE_TAG`) på `feature/fasad-nfc-bridge`
+
+**Gren:** `feature/fasad-nfc-bridge` (utgår från `main` `fb4fd5f`; pushad som egen gren, **inte** mergad, `main` orörd).
+
+**Uppdrag:** Joakim gav klartecken ("kör", `t63u`) att bygga kortet i [[Fasad-NFC-Integration]] och [[Kanban]].
+
+**Utfört:**
+- Ny ren Kotlin-modul `nfc/FasadNfcBridge.kt` (inga Android-beroenden, 100 % JVM-testbar): bygger och tolkar `fasad://besiktning?lgh=...&rum=...&del=...&utrustning=...&uid=...`, hänger på `uid` i versalt hexformat (`appendUidToFasadUri`), bygger Läge 2-URI för skrivskyddade taggar (`buildUidOnlyUri`), packar och avkodar NDEF Type 2 Tag TLV URI-record (`0x03 ... 'U' ... 0xFE`) i 4-bytes Ultralight/NTAG-sidor från sida 4 samt kontrollerar låsbitar via `TagLocks`.
+- Utökad `nfc/WriteMode.kt` med valfritt `fasadUri` på `WriteRequest` och `WriteMode.armFasad(...)` med samma 30 s nedräkning (`ARM_TIMEOUT_MS`), avbryt- och timeout-regler som övriga skrivningar.
+- Utökad `nfc/NfcManager.kt` och `nfc/AndroidNfcManager.kt` med läsning av Ultralight/NTAG-sidor upp till sida 36 (samt cached NDEF-fallback) och flersidig skrivning `writeMifareUltralightPages`.
+- Uppdaterad `AndroidManifest.xml` (`fasad.rfid.WRITE_TAG` intent-filter samt `<queries>` för `fasad.besiktning` och `fasad.besiktning.labb`), `MainActivity.kt`, `MainScreenHost.kt`, `ScanScreen.kt` samt `strings_sv.json` och `strings_en.json` med Fasad-taggbindningskort, **Öppna i Fasad** (Läge 1) och **Skicka UID till Fasad** (Läge 2) i `OutboxPalette`-kontrast.
+
+**Verifierat:** 12 nya JVM-enhetstester i `FasadNfcBridgeTest` (totalt 155 enhetstester, alla 143 gamla + 12 nya gröna), `./gradlew assembleDebug testDebugUnitTest --offline` OK. **Ej installerad och ej provad på telefon.**
+
+---
+
 ## [2026-10-27] docs | Gränssnittskontrakt Fasad-NFC (`fasad://besiktning` & `fasad.rfid.WRITE_TAG`) och Kanbankort
 
 **Gren:** `main` (endast dokumentation, ingen appkod ändrad).

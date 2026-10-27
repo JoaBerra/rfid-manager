@@ -11,8 +11,7 @@
       - uses-feature required=false → app installerar på enheter utan NFC (stub + UI fungerar).
       - TECH_DISCOVERED + nfc_tech_filter + NDEF → fallback så att onNewIntent i MainActivity kan fånga taggar
         när enableReaderMode + NO_PLATFORM_SOUNDS inte räcker (se "Fix: System chooser" i log.md).
-
-      **Eskortminne:** MifareUltralight/Classic/NTAG fångas via NfcA + Ndef + tech list (se nfc_tech_filter.xml).
+      - fasad.rfid.WRITE_TAG → tar emot taggbindningsanrop från Fasad (se wiki/Fasad-NFC-Integration.md).
     -->
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -21,14 +20,22 @@
     <!-- Nätverksstatus: utkorgen startar utskick när nätverk blir tillgängligt (ConnectivityManager-callback). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!--
-        NFC is used but not strictly required for the app to install.
-        The app gracefully handles devices without NFC.
-    -->
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="false"
         tools:ignore="UnusedAttribute,Typos" />
+
+    <!-- Android 11+ paket- och intent-synlighet för Fasad besiktningsklient -->
+    <queries>
+        <package android:name="fasad.besiktning" />
+        <package android:name="fasad.besiktning.labb" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data
+                android:scheme="fasad"
+                android:host="besiktning" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -48,6 +55,12 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Taggbindning från Fasad (fasad.besiktning / fasad.besiktning.labb) -->
+            <intent-filter>
+                <action android:name="fasad.rfid.WRITE_TAG" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <!-- NFC intent filters so the app appears in the NFC chooser when reader mode doesn't suppress it.

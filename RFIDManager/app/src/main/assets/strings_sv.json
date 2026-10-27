@@ -14,7 +14,6 @@
   "screen.scan.persisted": "✓ Sparad",
   "screen.scan.type": "Typ",
   "screen.scan.persist_hint": "Spara [",
-
   "screen.readings.title": "SPARADE AVLÄSNINGAR",
   "screen.readings.search_hint": "Sök UID…",
   "screen.readings.filter_all": "Alla",
@@ -27,7 +26,6 @@
   "screen.readings.clear_all": "Rensa alla",
   "screen.readings.clear_confirm": "Vill du ta bort alla sparade avläsningar?",
   "screen.readings.unavailable": "Avläsningar ej tillgängliga (inget arkiv)",
-
   "screen.scan.write_title": "Skriv till tagg",
   "screen.scan.write_address": "Mål page/block",
   "screen.scan.write_data": "Data (hex)",
@@ -42,7 +40,6 @@
   "screen.scan.write_timeout": "Skrivläget avbröts (tidsgräns)",
   "screen.scan.write_invalid_hex": "Ogiltig hex-data",
   "screen.scan.write_dismiss": "OK",
-
   "screen.connectivity.title": "MQTT / Sparkplug",
   "screen.connectivity.status_connected": "SPARKPLUG ANSLUTEN ✓",
   "screen.connectivity.status_disconnected": "FRÅNKOPPLAD",
@@ -53,7 +50,6 @@
   "screen.connectivity.transmitted": "Skickad",
   "screen.connectivity.type": "Typ",
   "screen.connectivity.data": "Data",
-
   "screen.settings.title": "INSTÄLLNINGAR",
   "screen.settings.storage_mode": "Lagring",
   "screen.settings.storage_room": "Room (SQLite)",
@@ -87,13 +83,11 @@
   "screen.settings.broker_connecting": "Ansluter...",
   "screen.settings.haptic": "Vibrering vid skanning",
   "screen.settings.sound": "Ljud vid skanning",
-
   "common.loading": "Läser in…",
   "common.error": "Ett fel uppstod",
   "common.ok": "OK",
   "common.cancel": "Avbryt",
   "common.unknown_source": "Okänd källa",
-
   "persisted_item.transmitted": "Skickad via Sparkplug",
   "persisted_item.persisted": "Sparad",
   "persisted_item.transmit": "Skicka ↑",
@@ -125,5 +119,15 @@
   "screen.settings.outbox_err_rounds": "Ange ett heltal mellan 1 och 20",
   "screen.settings.outbox_rounds_save": "Spara",
   "screen.settings.outbox_rounds_reset": "Standardvärden",
-  "screen.settings.outbox_rounds_saved": "Sparat ✓"
+  "screen.settings.outbox_rounds_saved": "Sparat ✓",
+  "screen.scan.fasad_bind_title": "Knyt NFC-tagg till Fasad",
+  "screen.scan.fasad_bind_hold": "Håll en skrivbar tagg mot telefonen",
+  "screen.scan.fasad_bind_arm": "Starta skrivläge (30 s)",
+  "screen.scan.fasad_bind_done": "✓ Fasad-tagg bunden ({uid})",
+  "screen.scan.fasad_bind_failed": "✗ Kunde inte skriva Fasad-tagg (låst tagg eller tappad kontakt)",
+  "screen.scan.fasad_bind_invalid": "Ogiltigt Fasad-anrop (lgh saknas eller fel längd)",
+  "screen.scan.fasad_tag_label": "Fasad-tagg",
+  "screen.scan.fasad_open": "Öppna i Fasad",
+  "screen.scan.fasad_send_uid": "Skicka UID till Fasad",
+  "screen.scan.fasad_not_installed": "Fasad-appen (fasad.besiktning) är inte installerad på telefonen"
 }

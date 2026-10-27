@@ -7,13 +7,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -26,19 +26,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.shape.CircleShape
+import com.joakim.rfidmanager.FasadBindStatus
+import com.joakim.rfidmanager.nfc.FasadNfcBridge
+import com.joakim.rfidmanager.nfc.LastRead
 import com.joakim.rfidmanager.nfc.TagLocks
 import com.joakim.rfidmanager.nfc.WriteMode
 import com.joakim.rfidmanager.nfc.WriteModeState
 import com.joakim.rfidmanager.nfc.WriteResult
-import com.joakim.rfidmanager.nfc.LastRead
-import com.joakim.rfidmanager.ui.theme.Dimens
 import com.joakim.rfidmanager.ui.str
+import com.joakim.rfidmanager.ui.theme.Dimens
+import com.joakim.rfidmanager.ui.theme.rememberOutboxPalette
+import com.joakim.rfidmanager.ui.theme.toComposeColor
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * ScanScreen — live scanning view with radar visualization, detected tags and persist flow.
+ * ScanScreen — live scanning view with radar visualization, Fasad NFC bridge banner, detected tags and persist flow.
  */
 @Composable
 fun ScanScreen(
@@ -50,16 +53,22 @@ fun ScanScreen(
     onWrite: (String, Int, String) -> Unit = { _, _, _ -> },
     onPersist: (com.joakim.rfidmanager.ui.model.RFIDTag) -> Unit = {},
     persistedUids: Set<String> = emptySet(),
-    // Skrivläge (ren tillståndslogik i nfc/WriteMode.kt; ägs av MainActivity)
     writeState: WriteModeState = WriteModeState.Idle,
     lastRead: LastRead? = null,
     nowMs: Long = System.currentTimeMillis(),
     onEnterWrite: (String) -> Unit = {},
     onCancelWrite: () -> Unit = {},
+    fasadTargetUri: String? = null,
+    fasadBindStatus: FasadBindStatus? = null,
+    fasadErrorMessage: String? = null,
+    onArmFasadWrite: () -> Unit = {},
+    onOpenInFasad: (String) -> Unit = {},
+    onDismissFasadMessage: () -> Unit = {},
     fontSizeScale: Float = 1.0f,
     modifier: Modifier = Modifier
 ) {
-    // Radar sweep animation
+    val palette = rememberOutboxPalette()
+
     val infiniteTransition = rememberInfiniteTransition(label = "radar")
     val sweepAngleDeg by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -77,7 +86,6 @@ fun ScanScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = Dimens.screenHorizontalPadding, vertical = Dimens.sectionSpacing)
     ) {
-        // Header
         Text(
             str("screen.scan.title"),
             fontFamily = FontFamily.Monospace,
@@ -86,7 +94,107 @@ fun ScanScreen(
         )
         Spacer(Modifier.height(Dimens.smallGap))
 
-        // Radar area – capped height for breathing room (35-40 % rule)
+        // Fasad taggbindningskort / statuskort (när anropad via fasad.rfid.WRITE_TAG eller vid fel/kvittens)
+        if (fasadTargetUri != null || fasadBindStatus != null || fasadErrorMessage != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = palette.cardBackground.toComposeColor()),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(Dimens.cardPadding)) {
+                    if (fasadTargetUri != null) {
+                        val target = remember(fasadTargetUri) { FasadNfcBridge.parseFasadUri(fasadTargetUri) }
+                        val armedFasad = (writeState as? WriteModeState.Armed)?.takeIf { it.request.fasadUri != null }
+                        val secsLeft = WriteMode.remainingSeconds(writeState, nowMs)
+                        Text(
+                            "${str("screen.scan.fasad_bind_title")}: ${target?.summaryLabel() ?: fasadTargetUri}",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = (12 * fontSizeScale).sp,
+                            color = palette.text.toComposeColor()
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            fasadTargetUri,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = (10 * fontSizeScale).sp,
+                            color = palette.secondaryText.toComposeColor(),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        if (armedFasad != null) {
+                            Text(
+                                "${str("screen.scan.fasad_bind_hold")} ($secsLeft s)",
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = (11 * fontSizeScale).sp,
+                                color = palette.pending.toComposeColor()
+                            )
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                            )
+                        } else {
+                            Button(
+                                onClick = onArmFasadWrite,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    str("screen.scan.fasad_bind_arm"),
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = (11 * fontSizeScale).sp
+                                )
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = onCancelWrite,
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        ) {
+                            Text(str("screen.scan.write_cancel"), fontFamily = FontFamily.Monospace)
+                        }
+                    }
+
+                    if (fasadBindStatus != null) {
+                        val statusColor = if (fasadBindStatus.success) palette.sent.toComposeColor() else palette.errorText.toComposeColor()
+                        val statusText = if (fasadBindStatus.success) {
+                            str("screen.scan.fasad_bind_done").replace("{uid}", fasadBindStatus.uidHex)
+                        } else {
+                            str("screen.scan.fasad_bind_failed")
+                        }
+                        Text(
+                            statusText,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = (11 * fontSizeScale).sp,
+                            color = statusColor
+                        )
+                        Text(
+                            fasadBindStatus.uri,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = (10 * fontSizeScale).sp,
+                            color = palette.text.toComposeColor()
+                        )
+                        if (fasadTargetUri == null) {
+                            TextButton(onClick = onDismissFasadMessage) {
+                                Text(str("screen.scan.write_dismiss"), fontFamily = FontFamily.Monospace, color = palette.text.toComposeColor())
+                            }
+                        }
+                    }
+
+                    if (fasadErrorMessage != null) {
+                        Text(
+                            fasadErrorMessage,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = (11 * fontSizeScale).sp,
+                            color = palette.errorText.toComposeColor()
+                        )
+                        TextButton(onClick = onDismissFasadMessage) {
+                            Text(str("screen.scan.write_dismiss"), fontFamily = FontFamily.Monospace, color = palette.text.toComposeColor())
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(Dimens.smallGap))
+        }
+
+        // Radar area
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -105,15 +213,12 @@ fun ScanScreen(
                     val rMax = size.minDimension / 2f * 0.88f
                     val ringColor = onSurfaceVariantColor.copy(alpha = 0.28f)
 
-                    // Concentric radar rings
                     for (i in 1..4) {
                         val rad = rMax * i / 4f
                         drawCircle(color = ringColor, radius = rad, center = c, style = Stroke(width = 1.2.dp.toPx()))
                     }
-                    // Center
                     drawCircle(color = primaryColor, radius = 2.5.dp.toPx(), center = c)
 
-                    // Tag data — computed once per frame
                     val show = detectedTags.take(6)
                     data class TagVisual(val angleDeg: Float, val dist: Float, val pos: Offset)
                     val tagVisuals = show.mapIndexed { idx, tag ->
@@ -124,7 +229,6 @@ fun ScanScreen(
                         TagVisual(angleDeg, dist, Offset(c.x + cos(angRad) * dist, c.y + sin(angRad) * dist))
                     }
 
-                    // Tag tails — arc som växer från punkten framåt i svepriktning (endast vid aktiv skanning)
                     if (scanningEnabled) {
                         tagVisuals.forEach { tv ->
                             val diff = (sweepAngleDeg - tv.angleDeg).mod(360f)
@@ -143,12 +247,10 @@ fun ScanScreen(
                         }
                     }
 
-                    // Tag blips (ritas ovanpå svansarna)
                     tagVisuals.forEach { tv ->
                         drawCircle(color = primaryColor, radius = 3.5.dp.toPx(), center = tv.pos)
                     }
 
-                    // Animated sweep line
                     val sweepRad = if (scanningEnabled) Math.toRadians(sweepAngleDeg.toDouble()).toFloat() else 0.7f
                     val sx = c.x + cos(sweepRad) * rMax * 0.92f
                     val sy = c.y + sin(sweepRad) * rMax * 0.92f
@@ -159,7 +261,6 @@ fun ScanScreen(
                         strokeWidth = 2.dp.toPx()
                     )
 
-                    // Trail/efterglöd — fading wedge bakom svep-linjen (endast vid aktiv skanning)
                     if (scanningEnabled) {
                         val trailR = rMax * 0.92f
                         val n = 72
@@ -180,7 +281,6 @@ fun ScanScreen(
                     }
                 }
 
-                // Overlay label (bottom)
                 Column(
                     modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -197,7 +297,6 @@ fun ScanScreen(
 
         Spacer(Modifier.height(Dimens.sectionSpacing))
 
-        // Scan toggle – generous touch target
         Button(
             onClick = onToggleScan,
             modifier = Modifier.fillMaxWidth().heightIn(min = Dimens.minTouchTarget)
@@ -217,12 +316,10 @@ fun ScanScreen(
 
         Spacer(Modifier.height(Dimens.smallGap))
 
-        // Detected tags list
         Text(str("screen.scan.detected"), fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(Dimens.smallGap))
 
         if (detectedTags.isEmpty()) {
-            // Empty state with icon
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -254,7 +351,6 @@ fun ScanScreen(
                     )
                 }
             }
-            // Loading bar when scanning active
             if (scanningEnabled) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -263,9 +359,6 @@ fun ScanScreen(
                 )
             }
         } else {
-            // SnapshotStateList does NOT trigger remember re-evaluation
-            // (its equals() is referential identity — same object reference is "equal").
-            // So we must NOT wrap in remember; read toList() directly each recomposition.
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(Dimens.listItemSpacing)
             ) {
@@ -273,6 +366,9 @@ fun ScanScreen(
                     val isSelected = selectedTagUid == tag.uid
                     var writeAddress by remember { mutableStateOf("") }
                     var writeData by remember { mutableStateOf("") }
+                    val detectedFasadUri = remember(tag.fullSectors) {
+                        FasadNfcBridge.decodeFasadUriFromHexSectors(tag.fullSectors)
+                    }
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -287,6 +383,60 @@ fun ScanScreen(
                             Text(tag.uid, fontFamily = FontFamily.Monospace, fontSize = (9 * fontSizeScale).sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("${str("screen.scan.type")}: ${tag.type}", fontSize = (12 * fontSizeScale).sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(4.dp))
+
+                            // --- Fasad NFC-brygga: Läge 1 (inskriven fasad://besiktning-URI) eller Läge 2 (endast UID) ---
+                            if (detectedFasadUri != null) {
+                                val parsedTarget = remember(detectedFasadUri) { FasadNfcBridge.parseFasadUri(detectedFasadUri) }
+                                val uriWithUid = remember(detectedFasadUri, tag.uid) {
+                                    FasadNfcBridge.appendUidToFasadUri(detectedFasadUri, tag.uid)
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(palette.cardBackground.toComposeColor())
+                                        .padding(8.dp)
+                                ) {
+                                    Text(
+                                        "${str("screen.scan.fasad_tag_label")}: ${parsedTarget?.summaryLabel() ?: detectedFasadUri}",
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = (11 * fontSizeScale).sp,
+                                        color = palette.sent.toComposeColor()
+                                    )
+                                    Text(
+                                        detectedFasadUri,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = (9 * fontSizeScale).sp,
+                                        color = palette.text.toComposeColor(),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Button(
+                                    onClick = { onOpenInFasad(uriWithUid) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        str("screen.scan.fasad_open"),
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = (12 * fontSizeScale).sp
+                                    )
+                                }
+                                Spacer(Modifier.height(4.dp))
+                            } else {
+                                OutlinedButton(
+                                    onClick = { onOpenInFasad(FasadNfcBridge.buildUidOnlyUri(tag.uid)) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        str("screen.scan.fasad_send_uid"),
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = (11 * fontSizeScale).sp
+                                    )
+                                }
+                                Spacer(Modifier.height(4.dp))
+                            }
+
                             val alreadyPersisted = tag.uid in persistedUids
                             Button(
                                 onClick = {
@@ -433,7 +583,6 @@ fun ScanScreen(
         }
 
         Spacer(Modifier.height(Dimens.sectionSpacing))
-
         Spacer(Modifier.weight(1f))
     }
 }
