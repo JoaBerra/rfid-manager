@@ -1,5 +1,18 @@
 # Log — Projekt RF-ID Applikationer på Android
 
+## [2026-10-27] docs | Gränssnittskontrakt Fasad-NFC (`fasad://besiktning` & `fasad.rfid.WRITE_TAG`) och Kanbankort
+
+**Gren:** `main` (endast dokumentation, ingen appkod ändrad).
+
+**Bakgrund:** Joakim godkände (2026-10-27) det gemensamma förslaget från `rfid-manager` och @Kalle PL Fasad för hur NFC-taggar i fält knyts till och öppnar rätt besiktningsuppdrag, rum och byggnadsdel/utrustning i Fasads besiktningsklient (`fasad.besiktning` / `fasad.besiktning.labb`) enligt Alternativ A (Android Deep Link / Intent med noll kodberoende mellan apparna, förenligt med Fasads ADR 0010, 0012, 0014 och 0015).
+
+**Utfört:**
+- Skapat [[Fasad-NFC-Integration]] med begreppstabell (`Begrepp | Konnotation | Denotation`), läsflöde (`fasad://besiktning?lgh=...&rum=...&del=...&uid=...`), skrivflöde (`fasad.rfid.WRITE_TAG` med `WriteMode` och `TagLocks`), stöd för skrivskyddade taggar (endast `tagUid` mot uppdragsbrevets `taggar`-lista) samt strikt ansvarsgräns (Mål / Inte).
+- Uppdaterat [[Ordlista]] med `fasad://besiktning`, `fasad.rfid.WRITE_TAG` och `Taggbindning`.
+- Lagt upp kortet **NFC-brygga till Fasad (`fasad://besiktning` & `fasad.rfid.WRITE_TAG`)** under *Att göra* i [[Kanban]] samt länkat sidan i [[index]].
+
+---
+
 ## [2026-10-03] feature | Skrivknapp: skrivläge startar bara med "Skriv till tagg" på `feature/nfc-write-button`
 
 **Gren:** `feature/nfc-write-button` (från `feature/outbox-rounds`; pushad som egen gren, **inte** mergad, `main` orörd).

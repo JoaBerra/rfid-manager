@@ -40,6 +40,7 @@ Denna wiki följer strikt Karpathy LLM Wiki pattern (se [schema.md](/home/joakim
 - [[App-Architecture]] — Övergripande arkitektur för RFID Manager. Uppgraderad med Fas 2 (MQTT, persistens) + Fas 3 (navigation, ViewModels, spacing); persistensen uppdaterad 2026-10-03 (Room/SQLite, migrering).
 - [[Figma-to-Compose]] — Hur Figma-designen översatts till Jetpack Compose (design tokens, tema, manuell implementation).
 - [[Outbox]] — Utkorg för MQTT-överföring (`feature/outbox`): spara först/skicka sedan, WorkManager, ack (QoS 1), dubblettskydd och hur kärnan återanvänds i FASAD.
+- [[Fasad-NFC-Integration]] — Beslutat gränssnittskontrakt (2026-10-27) mellan `rfid-manager` och `fasad.besiktning` via Android Deep Link (`fasad://besiktning`) och skriv-Intent (`fasad.rfid.WRITE_TAG`).
 - [[Ordlista]] — Termer (Room, KSP, migrering, ACL, outbox m.fl.) som tabell Konnotation | Denotation. Varje term som används i wikin ska vara definierad här eller i Nomenclature.
 - [[Nomenclature-Figma-Android]] — Namnsättning / nomenclature för Figma-komponenter, variabler och Android/Kotlin (återanvänds 1:1 av AI-assistenten i design + kod).
 - [[Fas2-Implementation-Overview]] — Översikt över filer, struktur och steg för Fas 2.

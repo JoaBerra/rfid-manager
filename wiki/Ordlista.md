@@ -78,3 +78,11 @@ Nya termer läggs till här när de först används i ett dokument. Historiska t
 | **`feature/sqlite`** | Git-gren med Room/SQLite som enda lagring (commits `eab6b6a..48e8a89`), verifierad på telefonen 2026-10-03 och mergad till `main` 2026-10-03. | Inte en gren som fortfarande väntar på merge — innehållet ligger på `main`. |
 | **Teknisk skuld** | Känd brist som medvetet lämnats och är noterad i backlog (README, [[Kanban]]). | Inte en okänd bugg och inte något som blockerar release. |
 | **Historiskt / löst** | Märkning av text som beskriver ett tidigare läge. Texten behålls som historik; "löst" anger att problemet är åtgärdat och datum/commit. | Inte "raderat" och inte "gäller fortfarande". |
+
+## NFC-integration med Fasad
+
+| Begrepp | Konnotation | Denotation |
+|---------|-------------|------------|
+| **`fasad://besiktning`** | Läs-URI (Android Deep Link) som öppnar rätt besiktningsuppdrag (`lgh`), `rum` och `del`/`utrustning` i Fasads besiktningsklient (`fasad.besiktning` / `fasad.besiktning.labb`) med `uid` som närvarokvittens. Se [[Fasad-NFC-Integration]]. | Inte ett nätverksanrop (HTTP/MQTT) och inte en skärm i `rfid-manager`. |
+| **`fasad.rfid.WRITE_TAG`** | Explicit Android-Intent från Fasad till `rfid-manager` för att knyta en skrivbar NFC-tagg till angivet `lgh`/`rum`/`del`/`utrustning` via det skyddade skrivläget (`WriteMode`, 30 s fönster, `TagLocks`). Returnerar `RESULT_OK` med `uid`. Se [[Fasad-NFC-Integration]]. | Inte en automatisk bakgrundsskrivning vid vanlig skanning. |
+| **`Taggbindning`** | Kopplingen mellan en fysisk NFC-tagg och ett mål i Fasad, antingen som NDEF-URI (`fasad://besiktning?...`) inskriven på en skrivbar tagg eller som en post i uppdragsbrevets `taggar`-lista för en skrivskyddad tagg (`tagUid`). Se [[Fasad-NFC-Integration]]. | Inte ett eget bestånds- eller taggregister i fältappens SQLite-databas (följer Fasads ADR 0012). |

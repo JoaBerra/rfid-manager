@@ -4,6 +4,7 @@ kanban-plugin: board
 
 ## 🔜 Att göra (To Do)
 
+- [ ] **NFC-brygga till Fasad (`fasad://besiktning` & `fasad.rfid.WRITE_TAG`)** — Mål: ta emot skriv-Intent `fasad.rfid.WRITE_TAG`, skriva/läsa NDEF-URI `fasad://besiktning?...` med `WriteMode`/`TagLocks` och öppna `fasad.besiktning` med `uid` vid avläsning ([[Fasad-NFC-Integration]]). Inte: ingen kännedom om Fasads rumslistor, protokoll eller SQLite-databas. Beslutat av Joakim 2026-10-27; inväntar Joakims "kör" för kodbygge.
 - [x] ~~**Merga `feature/outbox` → `main`**~~ — ✅ klart 2026-10-03 (mergad tillsammans med sqlite, omgångar och NFC-skrivknapp)
 - [ ] **FASAD: återanvänd utkorgskärnan** (`outbox/core`) — beskrivet i [[Outbox]]; FASAD-repot ägs av Kalle PL Fasad. **FASAD-172** (utvärdering av utkorgsmönstret) kan starta; Kalle PL Fasad är informerad 2026-10-03
 - [x] ~~**Rätta `markAsTransmitted`**~~ — löst 2026-10-03 med utkorgen (`feature/outbox`, mergad till `main`): *outbox* implementerad ([[Outbox]]), en post blir `SENT` först när brokern bekräftat (QoS 1)
